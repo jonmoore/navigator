@@ -1,0 +1,27 @@
+.footdef {
+  display: flex; /* Makes the container a flex container */
+  align-items: baseline; /* Aligns items based on their text baseline */
+  margin-bottom: 0.5em; /* Add some space between footnotes if needed */
+}
+
+.footdef sup {
+  /* Adjust margin to create space between the number and the content */
+  margin-right: 0.5em; /* Adjust this value as needed */
+  /* Ensure the superscript doesn't cause vertical alignment issues */
+  flex-shrink: 0; /* Prevent the number from shrinking */
+}
+
+.footpara {
+  /* Make the content container take up the remaining space */
+  flex-grow: 1;
+  /* Remove default margin/padding from the div if it's adding space */
+  margin: 0;
+  padding: 0;
+}
+
+.footpara p {
+  /* Remove default margin/padding from the paragraph inside */
+  margin: 0;
+  padding: 0;
+  display: inline; /* Ensure the paragraph content flows inline */
+}
