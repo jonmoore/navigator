@@ -844,6 +844,7 @@
           from typing import cast
 
           import ipywidgets
+          import pandas as pd
           import shiny
           import shinywidgets
           import networkx as nx
@@ -854,14 +855,17 @@
 
           graph_id = "graph_output"
           selected_node_display_id = "selected_node_display"
+          node_data_display_id = "node_data_display"
+
           app_ui = ui.page_fluid(
               ui.h2("Ipysigma Graph (Core API), incremental redraw"),
               shinywidgets.output_widget(graph_id),
               ui.output_text(selected_node_display_id),
+              ui.output_table(node_data_display_id)
           )
 
 
-          def server(input, _output, _session: Session):
+          def server(_input, _output, _session: Session):
               initial_num_nodes: int = int(os.environ.get("NAVIGATOR_INITIAL_NUM_NODES", 5))
               base_graph: nx.Graph = graph_utils.create_cycle_graph(n=initial_num_nodes)
               focus_node_reactive = shiny.reactive.Value[int | None](None)
@@ -879,17 +883,13 @@
                   return Sigma(
                       graph,
                       start_layout=5,
-
-                      raw_node_size=lambda _: 30,
-                      raw_node_border_size=lambda _: 5,
-                      raw_node_border_color=lambda _:'blue',
-
+                      raw_node_size=lambda _: 24,
+                      raw_node_border_size=lambda _: 4,
+                      raw_node_border_color=lambda _: 'blue',
                       show_all_labels=True,
-                      raw_node_label_size=lambda _: 20,
-
-                      raw_edge_size=lambda _: 2,
+                      raw_node_label_size=lambda _: 18,
+                      raw_edge_size=lambda _: 4,
                       raw_edge_color=lambda: 'red',
-
                       **extra_kwargs
                   )
 
@@ -902,6 +902,25 @@
                   )
                   focus_node_reactive.set(value=selected_node)
                   return f"The selected node is: {selected_node}"
+
+              @shiny.render.table
+              def node_data_display() -> pd.DataFrame:
+                  selected_node = focus_node_reactive.get()
+                  if selected_node is not None:
+                      # Generate some example data for the selected node
+                      data = {
+                          "Attribute": ["Node", "Degree", "Clustering Coefficient"],
+                          "Value": [
+                              selected_node,
+                              nx.degree(base_graph, selected_node),
+                              nx.clustering(base_graph, selected_node)
+                          ]
+                      }
+                      df = pd.DataFrame(data)
+                  else:
+                      # Return an empty DataFrame as a placeholder
+                      df = pd.DataFrame(columns=["Attribute", "Value"])
+                  return df
 
 
           app = App(app_ui, server)
