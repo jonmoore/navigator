@@ -1,0 +1,16 @@
+This repo is an experiment in
+1. exploring graph visualization using Python, including describing
+   and assessing different options for this.
+2. literate programming to write a combination of code and
+   a written report for the graph visualization exploration.  This is
+   done using [[https://orgmode.org/][Org Mode]].
+
+It includes:
+- [[file:navigator.org]], an org mode file describing the problem and approaches being used,
+  and containing the experimental code as org mode src blocks
+  which are tangled to Python files.
+- project setup files for git, pypromject, etc.
+- files to set up the html export in a readthedocs-style theme.
+- a couple of Jupyter notebooks not generated through org mode.
+
+See [[file:navigator.org]] for the main content.
