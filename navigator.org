@@ -148,6 +148,66 @@
 
     ipysigma's main use cases are for exploring graph structure and data
     rather than graph-driven interactivity which may not be a good fit here.
+*** Pyvis
+    :PROPERTIES:
+    :ID:       54b92d04-5cfb-4dfc-9cd5-a663c5654cb8
+    :END:
+    - *Basis:* Wraps the vis.js JavaScript library.
+    - *Features:* Designed to make creating interactive network graphs easy
+      with just a few lines of Python code.
+      It allows for interactive exploration and physics adjustments directly
+      within a Jupyter notebook or exported HTML file.
+    - *Links:*
+      - https://pyvis.readthedocs.io/en/latest/
+      - https://arxiv.org/abs/2006.04951
+    - *Note:*
+      - Impressive interactivity capabilities,
+        including a built-in control panel to control layout parameters.
+      - Doesn't have a native option to display using ipywidgets.
+        There is a way to display in a Jupyter notebook
+        by changing the arguments to the constructor.
+      - It is possible to include pyvis components in Shiny directly,
+        without using py-shinywidgets,
+        as noted in this response to a request for support in py-shinywidgets:
+        https://github.com/posit-dev/py-shinywidgets/issues/63.
+    - *Conclusion:*
+      - Displays graphs using an external HTML file, so rejected.
+*** D3
+    - *Basis:* Pure JavaScript library
+    - *Features:* Provides a highly customizable framework for interactive visualizations.
+      Low-level in terms of the graphical primitives it offers,
+      but high-level in that it provides supporting tooling and offers
+      a way to compose sophisticated visualizations from fairly simple elements.
+    - *Note:*
+      - Writing "ground-up" visualizations with D3 is actually quite easy,
+        even for someone not familiar with Javascript if using an LLM coding assistant.
+        The resulting code can be directly embedded in HTML and
+        deployed anywhere that will accept fragments of generic HTML documents,
+        e.g. Confluence.
+      - Using D3 directly would essentially be a two-language approach
+        with Javascript on the front end and Python on the back end.
+        The front-end Javascript can also be extended to call external services,
+        e.g. to get data or to trigger server-side calculations.
+        The main session state and focus of the design
+        moves partly into the Jaavscript world in this approach.
+      - This was an approach I hadn't taken seriously until
+        playing around with it in Confluence, and calling out to external data sources.
+        Language model support for wiring up the boilerplate to get started with
+        was especially helpful.
+      - Other UI elements would still have to come from somewhere,
+        e.g. 1) Shiny, Dash or similar, 2) a javascript framework like react, or 3)
+        something like htmx.
+*** d3blocks
+    - https://github.com/d3blocks/d3blocks
+    - **Basis:* Python library for generating Javascript
+    - **Features:* Create stand-alone and interactive d3 charts.
+      Supports a range of widely-used chart types.
+    - **Notes:* 
+*** d3graph
+    - https://github.com/erdogant/d3graph
+    - **Basis:* Python package
+    - **Features:* Simplifies creating networks in D3
+    - **Notes:* 
 *** ipydagred3
     :PROPERTIES:
     :ID:       53871af9-39da-435f-a93c-9990a53e6148
@@ -173,7 +233,13 @@
     - *Note:*
       - Search results highlight Plotly frequently for general interactive visualizations in Jupyter.
       - Plotly has dedicated support for cytoscape through [[https://dash.plotly.com/cytoscape/][Dash Cytoscape]].
-
+        The documentation describes how to
+        use callbacks triggered by clicks to add and remove nodes.
+        This seems to be dong using Dash's own facilities for managing
+        inputs, outputs and state
+        rather than using the Cytoscape graph.
+        Presumably the graph is redrawn each time,
+        unless they have a workaround for Cytoscape's bugs.
 *** Bokeh
     :PROPERTIES:
     :ID:       f8d763d3-8d7e-490d-9624-eb90f07f64a6
@@ -191,19 +257,6 @@
       of complex statistical visualizations.
       Does not directly support network graphs, although
       the [[https://altair-viz.github.io/getting_started/resources.html#nx-altair][nx_altair]] package provides some basic support.
-*** Pyvis
-    :PROPERTIES:
-    :ID:       54b92d04-5cfb-4dfc-9cd5-a663c5654cb8
-    :END:
-    - *Basis:* Wraps the vis.js JavaScript library.
-    - *Features:* Designed to make creating interactive network graphs easy
-      with just a few lines of Python code.
-      It allows for interactive exploration and physics adjustments directly
-      within a Jupyter notebook or exported HTML file.
-    - *Links:*
-      - https://pyvis.readthedocs.io/en/latest/
-      - https://arxiv.org/abs/2006.04951
-
 * Using Shiny
   :PROPERTIES:
   :CUSTOM_ID: methods-for-creating-custom-components-in-shiny-for-python
@@ -821,7 +874,7 @@
           app = App(app_ui, server)
         #+end_src
 
-******* ipysigma Shiny Core app with incremental redraw
+******* ipysigma Shiny Core node navigator
 
         This is a Shiny Core App that displays an ipysigma Graph,
         with the choice of nodes displayed driven by
@@ -836,10 +889,11 @@
 
         It can be run with
         #+begin_src bash
-          shiny run --reload --log-level debug src/navigator/ipysigma_core_incremental.py
+          shiny run --reload --log-level debug src/navigator/ipysigma_core_navigator.py
         #+end_src
 
-        #+begin_src python :tangle src/navigator/ipysigma_core_incremental.py
+        #+NAME: ipysigma_core_navigator
+        #+begin_src python :tangle src/navigator/ipysigma_core_navigator.py
           import os
           from typing import cast
 
@@ -853,32 +907,33 @@
 
           import navigator.graph_utils as graph_utils
 
-          graph_id = "graph_output"
-          selected_node_display_id = "selected_node_display"
-          node_data_display_id = "node_data_display"
-
           app_ui = ui.page_fluid(
-              ui.h2("Ipysigma Graph (Core API), incremental redraw"),
-              shinywidgets.output_widget(graph_id),
-              ui.output_text(selected_node_display_id),
-              ui.output_table(node_data_display_id)
+              ui.h2("Ipysigma Graph (Core API), node navigator"),
+              shinywidgets.output_widget('graph_output'),
+              ui.output_text('selected_node_description'),
+              ui.output_table('node_data')
           )
 
 
           def server(_input, _output, _session: Session):
               initial_num_nodes: int = int(os.environ.get("NAVIGATOR_INITIAL_NUM_NODES", 5))
               base_graph: nx.Graph = graph_utils.create_cycle_graph(n=initial_num_nodes)
-              focus_node_reactive = shiny.reactive.Value[int | None](None)
+              selected_node_reactive = shiny.reactive.Value[int | None](None)
 
               @shinywidgets.render_widget
               def graph_output() -> Sigma:
-                  focus_node = focus_node_reactive.get()
-                  if focus_node is None:
+                  """Return the ipysigma graph to render.
+
+                  Reactive reads:
+                    selected_node_reactive
+                  """
+                  selected_node = selected_node_reactive.get()
+                  if selected_node is None:
                       graph = base_graph
                       extra_kwargs = {}
                   else:
-                      graph = graph_utils.node_and_neighbors(base_graph, focus_node)
-                      extra_kwargs = dict(selected_node=focus_node)
+                      graph = graph_utils.node_and_neighbors(base_graph, selected_node)
+                      extra_kwargs = dict(selected_node=selected_node)
 
                   return Sigma(
                       graph,
@@ -894,18 +949,31 @@
                   )
 
               @shiny.render.text
-              def selected_node_display() -> str:
+              def selected_node_description() -> str:
+                  """Return a text description of the selected node.
+
+                  Reactive reads:
+                    graph_output.widget
+
+                  Reactive sets:
+                    focus_node_reactive
+                  """
                   widget = cast(ipywidgets.Widget, graph_output.widget)
                   selected_node_read = shinywidgets.reactive_read(widget, names="selected_node")
                   selected_node: int | None = (
                       int(selected_node_read) if selected_node_read is not None else None
                   )
-                  focus_node_reactive.set(value=selected_node)
+                  selected_node_reactive.set(value=selected_node)
                   return f"The selected node is: {selected_node}"
 
               @shiny.render.table
-              def node_data_display() -> pd.DataFrame:
-                  selected_node = focus_node_reactive.get()
+              def node_data() -> pd.DataFrame:  # pyright: ignore[reportUnusedFunction]
+                  """Return a DataFrame with data about the selected node.
+
+                  Reactive reads:
+                    focus_node_reactive
+                  """
+                  selected_node = selected_node_reactive.get()
                   if selected_node is not None:
                       # Generate some example data for the selected node
                       data = {
@@ -940,12 +1008,405 @@
       the maintenance is sporadic, with a small group of maintainers,
       a low (but non-zero) rate of commits and
       a significant number of bugs outstanding;
-      there were 15 at the time of writing with some in quite basic areas like svg export.
+      there were 15 at the time of writing with some in quite basic areas like [[https://github.com/medialab/ipysigma/issues/129][svg export]].
 
       A secondary downside is that the general appearance is quite "geeky" and less
       polished than the containers available through Bokeh, Plotly, etc.
       
-      
+*** Using pyvis
+***** pyvis Shiny Core node navigator
+
+      This is a Shiny Core App that displays a graph using pyvis.
+
+      It's based on https://github.com/posit-dev/py-shinywidgets/issues/63
+
+      It can be run with
+      #+begin_src bash
+        shiny run --reload --log-level debug src/navigator/pyvis_core_navigator.py
+      #+end_src
+
+      Note that pyvis operates, as here, by saving an HTML file.
+      Nothing in the documentation at
+      https://pyvis.readthedocs.io/en/latest/documentation.html
+      indicates that any other mode is supported.
+
+      #+NAME: pyvis_core_navigator
+      #+begin_src python :tangle src/navigator/pyvis_core_navigator.py
+        import os
+        from pathlib import Path
+
+        import shiny
+        import networkx as nx
+        from pyvis.network import Network
+        from shiny import App, ui
+
+        import navigator.graph_utils as graph_utils
+
+        # Use a static_assets folder for holding the Network()'s html file
+
+        WWW = Path(__file__).resolve().parent.parent / "www"
+
+        PYVIS_OUTPUT_ID = "pyvis"
+
+        app_ui = ui.page_fluid(
+            ui.output_ui(PYVIS_OUTPUT_ID),
+        )
+
+        def server(input: shiny.Inputs, output: shiny.Outputs, _session: shiny.Session):
+            initial_num_nodes: int = int(os.environ.get("NAVIGATOR_INITIAL_NUM_NODES", 5))
+
+            @output(id=PYVIS_OUTPUT_ID)
+            @shiny.render.ui
+            def _():
+                G: nx.Graph = graph_utils.create_cycle_graph(n=initial_num_nodes)
+                net = Network()
+                net.from_nx(G)
+                net.toggle_drag_nodes(True)
+
+                f = WWW / f"{PYVIS_OUTPUT_ID}.html"
+                new_content = net.generate_html(local=False)
+
+                try:
+                    current_content = f.read_text()
+                except FileNotFoundError:
+                    current_content = None
+
+                # avoid triggering an endless loop of reloads because a watched file changes
+                if new_content != current_content:
+                    f.write_text(new_content)
+
+                return ui.tags.iframe(
+                    src=PYVIS_OUTPUT_ID + ".html",
+                    style="height:600px;width:100%;",
+                    scrolling="no",
+                    seamless="seamless",
+                    frameBorder="0",
+                )
+
+        app = App(app_ui, server, static_assets=WWW)
+      #+end_src
+***** Conclusion
+      pyvis is not a useful option given how it operates using external HTML files,
+      although the underlying VisJS library might be useful.
+*** D3
+***** D3 navigator
+      This is a Shiny Core App that displays a graph using D3.
+
+      It's based on Gemini's suggestions
+
+      It can be run with
+      #+begin_src bash
+        shiny run --reload --log-level debug src/navigator/d3_core_navigator.py
+      #+end_src
+
+      #+NAME: d3_core_navigator
+      #+begin_src python :tangle src/navigator/d3_core_navigator.py
+        import json
+        from pathlib import Path
+
+        import pandas as pd
+        from shiny import App, ui, render
+
+        graph_data = {
+            "nodes": [
+                {"id": "A", "name": "Node A"},
+                {"id": "B", "name": "Node B"},
+                {"id": "C", "name": "Node C"},
+                {"id": "D", "name": "Node D"},
+                {"id": "E", "name": "Node E"},
+            ],
+            "links": [
+                {"source": "A", "target": "B"},
+                {"source": "B", "target": "C"},
+                {"source": "C", "target": "A"},
+                {"source": "A", "target": "D"},
+                {"source": "D", "target": "E"},
+            ],
+        }
+
+        # Sample DataFrames for each node
+        dataframes = {
+            "A": pd.DataFrame(
+                {
+                    "Product": ["Laptop", "Monitor", "Keyboard"],
+                    "Price": [1200, 300, 75],
+                    "Stock": [50, 120, 200],
+                }
+            ),
+            "B": pd.DataFrame(
+                {
+                    "City": ["New York", "Los Angeles", "Chicago"],
+                    "Population": [8.4, 3.9, 2.7],
+                    "Country": ["USA", "USA", "USA"],
+                }
+            ),
+            "C": pd.DataFrame(
+                {
+                    "Animal": ["Lion", "Tiger", "Bear"],
+                    "Habitat": ["Savannah", "Forest", "Forest"],
+                    "Diet": ["Carnivore", "Carnivore", "Omnivore"],
+                }
+            ),
+            "D": pd.DataFrame(
+                {
+                    "Course": ["Math", "Science", "History"],
+                    "Credits": [3, 4, 3],
+                    "Instructor": ["Prof. Smith", "Dr. Jones", "Ms. Davis"],
+                }
+            ),
+            "E": pd.DataFrame(
+                {
+                    "Language": ["Python", "JavaScript", "R"],
+                    "Paradigm": ["OOP", "Multi-paradigm", "Functional"],
+                    "Year": [1991, 1995, 1993],
+                }
+            ),
+        }
+
+        app_ui = ui.page_fluid(
+            ui.tags.head(
+                ui.tags.title("D3.js Directed Graph in Shiny"),
+                ui.tags.script(src="https://d3js.org/d3.v7.min.js"),
+                ui.include_css(Path(__file__).parent / "d3_navigator.css"),
+            ),
+            ui.div(
+                ui.h2("D3.js Directed Graph Example"),
+                ui.div(
+                        ui.tags.svg(id="d3-graph"),
+                        ui.div(id="tooltip"),
+                        id="graph-container",
+                    ),
+                ui.div(ui.output_ui("d3_graph_output")),
+                ui.div(ui.h3("Selected Node Data"), ui.output_table("dataframe_output")),
+            ),
+        )
+
+
+        def server(input, output, session):
+            @output
+            @render.ui
+            def d3_graph_output():
+                json_graph_data = json.dumps(graph_data)
+
+                # D3.js code embedded as HTML
+                d3_code = (
+                    f"""
+                <script>
+                    const svg = d3.select("#d3-graph");
+                    const tooltip = d3.select("#tooltip");
+
+                    const width = svg.node().getBoundingClientRect().width;
+                    const height = svg.node().getBoundingClientRect().height;
+
+
+                    // Define arrow markers for directed graph links
+                    svg.append("defs").append("marker")
+                        .attr("id", "arrowhead")
+                        .attr("viewBox", "-0 -5 10 10")
+                        .attr("refX", 15) // Position of the arrowhead relative to the end of the line
+                        .attr("refY", 0)
+                        .attr("orient", "auto")
+                        .attr("markerWidth", 6)
+                        .attr("markerHeight", 6)
+                        .attr("xoverflow", "visible")
+                        .append("path")
+                        .attr("d", "M 0,-5 L 10,0 L 0,5")
+                        .attr("fill", "#999")
+                        .style("stroke", "none");
+
+                    // Parse the graph data from the Python backend
+                    const graph = {json_graph_data};
+                """
+                    + """
+
+                    // Create a force simulation
+                    const simulation = d3.forceSimulation(graph.nodes)
+                        .force("link", d3.forceLink(graph.links).id(d => d.id).distance(100))
+                        .force("charge", d3.forceManyBody().strength(-300))
+                        .force("center", d3.forceCenter(width / 2, height / 2))
+                        .on("tick", ticked);
+
+                    // Add links (lines)
+                    const link = svg.append("g")
+                        .attr("class", "links")
+                        .selectAll("line")
+                        .data(graph.links)
+                        .enter().append("line")
+                        .attr("class", "link")
+                        .attr("marker-end", "url(#arrowhead)"); // Attach arrowhead
+
+                    // Add nodes (circles)
+                    const node = svg.append("g")
+                        .attr("class", "nodes")
+                        .selectAll("g")
+                        .data(graph.nodes)
+                        .enter().append("g")
+                        .call(d3.drag()
+                            .on("start", dragstarted)
+                            .on("drag", dragged)
+                            .on("end", dragended));
+
+                    node.append("circle")
+                        .attr("r", 8)
+                        .attr("fill", "#69b3a2")
+                        .on("click", function(event, d) {
+                            // Remove highlight from all nodes
+                            d3.selectAll(".node circle").classed("highlighted", false);
+                            d3.selectAll(".node text").classed("highlighted-text", false);
+
+                            // Add highlight to the clicked node
+                            d3.select(this).classed("highlighted", true);
+                            d3.select(this.parentNode).select("text").classed("highlighted-text", true);
+
+                            if (typeof Shiny !== 'undefined' && Shiny.setInputValue) {
+                                Shiny.setInputValue("clicked_node_id", d.id);
+                            } else {
+                                console.warn("Shiny.setInputValue is not available. Ensure Shiny is loaded correctly.");
+                            }
+                        })
+                        .on("mouseover", function(event, d) {
+                            tooltip.transition()
+                                .duration(200)
+                                .style("opacity", .9);
+                            tooltip.html("Node: " + d.name + "<br/>ID: " + d.id)
+                                .style("left", (event.pageX + 10) + "px")
+                                .style("top", (event.pageY - 28) + "px");
+                        })
+                        .on("mouseout", function(d) {
+                            tooltip.transition()
+                                .duration(500)
+                                .style("opacity", 0);
+                        });
+
+                    node.append("text")
+                        .attr("dy", "0.35em")
+                        .attr("y", 15) // Position text below the circle
+                        .text(d => d.name);
+
+                    // Update positions of links and nodes on each tick of the simulation
+                    function ticked() {
+                        link
+                            .attr("x1", d => d.source.x)
+                            .attr("y1", d => d.source.y)
+                            .attr("x2", d => d.target.x)
+                            .attr("y2", d => d.target.y);
+
+                        node
+                            .attr("transform", d => `translate(${d.x},${d.y})`);
+                    }
+
+                    // Drag functions
+                    function dragstarted(event, d) {
+                        if (!event.active) simulation.alphaTarget(0.3).restart();
+                        d.fx = d.x;
+                        d.fy = d.y;
+                    }
+
+                    function dragged(event, d) {
+                        d.fx = event.x;
+                        d.fy = event.y;
+                    }
+
+                    function dragended(event, d) {
+                        if (!event.active) simulation.alphaTarget(0);
+                        d.fx = null;
+                        d.fy = null;
+                    }
+
+                    // Handle window resize to make the SVG responsive
+                    window.addEventListener('resize', () => {
+                        const newWidth = svg.node().getBoundingClientRect().width;
+                        const newHeight = svg.node().getBoundingClientRect().height;
+                        svg.attr("width", newWidth).attr("height", newHeight);
+                        simulation.force("center", d3.forceCenter(newWidth / 2, newHeight / 2));
+                        simulation.alpha(1).restart(); // Restart simulation on resize
+                    });
+
+                    // Initial resize call to set correct dimensions
+                    window.dispatchEvent(new Event('resize'));
+
+                </script>
+                """
+                )
+                return ui.HTML(d3_code)
+
+            @output
+            @render.table
+            def dataframe_output():
+                node_id = input.clicked_node_id()
+                if node_id and node_id in dataframes:
+                    return dataframes[node_id]
+                return pd.DataFrame({"Info": ["Click a node to see its associated DataFrame!"]})
+
+
+        app = App(app_ui, server)
+      #+end_src
+
+      #+begin_src css :tangle src/navigator/d3_navigator.css
+body { font-family: 'Inter', sans-serif; }
+
+.node circle {
+    stroke: #fff;
+    stroke-width: 1.5px;
+    transition: all 0.2s ease-in-out; /* Smooth transition for highlight */
+}
+
+.node circle.highlighted {
+    stroke: #ff0000; /* Red border for highlight */
+    stroke-width: 3px;
+    fill: #ffcc00; /* Yellow fill for highlight */
+}
+
+.link {
+    stroke: #999;
+    stroke-opacity: 0.6;
+    stroke-width: 2px;
+    fill: none; /* Ensure links are lines, not filled shapes */
+}
+
+.node text {
+    font-size: 10px;
+    pointer-events: none; /* Prevent text from interfering with drag */
+    text-anchor: middle;
+    fill: #333;
+    transition: all 0.2s ease-in-out; /* Smooth transition for highlight */
+}
+
+.node text.highlighted-text {
+    font-weight: bold;
+    fill: #ff0000; /* Red text for highlight */
+}
+
+.tooltip {
+    position: absolute;
+    text-align: center;
+    width: auto;
+    height: auto;
+    padding: 8px;
+    background: lightsteelblue;
+    border: 0px;
+    border-radius: 8px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+      #+end_src
 *** Debugging Shiny
     :PROPERTIES:
     :ID:       5274a82c-1ba9-4104-ab93-74d8df07fbbf
@@ -1010,6 +1471,28 @@
           """
           print([t for t in widget.traits()
                  if not str(t).startswith('_')])
+
+      def bind_to_name(name: str):
+          """
+          A decorator that binds the decorated function to a specified string name
+          at the module/global level.
+
+          The function will be accessible via its original name and the new bound name.
+
+          Args:
+              name: The name to bind the function to at global scope.
+          """
+          if not isinstance(name, str):
+              raise TypeError("The name argument must be a string.")
+
+          def decorator(func):
+              @functools.wraps(func)
+              def wrapper(*args, **kwargs):
+                  return func(*args, **kwargs)
+              globals()[name] = func
+              return wrapper
+
+          return decorator
     #+end_src
 
 *** Graph utilities
@@ -1074,7 +1557,7 @@
 [[https://www.appsilon.com/post/shiny-for-python-javascript]]
 
 
-* Local variables                                                     :noexport:
+* Local variables :noexport:
   :PROPERTIES:
   :ID:       f3c4191a-f21b-4c5f-80b2-213a6c590d49
   :END:

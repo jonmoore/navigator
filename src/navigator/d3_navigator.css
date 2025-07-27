@@ -1,0 +1,65 @@
+/* [[file:../../navigator.org::*D3 navigator][D3 navigator:3]] */
+body { font-family: 'Inter', sans-serif; }
+
+.node circle {
+    stroke: #fff;
+    stroke-width: 1.5px;
+    transition: all 0.2s ease-in-out; /* Smooth transition for highlight */
+}
+
+.node circle.highlighted {
+    stroke: #ff0000; /* Red border for highlight */
+    stroke-width: 3px;
+    fill: #ffcc00; /* Yellow fill for highlight */
+}
+
+.link {
+    stroke: #999;
+    stroke-opacity: 0.6;
+    stroke-width: 2px;
+    fill: none; /* Ensure links are lines, not filled shapes */
+}
+
+.node text {
+    font-size: 10px;
+    pointer-events: none; /* Prevent text from interfering with drag */
+    text-anchor: middle;
+    fill: #333;
+    transition: all 0.2s ease-in-out; /* Smooth transition for highlight */
+}
+
+.node text.highlighted-text {
+    font-weight: bold;
+    fill: #ff0000; /* Red text for highlight */
+}
+
+.tooltip {
+    position: absolute;
+    text-align: center;
+    width: auto;
+    height: auto;
+    padding: 8px;
+    background: lightsteelblue;
+    border: 0px;
+    border-radius: 8px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+/* D3 navigator:3 ends here */
