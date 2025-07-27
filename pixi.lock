@@ -204,6 +204,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zlib-1.3.1-hb9d3cd8_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstandard-0.23.0-py313h536fd9c_1.conda
       - pypi: https://files.pythonhosted.org/packages/e8/99/59a0221f8a41c14af07f82ffdad204730a31b2a946201319d59796dcfa9c/ipysigma-0.24.5-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/a3/04/35477d786dbe2ace26bf34c8251a3213fcb4c70e25539f3739dda9d81dba/shinyswatch-0.9.0-py3-none-any.whl
       - pypi: .
 packages:
 - conda: https://conda.anaconda.org/conda-forge/linux-64/_libgcc_mutex-0.1-conda_forge.tar.bz2
@@ -1603,9 +1604,10 @@ packages:
 - pypi: .
   name: navigator
   version: 0.1.0
-  sha256: 6997e76718f7228ef7ed59089425481474768b3e12697994bf42e0c72c58e245
+  sha256: 0c0a401670a422c8b9acc207b2fda2b18f2dd840d20581cd1065da36443e19cf
   requires_dist:
   - ipysigma>=0.24.5,<0.25
+  - shinyswatch>=0.9.0,<0.10
   requires_python: '>=3.11'
   editable: true
 - conda: https://conda.anaconda.org/conda-forge/noarch/nbclient-0.10.2-pyhd8ed1ab_0.conda
@@ -2385,6 +2387,33 @@ packages:
   - pkg:pypi/shiny?source=hash-mapping
   size: 2640846
   timestamp: 1741050118548
+- pypi: https://files.pythonhosted.org/packages/a3/04/35477d786dbe2ace26bf34c8251a3213fcb4c70e25539f3739dda9d81dba/shinyswatch-0.9.0-py3-none-any.whl
+  name: shinyswatch
+  version: 0.9.0
+  sha256: bb335a1db9bf5fc84867e2644ffbcc61ccad452d38c7b386651c2b78ab0f734a
+  requires_dist:
+  - typing-extensions>=3.10.0.0
+  - packaging>=20.9
+  - htmltools>=0.2.0
+  - shiny>=1.2.0
+  - pytest>=6.2.4 ; extra == 'test'
+  - black>=23.1.0 ; extra == 'dev'
+  - flake8>=6.0.0 ; extra == 'dev'
+  - isort>=5.11.2 ; extra == 'dev'
+  - pyright>=1.1.301 ; extra == 'dev'
+  - pre-commit>=2.15.0 ; extra == 'dev'
+  - wheel ; extra == 'dev'
+  - pandas ; extra == 'dev'
+  - jinja2 ; extra == 'dev'
+  - matplotlib ; extra == 'dev'
+  - libsass ; extra == 'dev'
+  - tinycss2 ; extra == 'dev'
+  - griffe==0.47.0 ; extra == 'docs'
+  - quartodoc==0.7.5 ; extra == 'docs'
+  - shinylive ; extra == 'docs'
+  - plum-dispatch ; extra == 'docs'
+  - jupyter ; extra == 'docs'
+  requires_python: '>=3.8'
 - conda: https://conda.anaconda.org/conda-forge/noarch/shinywidgets-0.5.1-pyhd8ed1ab_0.conda
   sha256: 49f7286d72a77f7562c1836d26822535160b1e0dffaf970de7fcd1f25ffa7b04
   md5: d1c61d5cffb6e37165ceda34992503ab

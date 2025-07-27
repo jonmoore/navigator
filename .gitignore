@@ -1,6 +1,7 @@
 # org-generated files
 /*.html
 src/navigator/*.py
+src/www/gen/
 
 # exceptions to the org-generated files
 !src/navigator/__init__.py
@@ -43,14 +44,4 @@ coverage.xml
 
 # Jupyter Notebook
 .ipynb_checkpoints
-
-# IPython
-profile_default/
-ipython_config.py
-.ipython/
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
 

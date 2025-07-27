@@ -3,7 +3,7 @@ authors = [{name = "Jonathan Moore", email = "jonathanmoorephd@gmail.com"}]
 name = "navigator"
 requires-python = ">= 3.11"
 version = "0.1.0"
-dependencies = ["ipysigma>=0.24.5,<0.25"]
+dependencies = ["ipysigma>=0.24.5,<0.25", "shinyswatch>=0.9.0,<0.10"]
 
 [build-system]
 build-backend = "hatchling.build"

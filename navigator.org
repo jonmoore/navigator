@@ -1101,10 +1101,12 @@
 
       #+NAME: d3_core_navigator
       #+begin_src python :tangle src/navigator/d3_core_navigator.py
-        import json
         from pathlib import Path
 
         import pandas as pd
+
+        import shiny
+        import shinyswatch
         from shiny import App, ui, render
 
         graph_data = {
@@ -1163,11 +1165,15 @@
             ),
         }
 
+        src_dir = Path(__file__).parent.parent
+        www_dir = src_dir / 'www'
+
         app_ui = ui.page_fluid(
             ui.tags.head(
                 ui.tags.title("D3.js Directed Graph in Shiny"),
                 ui.tags.script(src="https://d3js.org/d3.v7.min.js"),
-                ui.include_css(Path(__file__).parent / "d3_navigator.css"),
+                ui.tags.link(href="gen/d3_navigator.css", rel="stylesheet"),
+                ui.include_js(www_dir / "gen" / "d3_graph.js")
             ),
             ui.div(
                 ui.h2("D3.js Directed Graph Example"),
@@ -1179,156 +1185,16 @@
                 ui.div(ui.output_ui("d3_graph_output")),
                 ui.div(ui.h3("Selected Node Data"), ui.output_table("dataframe_output")),
             ),
+            theme=shinyswatch.theme.cerulean,
+
         )
 
 
-        def server(input, output, session):
+        def server(input: shiny.Inputs, output: shiny.Outputs, _session: shiny.Session):
             @output
             @render.ui
             def d3_graph_output():
-                json_graph_data = json.dumps(graph_data)
-
-                # D3.js code embedded as HTML
-                d3_code = (
-                    f"""
-                <script>
-                    const svg = d3.select("#d3-graph");
-                    const tooltip = d3.select("#tooltip");
-
-                    const width = svg.node().getBoundingClientRect().width;
-                    const height = svg.node().getBoundingClientRect().height;
-
-
-                    // Define arrow markers for directed graph links
-                    svg.append("defs").append("marker")
-                        .attr("id", "arrowhead")
-                        .attr("viewBox", "-0 -5 10 10")
-                        .attr("refX", 15) // Position of the arrowhead relative to the end of the line
-                        .attr("refY", 0)
-                        .attr("orient", "auto")
-                        .attr("markerWidth", 6)
-                        .attr("markerHeight", 6)
-                        .attr("xoverflow", "visible")
-                        .append("path")
-                        .attr("d", "M 0,-5 L 10,0 L 0,5")
-                        .attr("fill", "#999")
-                        .style("stroke", "none");
-
-                    // Parse the graph data from the Python backend
-                    const graph = {json_graph_data};
-                """
-                    + """
-
-                    // Create a force simulation
-                    const simulation = d3.forceSimulation(graph.nodes)
-                        .force("link", d3.forceLink(graph.links).id(d => d.id).distance(100))
-                        .force("charge", d3.forceManyBody().strength(-300))
-                        .force("center", d3.forceCenter(width / 2, height / 2))
-                        .on("tick", ticked);
-
-                    // Add links (lines)
-                    const link = svg.append("g")
-                        .attr("class", "links")
-                        .selectAll("line")
-                        .data(graph.links)
-                        .enter().append("line")
-                        .attr("class", "link")
-                        .attr("marker-end", "url(#arrowhead)"); // Attach arrowhead
-
-                    // Add nodes (circles)
-                    const node = svg.append("g")
-                        .attr("class", "nodes")
-                        .selectAll("g")
-                        .data(graph.nodes)
-                        .enter().append("g")
-                        .call(d3.drag()
-                            .on("start", dragstarted)
-                            .on("drag", dragged)
-                            .on("end", dragended));
-
-                    node.append("circle")
-                        .attr("r", 8)
-                        .attr("fill", "#69b3a2")
-                        .on("click", function(event, d) {
-                            // Remove highlight from all nodes
-                            d3.selectAll(".node circle").classed("highlighted", false);
-                            d3.selectAll(".node text").classed("highlighted-text", false);
-
-                            // Add highlight to the clicked node
-                            d3.select(this).classed("highlighted", true);
-                            d3.select(this.parentNode).select("text").classed("highlighted-text", true);
-
-                            if (typeof Shiny !== 'undefined' && Shiny.setInputValue) {
-                                Shiny.setInputValue("clicked_node_id", d.id);
-                            } else {
-                                console.warn("Shiny.setInputValue is not available. Ensure Shiny is loaded correctly.");
-                            }
-                        })
-                        .on("mouseover", function(event, d) {
-                            tooltip.transition()
-                                .duration(200)
-                                .style("opacity", .9);
-                            tooltip.html("Node: " + d.name + "<br/>ID: " + d.id)
-                                .style("left", (event.pageX + 10) + "px")
-                                .style("top", (event.pageY - 28) + "px");
-                        })
-                        .on("mouseout", function(d) {
-                            tooltip.transition()
-                                .duration(500)
-                                .style("opacity", 0);
-                        });
-
-                    node.append("text")
-                        .attr("dy", "0.35em")
-                        .attr("y", 15) // Position text below the circle
-                        .text(d => d.name);
-
-                    // Update positions of links and nodes on each tick of the simulation
-                    function ticked() {
-                        link
-                            .attr("x1", d => d.source.x)
-                            .attr("y1", d => d.source.y)
-                            .attr("x2", d => d.target.x)
-                            .attr("y2", d => d.target.y);
-
-                        node
-                            .attr("transform", d => `translate(${d.x},${d.y})`);
-                    }
-
-                    // Drag functions
-                    function dragstarted(event, d) {
-                        if (!event.active) simulation.alphaTarget(0.3).restart();
-                        d.fx = d.x;
-                        d.fy = d.y;
-                    }
-
-                    function dragged(event, d) {
-                        d.fx = event.x;
-                        d.fy = event.y;
-                    }
-
-                    function dragended(event, d) {
-                        if (!event.active) simulation.alphaTarget(0);
-                        d.fx = null;
-                        d.fy = null;
-                    }
-
-                    // Handle window resize to make the SVG responsive
-                    window.addEventListener('resize', () => {
-                        const newWidth = svg.node().getBoundingClientRect().width;
-                        const newHeight = svg.node().getBoundingClientRect().height;
-                        svg.attr("width", newWidth).attr("height", newHeight);
-                        simulation.force("center", d3.forceCenter(newWidth / 2, newHeight / 2));
-                        simulation.alpha(1).restart(); // Restart simulation on resize
-                    });
-
-                    // Initial resize call to set correct dimensions
-                    window.dispatchEvent(new Event('resize'));
-
-                </script>
-                """
-                )
-                return ui.HTML(d3_code)
+                return ui.HTML("")
 
             @output
             @render.table
@@ -1339,10 +1205,11 @@
                 return pd.DataFrame({"Info": ["Click a node to see its associated DataFrame!"]})
 
 
-        app = App(app_ui, server)
+        app = App(app_ui, server, static_assets = www_dir)
       #+end_src
 
-      #+begin_src css :tangle src/navigator/d3_navigator.css
+      #+NAME: d3_core_css
+      #+begin_src css :tangle src/www/gen/d3_navigator.css
 body { font-family: 'Inter', sans-serif; }
 
 .node circle {
@@ -1406,6 +1273,185 @@ th, td {
 th {
     background-color: #f2f2f2;
 }
+      #+end_src
+
+      #+NAME: d3_core_js
+      #+begin_src js2 :tangle src/www/gen/d3_graph.js
+        document.addEventListener("DOMContentLoaded", function() {
+            const svg = d3.select("#d3-graph");
+            const tooltip = d3.select("#tooltip");
+
+            const width = svg.node().getBoundingClientRect().width;
+            const height = svg.node().getBoundingClientRect().height;
+
+            // Define arrow markers for directed graph links
+            svg.append("defs").append("marker")
+                .attr("id", "arrowhead")
+                .attr("viewBox", "-0 -5 10 10")
+                .attr("refX", 15) // Position of the arrowhead relative to the end of the line
+                .attr("refY", 0)
+                .attr("orient", "auto")
+                .attr("markerWidth", 6)
+                .attr("markerHeight", 6)
+                .attr("xoverflow", "visible")
+                .append("path")
+                .attr("d", "M 0,-5 L 10,0 L 0,5")
+                .attr("fill", "#999")
+                .style("stroke", "none");
+
+            // Parse the graph data from the Python backend
+            const graph = {
+                "nodes": [
+                    {
+                        "id": "A",
+                        "name": "Node A"
+                    },
+                    {
+                        "id": "B",
+                        "name": "Node B"
+                    },
+                    {
+                        "id": "C",
+                        "name": "Node C"
+                    },
+                    {
+                        "id": "D",
+                        "name": "Node D"
+                    },
+                    {
+                        "id": "E",
+                        "name": "Node E"
+                    }
+                ],
+                "links": [
+                    {
+                        "source": "A",
+                        "target": "B"
+                    },
+                    {
+                        "source": "B",
+                        "target": "C"
+                    },
+                    {
+                        "source": "C",
+                        "target": "A"
+                    },
+                    {
+                        "source": "A",
+                        "target": "D"
+                    },
+                    {
+                        "source": "D",
+                        "target": "E"
+                    }
+                ]
+            };
+            // Create a force simulation
+            const simulation = d3.forceSimulation(graph.nodes)
+                  .force("link", d3.forceLink(graph.links).id(d => d.id).distance(100))
+                  .force("charge", d3.forceManyBody().strength(-300))
+                  .force("center", d3.forceCenter(width / 2, height / 2))
+                  .on("tick", ticked);
+
+            // Add links (lines)
+            const link = svg.append("g")
+                  .attr("class", "links")
+                  .selectAll("line")
+                  .data(graph.links)
+                  .enter().append("line")
+                  .attr("class", "link")
+                  .attr("marker-end", "url(#arrowhead)"); // Attach arrowhead
+
+            // Add nodes (circles)
+            const node = svg.append("g")
+                  .attr("class", "nodes")
+                  .selectAll("g")
+                  .data(graph.nodes)
+                  .enter().append("g")
+                  .call(d3.drag()
+                        .on("start", dragstarted)
+                        .on("drag", dragged)
+                        .on("end", dragended));
+
+            node.append("circle")
+                .attr("r", 8)
+                .attr("fill", "#69b3a2")
+                .on("click", function(event, d) {
+                    // Remove highlight from all nodes
+                    d3.selectAll(".node circle").classed("highlighted", false);
+                    d3.selectAll(".node text").classed("highlighted-text", false);
+
+                    // Add highlight to the clicked node
+                    d3.select(this).classed("highlighted", true);
+                    d3.select(this.parentNode).select("text").classed("highlighted-text", true);
+
+                    if (typeof Shiny !== 'undefined' && Shiny.setInputValue) {
+                        Shiny.setInputValue("clicked_node_id", d.id);
+                    } else {
+                        console.warn("Shiny.setInputValue is not available. Ensure Shiny is loaded correctly.");
+                    }
+                })
+                .on("mouseover", function(event, d) {
+                    tooltip.transition()
+                        .duration(200)
+                        .style("opacity", .9);
+                    tooltip.html("Node: " + d.name + "<br/>ID: " + d.id)
+                        .style("left", (event.pageX + 10) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
+                .on("mouseout", function(d) {
+                    tooltip.transition()
+                        .duration(500)
+                        .style("opacity", 0);
+                });
+
+            node.append("text")
+                .attr("dy", "0.35em")
+                .attr("y", 15) // Position text below the circle
+                .text(d => d.name);
+
+            // Update positions of links and nodes on each tick of the simulation
+            function ticked() {
+                link
+                    .attr("x1", d => d.source.x)
+                    .attr("y1", d => d.source.y)
+                    .attr("x2", d => d.target.x)
+                    .attr("y2", d => d.target.y);
+
+                node
+                    .attr("transform", d => `translate(${d.x},${d.y})`);
+            }
+
+            // Drag functions
+            function dragstarted(event, d) {
+                if (!event.active) simulation.alphaTarget(0.3).restart();
+                d.fx = d.x;
+                d.fy = d.y;
+            }
+
+            function dragged(event, d) {
+                d.fx = event.x;
+                d.fy = event.y;
+            }
+
+            function dragended(event, d) {
+                if (!event.active) simulation.alphaTarget(0);
+                d.fx = null;
+                d.fy = null;
+            }
+
+            // Handle window resize to make the SVG responsive
+            window.addEventListener('resize', () => {
+                const newWidth = svg.node().getBoundingClientRect().width;
+                const newHeight = svg.node().getBoundingClientRect().height;
+                svg.attr("width", newWidth).attr("height", newHeight);
+                simulation.force("center", d3.forceCenter(newWidth / 2, newHeight / 2));
+                simulation.alpha(1).restart(); // Restart simulation on resize
+            });
+
+            window.dispatchEvent(new Event('resize'));
+
+        });
       #+end_src
 *** Debugging Shiny
     :PROPERTIES:
