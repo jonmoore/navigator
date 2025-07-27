@@ -1277,8 +1277,6 @@ th {
 
       #+NAME: d3_core_js
       #+begin_src js2 :tangle src/www/gen/d3_graph.js
-
-
         // Update positions of links and nodes on each tick of the simulation
         function ticked(link, node) {
             link
@@ -1289,6 +1287,23 @@ th {
 
             node
                 .attr("transform", d => `translate(${d.x},${d.y})`);
+        }
+
+        function dragstarted(event, d, simulation) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+
+        function dragended(event, d, simulation) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
         }
 
         function initializeD3Graph(graph) {
@@ -1333,9 +1348,9 @@ th {
                   .data(graph.nodes)
                   .enter().append("g")
                   .call(d3.drag()
-                        .on("start", dragstarted)
+                        .on("start", (event, d) => dragstarted(event, d, simulation))
                         .on("drag", dragged)
-                        .on("end", dragended));
+                        .on("end", (event, d) => dragended(event, d, simulation)));
 
             node.append("circle")
                 .attr("r", 8)
@@ -1373,23 +1388,6 @@ th {
                 .attr("dy", "0.35em")
                 .attr("y", 15) // Position text below the circle
                 .text(d => d.name);
-
-            function dragstarted(event, d) {
-                if (!event.active) simulation.alphaTarget(0.3).restart();
-                d.fx = d.x;
-                d.fy = d.y;
-            }
-
-            function dragged(event, d) {
-                d.fx = event.x;
-                d.fy = event.y;
-            }
-
-            function dragended(event, d) {
-                if (!event.active) simulation.alphaTarget(0);
-                d.fx = null;
-                d.fy = null;
-            }
 
             window.addEventListener('resize', () => {
                 const newWidth = svg.node().getBoundingClientRect().width;
