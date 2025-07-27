@@ -27,7 +27,7 @@
   The combination of web application frameworks like
   Shiny for Python[fn:shiny-overview],
   component frameworks like [[#jupyter-widgets][Jupyter Widgets]], and
-  graph visualization libraries integrated with these 
+  graph visualization libraries integrated with these
   offer an attractive possible solution.
   This report explores using different combinations of packages
   to achieve our goals.
@@ -52,16 +52,16 @@
   4. Anything else (e.g. other languages, heavy front-end frameworks).
 
 * Supporting packages
-  
+
 *** Jupyter Widgets
     :PROPERTIES:
     :CUSTOM_ID: jupyter-widgets
     :END:
-    Jupyter widgets, also known as ipywidgets, are interactive HTML widgets for Jupyter notebooks.  
-    They allow developers to create GUI-like elements within notebooks.  
-    Widgets let users interact with plots, images, and data tables, modify inputs, and see results in real time.  
+    Jupyter widgets, also known as ipywidgets, are interactive HTML widgets for Jupyter notebooks.
+    They allow developers to create GUI-like elements within notebooks.
+    Widgets let users interact with plots, images, and data tables, modify inputs, and see results in real time.
     They include components like sliders, buttons, and text boxes,
-    which can link to Python functions and data events, allowing dynamic computation and visualization.  
+    which can link to Python functions and data events, allowing dynamic computation and visualization.
 
     Application frameworks like Bokeh, Dash, and Shiny for Python support
     using Jupyter widgets to add interaction capabilities.
@@ -202,12 +202,12 @@
     - **Basis:* Python library for generating Javascript
     - **Features:* Create stand-alone and interactive d3 charts.
       Supports a range of widely-used chart types.
-    - **Notes:* 
+    - **Notes:*
 *** d3graph
     - https://github.com/erdogant/d3graph
     - **Basis:* Python package
     - **Features:* Simplifies creating networks in D3
-    - **Notes:* 
+    - **Notes:*
 *** ipydagred3
     :PROPERTIES:
     :ID:       53871af9-39da-435f-a93c-9990a53e6148
@@ -829,7 +829,7 @@
       The functionality for manipulating graphs
       after they have been displayed is completely broken and
       has clearly never been tested on even basic uses cases like the one in issue 322.
-        
+
 *** Using ipysigma
 ***** Code
 ******* ipysigma Shiny Core app with full redraw
@@ -996,7 +996,7 @@
 
 ***** Conclusion
       The combination of ipysigma with Shiny for Python is a viable candidate to build on.
-      
+
       Importantly, ipysigma appears to be robust enough to work with.
       Unlike ipycytoscape, the core functionality seems to work,
       and implementing the core functionality needed for output navigation
@@ -1012,7 +1012,7 @@
 
       A secondary downside is that the general appearance is quite "geeky" and less
       polished than the containers available through Bokeh, Plotly, etc.
-      
+
 *** Using pyvis
 ***** pyvis Shiny Core node navigator
 
@@ -1497,7 +1497,7 @@ th {
 
 *** Graph utilities
     We'll need some generic graph utilities; we'll build these on networkx for now.
-    
+
     #+begin_src python :tangle src/navigator/graph_utils.py
       from typing import Any
       import networkx as nx
