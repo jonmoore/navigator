@@ -1105,9 +1105,12 @@
 
         import pandas as pd
 
+        import htmltools
         import shiny
         import shinyswatch
         from shiny import App, ui, render
+        from shiny.module import resolve_id
+        from shiny.render.renderer import Jsonifiable, Renderer
 
         graph_data = {
             "nodes": [
@@ -1168,113 +1171,281 @@
         src_dir = Path(__file__).parent.parent
         www_dir = src_dir / 'www'
 
+        class render_d3graph(Renderer[dict]):
+            """
+            Render a pandas dataframe in d3.
+            """
+            async def transform(self, value: dict) -> Jsonifiable:
+                """
+                Transform a dict representing a graph into a JSONifiable object that can be
+                displayed using D3.
+                """
+                assert isinstance(value, dict)
+                assert set(value) == {'nodes', 'links'}
+
+                return value
+
+        d3_dep = htmltools.HTMLDependency(
+            "d3graph",
+            "0.0.0",
+            source={"subdir": str(www_dir / "gen")},
+            script={"src": "d3GraphComponent.js", "type": "module"},
+            stylesheet={"href": "d3_navigator.css"},
+            all_files=True,
+        )
+
         app_ui = ui.page_fluid(
             ui.tags.head(
                 ui.tags.title("D3.js Directed Graph in Shiny"),
-                ui.tags.script(src="https://d3js.org/d3.v7.min.js"),
-                ui.tags.link(href="gen/d3_navigator.css", rel="stylesheet"),
-                ui.include_js(www_dir / "gen" / "d3_graph.js")
+                d3_dep,
             ),
             ui.div(
-                ui.h2("D3.js Directed Graph Example"),
-                ui.div(
-                        ui.tags.svg(id="d3-graph"),
-                        ui.div(id="tooltip"),
-                        id="graph-container",
-                    ),
-                ui.div(ui.output_ui("d3_graph_output")),
-                ui.div(ui.h3("Selected Node Data"), ui.output_table("dataframe_output")),
+                id=resolve_id("d3Graph"),
+                class_="shiny-d3-graph-output",
             ),
+            ui.h2("D3.js Directed Graph Example"),
+            ui.div(
+                ui.tags.svg(
+                    id="d3-graph",
+                    style="width: 800px; height: 300px; border: 1px solid black;",
+                ),
+                ui.div(id="tooltip"),
+                id="navigator-graph-container",
+            ),
+            ui.div(ui.h3("Selected Node Data"),
+                   ui.output_table("dataframe_output")),
             theme=shinyswatch.theme.cerulean,
-
         )
 
 
         def server(input: shiny.Inputs, output: shiny.Outputs, _session: shiny.Session):
             @output
-            @render.ui
-            def d3_graph_output():
-                return ui.HTML("")
-
-            @output
             @render.table
             def dataframe_output():
                 node_id = input.clicked_node_id()
+                print(f"jm - {node_id=}")
+
                 if node_id and node_id in dataframes:
                     return dataframes[node_id]
                 return pd.DataFrame({"Info": ["Click a node to see its associated DataFrame!"]})
 
+            @render_d3graph
+            def d3Graph():
+                return graph_data
 
         app = App(app_ui, server, static_assets = www_dir)
       #+end_src
 
       #+NAME: d3_core_css
       #+begin_src css :tangle src/www/gen/d3_navigator.css
-body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', sans-serif; }
 
-.node circle {
-    stroke: #fff;
-    stroke-width: 1.5px;
-    transition: all 0.2s ease-in-out; /* Smooth transition for highlight */
-}
+        .node circle {
+            fill: #69b3a2; /* base fill */
+            stroke: #fff;
+            stroke-width: 1.5px;
+            transition: all 0.2s ease-in-out; /* Smooth transition for highlight */
+        }
 
-.node circle.highlighted {
-    stroke: #ff0000; /* Red border for highlight */
-    stroke-width: 3px;
-    fill: #ffcc00; /* Yellow fill for highlight */
-}
+        .node.highlighted circle {
+            stroke: #ff0000; /* Red border for highlight */
+            stroke-width: 3px;
+            fill: #ffcc00; /* Yellow fill for highlight */
+        }
 
-.link {
-    stroke: #999;
-    stroke-opacity: 0.6;
-    stroke-width: 2px;
-    fill: none; /* Ensure links are lines, not filled shapes */
-}
+        .link {
+            stroke: #999;
+            stroke-opacity: 0.6;
+            stroke-width: 2px;
+            fill: none; /* Ensure links are lines, not filled shapes */
+        }
 
-.node text {
-    font-size: 10px;
-    pointer-events: none; /* Prevent text from interfering with drag */
-    text-anchor: middle;
-    fill: #333;
-    transition: all 0.2s ease-in-out; /* Smooth transition for highlight */
-}
+        .node text {
+            font-size: 10px;
+            pointer-events: none; /* Prevent text from interfering with drag */
+            text-anchor: middle;
+            fill: #333;
+            transition: all 0.2s ease-in-out; /* Smooth transition for highlight */
+        }
 
-.node text.highlighted-text {
-    font-weight: bold;
-    fill: #ff0000; /* Red text for highlight */
-}
+        .node text.highlighted-text {
+            font-weight: bold;
+            fill: #ff0000;
+        }
 
-.tooltip {
-    position: absolute;
-    text-align: center;
-    width: auto;
-    height: auto;
-    padding: 8px;
-    background: lightsteelblue;
-    border: 0px;
-    border-radius: 8px;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.2s;
-}
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            width: auto;
+            height: auto;
+            padding: 8px;
+            background: lightsteelblue;
+            border: 0px;
+            border-radius: 8px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-}
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
 
-th, td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-}
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
 
-th {
-    background-color: #f2f2f2;
-}
+        th {
+            background-color: #f2f2f2;
+        }
       #+end_src
 
+      #+NAME: d3_graph_component_js
+      #+begin_src js2 :tangle src/www/gen/d3GraphComponent.js
+        import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm"; // Using d3 v7 ESM
+
+        function update_positions(link, node) {
+            link
+                .attr("x1", d => d.source.x)
+                .attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x)
+                .attr("y2", d => d.target.y);
+            node
+                .attr("transform", d => `translate(${d.x},${d.y})`);
+        }
+
+        if (Shiny) {
+            class NavigatorGraphOutputBinding extends Shiny.OutputBinding {
+                find(scope) {
+                    const function_name = "NavigatorGraphOutputBinding.find";
+                    console.debug(`${function_name}, scope:`, scope);
+                    const found = scope.find(".shiny-d3-graph-output");
+                    console.debug(`${function_name}, found:`, found);
+                    return found;
+                }
+
+                renderValue(el, payload) {
+                    // el - https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement
+                    const function_name = "NavigatorGraphOutputBinding.renderValue";
+                    console.info(`${function_name}, payload:`, payload);
+                    const node_data = payload.nodes;
+                    console.info(`${function_name}, node_data:`, node_data);
+                    const link_data = payload.links;
+                    console.info(`${function_name}, link_data:`, link_data);
+
+                    const svg = d3.select("#d3-graph");
+                    const tooltip = d3.select("#tooltip");
+                    const width = svg.node().getBoundingClientRect().width;
+                    const height = svg.node().getBoundingClientRect().height;
+
+                    console.debug(`${function_name}, svg:`, svg);
+                    console.debug(`${function_name}, tooltip:`, tooltip);
+                    console.debug(`${function_name}, width:`, width);
+                    console.debug(`${function_name}, height:`, height);
+
+                    const nodeRadius = 15;
+                    const node = svg.append("g")
+                          .attr("class", "nodes")
+                          .selectAll("g")
+                          .data(node_data)
+                          .enter().append("g")
+                          .attr("class", "node")
+                    // place the nodes at random positions
+                          .attr("transform", (d, i) => {
+                              const x = Math.random() * (width - nodeRadius * 2) + nodeRadius;
+                              const y = Math.random() * (height - nodeRadius * 2) + nodeRadius;
+                              return `translate(${x}, ${y})`;
+                          })
+                    ;
+
+                    const colorTradeWind = "#69b3a2";
+                    node.append("circle")
+                        .attr("r", nodeRadius)
+                        .attr("fill", colorTradeWind);
+
+                    node.append("text")
+                        .attr("dy", "0.75em")
+                        .attr("y", nodeRadius + 5) // Position text below the circle
+                        .text(d => d.name)
+                        .style("pointer-events", "none") // Make text not interfere with node click
+                    ;
+
+                    // Define arrow markers for directed graph links
+                    svg.append("defs").append("marker")
+                        .attr("id", "arrowhead")
+                        .attr("viewBox", "-0 -5 10 10")
+                        .attr("refX", 15) // Position of the arrowhead relative to the end of the line
+                        .attr("refY", 0)
+                        .attr("orient", "auto")
+                        .attr("markerWidth", 6)
+                        .attr("markerHeight", 6)
+                        .attr("xoverflow", "visible")
+                        .append("path")
+                        .attr("d", "M 0,-5 L 10,0 L 0,5")
+                        .attr("fill", "#999")
+                        .style("stroke", "none");
+
+                    const link = svg.append("g")
+                          .attr("class", "links")
+                          .selectAll("line")
+                          .data(link_data)
+                          .enter().append("line")
+                          .attr("class", "link")
+                          .attr("marker-end", "url(#arrowhead)");
+
+                    const simulation = d3.forceSimulation(node_data)
+                          .force("link", d3.forceLink(link_data).id(d => d.id).distance(100))
+                          .force("charge", d3.forceManyBody().strength(-300))
+                          .force("center", d3.forceCenter(width / 2, height / 2))
+                          .on("tick", () => update_positions(link, node));
+
+                    // record clicks on nodes
+                    node.on("click", function(event, d) {
+                            // 'this' refers to the node element that the event listener is attached to
+                            console.info("node click: this:", this);
+                            console.info("node click: event:", event);
+                            console.info("node click: event.target:", event.target);
+                            console.info("node click: d:", d);
+                            console.info("node click: d.id:", d.id);
+
+                            // Remove highlight from all nodes
+                            d3.selectAll(".node").classed("highlighted", false);
+                            d3.selectAll(".node text").classed("highlighted-text", false);
+
+                            // Add highlight to the clicked node
+                            d3.select(this).classed("highlighted", true);
+                            d3.select(this).select("text").classed("highlighted-text", true);
+
+                            // Let the server know which node was clicked
+                            const clicked_node_id = d.id;
+                            console.info("clicked_node_id:", clicked_node_id);
+                            Shiny.setInputValue("clicked_node_id", d.id);
+                        })
+                        .on("mouseover", function(event, d) {
+                            tooltip.transition()
+                                .duration(200)
+                                .style("opacity", .9);
+                            tooltip.html("Node: " + d.name + "<br/>ID: " + d.id)
+                                .style("left", (event.pageX + 10) + "px")
+                                .style("top", (event.pageY - 28) + "px");
+                        })
+                        .on("mouseout", function(d) {
+                            tooltip.transition()
+                                .duration(500)
+                                .style("opacity", 0);
+                        });
+                }
+            }
+            Shiny.outputBindings.register(
+                new NavigatorGraphOutputBinding(),
+                "shiny-d3-graph-output"
+            );
+        }
+      #+end_src
       #+NAME: d3_core_js
       #+begin_src js2 :tangle src/www/gen/d3_graph.js
         // Update positions of links and nodes on each tick of the simulation
@@ -1328,11 +1499,11 @@ th {
                 .attr("fill", "#999")
                 .style("stroke", "none");
 
-            const simulation = d3.forceSimulation(graph.nodes)
-                  .force("link", d3.forceLink(graph.links).id(d => d.id).distance(100))
-                  .force("charge", d3.forceManyBody().strength(-300))
-                  .force("center", d3.forceCenter(width / 2, height / 2))
-                  .on("tick", () => ticked(link, node));
+            const node = svg.append("g")
+                  .attr("class", "nodes")
+                  .selectAll("g")
+                  .data(graph.nodes)
+                  .enter().append("g");
 
             const link = svg.append("g")
                   .attr("class", "links")
@@ -1342,20 +1513,21 @@ th {
                   .attr("class", "link")
                   .attr("marker-end", "url(#arrowhead)");
 
-            const node = svg.append("g")
-                  .attr("class", "nodes")
-                  .selectAll("g")
-                  .data(graph.nodes)
-                  .enter().append("g")
-                  .call(d3.drag()
-                        .on("start", (event, d) => dragstarted(event, d, simulation))
-                        .on("drag", dragged)
-                        .on("end", (event, d) => dragended(event, d, simulation)));
+            const simulation = d3.forceSimulation(graph.nodes)
+                  .force("link", d3.forceLink(graph.links).id(d => d.id).distance(100))
+                  .force("charge", d3.forceManyBody().strength(-300))
+                  .force("center", d3.forceCenter(width / 2, height / 2));
 
             node.append("circle")
                 .attr("r", 8)
-                .attr("fill", "#69b3a2")
-                .on("click", function(event, d) {
+                .attr("fill", "#69b3a2");
+
+            node.append("text")
+                .attr("dy", "0.35em")
+                .attr("y", 15) // Position text below the circle
+                .text(d => d.name);
+
+            node.on("click", function(event, d) {
                     // Remove highlight from all nodes
                     d3.selectAll(".node circle").classed("highlighted", false);
                     d3.selectAll(".node text").classed("highlighted-text", false);
@@ -1367,7 +1539,7 @@ th {
                     if (typeof Shiny !== 'undefined' && Shiny.setInputValue) {
                         Shiny.setInputValue("clicked_node_id", d.id);
                     } else {
-                        console.warn("Shiny.setInputValue is not available. Ensure Shiny is loaded correctly.");
+                        console.error("Shiny.setInputValue is not available. Ensure Shiny is loaded correctly.");
                     }
                 })
                 .on("mouseover", function(event, d) {
@@ -1384,10 +1556,12 @@ th {
                         .style("opacity", 0);
                 });
 
-            node.append("text")
-                .attr("dy", "0.35em")
-                .attr("y", 15) // Position text below the circle
-                .text(d => d.name);
+            node.call(d3.drag()
+                      .on("start", (event, d) => dragstarted(event, d, simulation))
+                      .on("drag", dragged)
+                      .on("end", (event, d) => dragended(event, d, simulation)));
+
+            simulation.on("tick", () => ticked(link, node));
 
             window.addEventListener('resize', () => {
                 const newWidth = svg.node().getBoundingClientRect().width;
@@ -1399,6 +1573,25 @@ th {
 
             window.dispatchEvent(new Event('resize'));
         }
+
+
+        class NavigatorGraphOutputBinding extends Shiny.OutputBinding {
+            find(scope) {
+                return scope.find("#navigator-graph-container");
+            }
+
+            renderValue(el, payload) {
+                // el - https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement
+                // payload - JSON data
+                console.log(payload);
+            }
+        }
+
+        Shiny.outputBindings.register(
+            new NavigatorGraphOutputBinding(),
+            "shiny-navigator-output-dfg"
+        );
+
 
         document.addEventListener("DOMContentLoaded", function() {
             const graph = {
