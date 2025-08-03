@@ -6,6 +6,9 @@ src/www/gen/
 # exceptions to the org-generated files
 !src/navigator/__init__.py
 
+# temporary files
+/tmp/
+
 # pixi environments
 .pixi
 *.egg-info
