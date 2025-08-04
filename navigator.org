@@ -1635,7 +1635,6 @@
 
       #+NAME: shakespeare_data
       #+begin_src python :tangle src/navigator/shakespeare.py
-
         import pandas as pd
         import networkx as nx
         from itertools import combinations
@@ -1649,7 +1648,15 @@
             Edges connect characters who speak in the same scene.
 
             Args:
-                df: The dataframe.
+                df: The dataframe, with columns:
+                - play_name
+                - genre
+                - act
+                - scene
+                - character
+                - sex
+                - sentence
+                - text
 
             Returns:
                 A NetworkX Graph object with structured node and edge attributes.
@@ -1702,15 +1709,11 @@
                     edge_key = (play_name, char1, char2)
                     sentences_char1 = sentences_by_scene_and_character.loc[play_name, act, scene, char1]
                     sentences_char2 = sentences_by_scene_and_character.loc[play_name, act, scene, char2]
-
-                    # If the edge doesn't exist yet, initialize it.
                     if edge_key not in edge_attributes:
                         edge_attributes[edge_key] = {
                             'play_name': play_name,
                             'interactions': []
                         }
-
-                    # Append the current scene's interaction data.
                     edge_attributes[edge_key]['interactions'].append({
                         'act': act,
                         'scene': scene,
@@ -1742,23 +1745,6 @@
             print(f"jm - {len(graph.edges)=}")
             print(f"jm - {len(graph.nodes)=}")
             print(graph.nodes(data=True))
-        #    print(graph.edges(data=True))
-
-
-        if __name__ == '__main__':
-            main()
-        #     # --- Example of Conversion to JSON ---
-        #     # For a simple JSON representation of the graph structure.
-        #     # import json
-        #     # json_data = nx.node_link_data(graph)
-        #     # with open('shakespeare_graph.json', 'w') as f:
-        #     #     json.dump(json_data, f, indent=2)
-        #
-        #     # --- Example of Conversion to DataFrame ---
-        #     # Convert node attributes to a DataFrame.
-        #     # nodes_df = pd.DataFrame.from_dict(dict(graph.nodes(data=True)), orient='index')
-        #     # print("\n--- Nodes DataFrame ---")
-        #     # print(nodes_df.head())
       #+end_src
 
 * Footnotes
