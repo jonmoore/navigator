@@ -1189,7 +1189,7 @@
             "d3graph",
             "0.0.0",
             source={"subdir": str(www_dir / "gen")},
-            script={"src": "d3GraphComponent.js", "type": "module"},
+            script={"src": "d3_navigator.js", "type": "module"},
             stylesheet={"href": "d3_navigator.css"},
             all_files=True,
         )
@@ -1305,7 +1305,7 @@
       #+end_src
 
       #+NAME: d3_graph_component_js
-      #+begin_src js2 :tangle src/www/gen/d3GraphComponent.js
+      #+begin_src js2 :tangle src/www/gen/d3_navigator.js
         import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm"; // Using d3 v7 ESM
 
         function update_positions(link, node) {
@@ -1445,174 +1445,6 @@
                 "shiny-d3-graph-output"
             );
         }
-      #+end_src
-      #+NAME: d3_core_js
-      #+begin_src js2 :tangle src/www/gen/d3_graph.js
-        // Update positions of links and nodes on each tick of the simulation
-        function ticked(link, node) {
-            link
-                .attr("x1", d => d.source.x)
-                .attr("y1", d => d.source.y)
-                .attr("x2", d => d.target.x)
-                .attr("y2", d => d.target.y);
-
-            node
-                .attr("transform", d => `translate(${d.x},${d.y})`);
-        }
-
-        function dragstarted(event, d, simulation) {
-            if (!event.active) simulation.alphaTarget(0.3).restart();
-            d.fx = d.x;
-            d.fy = d.y;
-        }
-
-        function dragged(event, d) {
-            d.fx = event.x;
-            d.fy = event.y;
-        }
-
-        function dragended(event, d, simulation) {
-            if (!event.active) simulation.alphaTarget(0);
-            d.fx = null;
-            d.fy = null;
-        }
-
-        function initializeD3Graph(graph) {
-            const svg = d3.select("#d3-graph");
-            const tooltip = d3.select("#tooltip");
-
-            const width = svg.node().getBoundingClientRect().width;
-            const height = svg.node().getBoundingClientRect().height;
-
-            // Define arrow markers for directed graph links
-            svg.append("defs").append("marker")
-                .attr("id", "arrowhead")
-                .attr("viewBox", "-0 -5 10 10")
-                .attr("refX", 15) // Position of the arrowhead relative to the end of the line
-                .attr("refY", 0)
-                .attr("orient", "auto")
-                .attr("markerWidth", 6)
-                .attr("markerHeight", 6)
-                .attr("xoverflow", "visible")
-                .append("path")
-                .attr("d", "M 0,-5 L 10,0 L 0,5")
-                .attr("fill", "#999")
-                .style("stroke", "none");
-
-            const node = svg.append("g")
-                  .attr("class", "nodes")
-                  .selectAll("g")
-                  .data(graph.nodes)
-                  .enter().append("g");
-
-            const link = svg.append("g")
-                  .attr("class", "links")
-                  .selectAll("line")
-                  .data(graph.links)
-                  .enter().append("line")
-                  .attr("class", "link")
-                  .attr("marker-end", "url(#arrowhead)");
-
-            const simulation = d3.forceSimulation(graph.nodes)
-                  .force("link", d3.forceLink(graph.links).id(d => d.id).distance(100))
-                  .force("charge", d3.forceManyBody().strength(-300))
-                  .force("center", d3.forceCenter(width / 2, height / 2));
-
-            node.append("circle")
-                .attr("r", 8)
-                .attr("fill", "#69b3a2");
-
-            node.append("text")
-                .attr("dy", "0.35em")
-                .attr("y", 15) // Position text below the circle
-                .text(d => d.name);
-
-            node.on("click", function(event, d) {
-                    // Remove highlight from all nodes
-                    d3.selectAll(".node circle").classed("highlighted", false);
-                    d3.selectAll(".node text").classed("highlighted-text", false);
-
-                    // Add highlight to the clicked node
-                    d3.select(this).classed("highlighted", true);
-                    d3.select(this.parentNode).select("text").classed("highlighted-text", true);
-
-                    if (typeof Shiny !== 'undefined' && Shiny.setInputValue) {
-                        Shiny.setInputValue("clicked_node_id", d.id);
-                    } else {
-                        console.error("Shiny.setInputValue is not available. Ensure Shiny is loaded correctly.");
-                    }
-                })
-                .on("mouseover", function(event, d) {
-                    tooltip.transition()
-                        .duration(200)
-                        .style("opacity", .9);
-                    tooltip.html("Node: " + d.name + "<br/>ID: " + d.id)
-                        .style("left", (event.pageX + 10) + "px")
-                        .style("top", (event.pageY - 28) + "px");
-                })
-                .on("mouseout", function(d) {
-                    tooltip.transition()
-                        .duration(500)
-                        .style("opacity", 0);
-                });
-
-            node.call(d3.drag()
-                      .on("start", (event, d) => dragstarted(event, d, simulation))
-                      .on("drag", dragged)
-                      .on("end", (event, d) => dragended(event, d, simulation)));
-
-            simulation.on("tick", () => ticked(link, node));
-
-            window.addEventListener('resize', () => {
-                const newWidth = svg.node().getBoundingClientRect().width;
-                const newHeight = svg.node().getBoundingClientRect().height;
-                svg.attr("width", newWidth).attr("height", newHeight);
-                simulation.force("center", d3.forceCenter(newWidth / 2, newHeight / 2));
-                simulation.alpha(1).restart();
-            });
-
-            window.dispatchEvent(new Event('resize'));
-        }
-
-
-        class NavigatorGraphOutputBinding extends Shiny.OutputBinding {
-            find(scope) {
-                return scope.find("#navigator-graph-container");
-            }
-
-            renderValue(el, payload) {
-                // el - https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement
-                // payload - JSON data
-                console.log(payload);
-            }
-        }
-
-        Shiny.outputBindings.register(
-            new NavigatorGraphOutputBinding(),
-            "shiny-navigator-output-dfg"
-        );
-
-
-        document.addEventListener("DOMContentLoaded", function() {
-            const graph = {
-                "nodes": [
-                    { "id": "A", "name": "Node A" },
-                    { "id": "B", "name": "Node B" },
-                    { "id": "C", "name": "Node C" },
-                    { "id": "D", "name": "Node D" },
-                    { "id": "E", "name": "Node E" }
-                ],
-                "links": [
-                    { "source": "A", "target": "B" },
-                    { "source": "B", "target": "C" },
-                    { "source": "C", "target": "A" },
-                    { "source": "A", "target": "D" },
-                    { "source": "D", "target": "E" }
-                ]
-            };
-
-            initializeD3Graph(graph);
-        });
       #+end_src
 *** Debugging Shiny
     :PROPERTIES:
