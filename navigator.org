@@ -1092,7 +1092,7 @@
 ***** D3 navigator
       This is a Shiny Core App that displays a graph using D3.
 
-      It's based on Gemini's suggestions
+      It's based on the Tabulator sample for [[id:bb39af16-fa88-43c2-8fe9-7e66c133ff86][Shiny one-off custom components]].
 
       It can be run with
       #+begin_src bash
@@ -1112,6 +1112,21 @@
         from shiny.module import resolve_id
         from shiny.render.renderer import Jsonifiable, Renderer
 
+        import navigator.shakespeare as shakespeare
+
+        src_dir = Path(__file__).parent.parent
+        www_dir = src_dir / 'www'
+        data_dir = src_dir / 'www' / 'data'
+
+        sdf = pd.read_csv(data_dir / 'shakespeare_plays.csv')
+        play_names = sorted(set(sdf['play_name']))
+        print(f"jm - {sdf.head()=}")
+        print(f"jm - {sorted(play_names)=}")
+
+        sdg = shakespeare.build_shakespeare_network(sdf)
+        print(f"jm - {sdg=}")
+
+        print("loaded shakespeare data")
         graph_data = {
             "nodes": [
                 {"id": "A", "name": "Node A"},
@@ -1168,9 +1183,6 @@
             ),
         }
 
-        src_dir = Path(__file__).parent.parent
-        www_dir = src_dir / 'www'
-
         class render_d3graph(Renderer[dict]):
             """
             Render a pandas dataframe in d3.
@@ -1204,10 +1216,16 @@
                 class_="shiny-d3-graph-output",
             ),
             ui.h2("D3.js Directed Graph Example"),
+            ui.input_select(
+                id="play_name",
+                label="Choose a play:",
+                choices=play_names,
+                selected='Hamlet',
+            ),
             ui.div(
                 ui.tags.svg(
                     id="d3-graph",
-                    style="width: 800px; height: 300px; border: 1px solid black;",
+                    style="width: 1200px; height: 600px; border: 1px solid black;",
                 ),
                 ui.div(id="tooltip"),
                 id="navigator-graph-container",
@@ -1223,7 +1241,6 @@
             @render.table
             def dataframe_output():
                 node_id = input.clicked_node_id()
-                print(f"jm - {node_id=}")
 
                 if node_id and node_id in dataframes:
                     return dataframes[node_id]
@@ -1231,9 +1248,187 @@
 
             @render_d3graph
             def d3Graph():
+                play_name = input.play_name()
+                graph_data = {
+                    'nodes': [
+                        {
+                            'id': node[1],
+                            'name': node[1],
+                        }
+                        for node in sdg.nodes
+                        if node[0] == play_name
+                    ],
+                    'links': [
+                        {
+                            'source': edge[0][1],
+                            'target': edge[1][1],
+                        }
+                        for edge in sdg.edges
+                        if edge[0][0] == play_name
+                        ]
+                }
+                print(f"jm - {play_name=}")
+                print(f"jm - {len(graph_data['nodes'])=}")
+                print(f"jm - {len(graph_data['links'])=}")
+                node_ids = set(n['id'] for n in graph_data['nodes'])
+                edge_node_ids = set(edge['source'] for edge in graph_data['links']) | set(edge['target'] for edge in graph_data['links'])
+                print(f"jm - {node_ids=}")
+                print(f"jm - {edge_node_ids=}")
+                print(f"jm - {node_ids-edge_node_ids=}")
+                print(f"jm - {edge_node_ids-node_ids=}")
+
+
+
                 return graph_data
 
         app = App(app_ui, server, static_assets = www_dir)
+      #+end_src
+
+      #+NAME: d3_graph_component_js
+      #+begin_src js2 :tangle src/www/gen/d3_navigator.js
+        import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm"; // Using d3 v7 ESM
+
+        function update_positions(link, node, width, height) {
+            node.attr("transform", d => {
+                const x = d.x = Math.max(10, Math.min(width - 10, d.x));
+                const y = d.y = Math.max(10, Math.min(height - 10, d.y));
+                return `translate(${x},${y})`;
+            });
+
+            link
+                .attr("x1", d => d.source.x)
+                .attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x)
+                .attr("y2", d => d.target.y);
+        }
+
+        if (Shiny) {
+            class NavigatorGraphOutputBinding extends Shiny.OutputBinding {
+                find(scope) {
+                    const found = scope.find(".shiny-d3-graph-output");
+                    return found;
+                }
+
+                renderValue(el, payload) {
+                    const node_data = payload.nodes;
+                    const link_data = payload.links;
+
+                    const svg = d3.select("#d3-graph");
+                    const tooltip = d3.select("#tooltip");
+                    const width = svg.node().getBoundingClientRect().width;
+                    const height = svg.node().getBoundingClientRect().height;
+
+                    const nodeRadius = 15;
+                    const linkGroup = svg.selectAll(".links")
+                        .data([null])
+                        .join("g")
+                        .attr("class", "links");
+                    const nodeGroup = svg.selectAll(".nodes")
+                        .data([null])
+                        .join("g")
+                        .attr("class", "nodes");
+                    const defs = svg.selectAll("defs")
+                          .data([null])
+                          .join("defs");
+
+                    // Use a key function (d.id) to ensure D3 correctly matches data to elements
+                    const node = nodeGroup.selectAll("g")
+                        .data(node_data, d => d.id)
+                        .join(
+                            enter => {
+                                const nodeEnter = enter.append("g")
+                                    .attr("class", "node")
+                                    .attr("transform", d => {
+                                        // Position new nodes randomly within the SVG
+                                        const x = Math.random() * (width - nodeRadius * 2) + nodeRadius;
+                                        const y = Math.random() * (height - nodeRadius * 2) + nodeRadius;
+                                        return `translate(${x}, ${y})`;
+                                    });
+                                nodeEnter.append("circle")
+                                    .attr("r", nodeRadius);
+                                nodeEnter.append("text")
+                                    .attr("dy", "0.75em")
+                                    .attr("y", nodeRadius + 5) // Position text below the circle
+                                    .text(d => d.name)
+                                    .style("pointer-events", "none") // Make text not interfere with node click
+                                ;
+                                return nodeEnter;
+                            },
+                            update => update,
+                            exit => exit.remove()
+                        );
+
+                    const link = linkGroup.selectAll("line")
+                          .data(link_data, d => d.source.id + "-" + d.target.id)
+                          .join("line")
+                          .attr("class", "link")
+                          .attr("marker-end", "url(#arrowhead)");
+
+                    // Define arrow markers for directed graph links
+                    defs.selectAll("marker")
+                        .data([null])
+                        .join("marker")
+                        .attr("id", "arrowhead")
+                        .attr("viewBox", "-0 -5 10 10")
+                        .attr("refX", 15) // Position of the arrowhead relative to the end of the line
+                        .attr("refY", 0)
+                        .attr("orient", "auto")
+                        .attr("markerWidth", 6)
+                        .attr("markerHeight", 6)
+                        .attr("xoverflow", "visible")
+                        .append("path")
+                        .attr("d", "M 0,-5 L 10,0 L 0,5")
+                        .attr("fill", "#999")
+                        .style("stroke", "none");
+
+                    const simulation = d3.forceSimulation(node_data)
+                          .force("link", d3.forceLink(link_data).id(d => d.id).distance(100))
+                          .force("charge", d3.forceManyBody().strength(-300))
+                          .force("center", d3.forceCenter(width / 2, height / 2))
+                          .on("tick", () => update_positions(link, node, width, height));
+
+                    // record clicks on nodes
+                    node.on("click", function(event, d) {
+                            // 'this' refers to the node element that the event listener is attached to
+                            console.debug("node click: this:", this);
+                            console.debug("node click: event:", event);
+                            console.debug("node click: event.target:", event.target);
+                            console.debug("node click: d:", d);
+                            console.debug("node click: d.id:", d.id);
+
+                            // Remove highlight from all nodes
+                            d3.selectAll(".node").classed("highlighted", false);
+                            d3.selectAll(".node text").classed("highlighted-text", false);
+
+                            // Add highlight to the clicked node
+                            d3.select(this).classed("highlighted", true);
+                            d3.select(this).select("text").classed("highlighted-text", true);
+
+                            // Let the server know which node was clicked
+                            const clicked_node_id = d.id;
+                            console.debug("clicked_node_id:", clicked_node_id);
+                            Shiny.setInputValue("clicked_node_id", d.id);
+                        })
+                        .on("mouseover", function(event, d) {
+                            tooltip.transition()
+                                .duration(200)
+                                .style("opacity", .9);
+                            tooltip.html("Node: " + d.name + "<br/>ID: " + d.id)
+                                .style("left", (event.pageX + 10) + "px")
+                                .style("top", (event.pageY - 28) + "px");
+                        })
+                        .on("mouseout", function(d) {
+                            tooltip.transition()
+                                .duration(500)
+                                .style("opacity", 0);
+                        });
+                }
+            }
+            Shiny.outputBindings.register(
+                new NavigatorGraphOutputBinding(),
+                "shiny-d3-graph-output"
+            );
+        }
       #+end_src
 
       #+NAME: d3_core_css
@@ -1241,20 +1436,19 @@
         body { font-family: 'Inter', sans-serif; }
 
         .node circle {
-            fill: #69b3a2; /* base fill */
-            stroke: #fff;
+            fill: #69b3a2;
+            stroke: #000000;
             stroke-width: 1.5px;
             transition: all 0.2s ease-in-out; /* Smooth transition for highlight */
         }
 
         .node.highlighted circle {
-            stroke: #ff0000; /* Red border for highlight */
             stroke-width: 3px;
-            fill: #ffcc00; /* Yellow fill for highlight */
+            fill: #ff0000;
         }
 
         .link {
-            stroke: #999;
+            stroke: #909090;
             stroke-opacity: 0.6;
             stroke-width: 2px;
             fill: none; /* Ensure links are lines, not filled shapes */
@@ -1301,149 +1495,6 @@
 
         th {
             background-color: #f2f2f2;
-        }
-      #+end_src
-
-      #+NAME: d3_graph_component_js
-      #+begin_src js2 :tangle src/www/gen/d3_navigator.js
-        import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm"; // Using d3 v7 ESM
-
-        function update_positions(link, node) {
-            link
-                .attr("x1", d => d.source.x)
-                .attr("y1", d => d.source.y)
-                .attr("x2", d => d.target.x)
-                .attr("y2", d => d.target.y);
-            node
-                .attr("transform", d => `translate(${d.x},${d.y})`);
-        }
-
-        if (Shiny) {
-            class NavigatorGraphOutputBinding extends Shiny.OutputBinding {
-                find(scope) {
-                    const function_name = "NavigatorGraphOutputBinding.find";
-                    console.debug(`${function_name}, scope:`, scope);
-                    const found = scope.find(".shiny-d3-graph-output");
-                    console.debug(`${function_name}, found:`, found);
-                    return found;
-                }
-
-                renderValue(el, payload) {
-                    // el - https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement
-                    const function_name = "NavigatorGraphOutputBinding.renderValue";
-                    console.info(`${function_name}, payload:`, payload);
-                    const node_data = payload.nodes;
-                    console.info(`${function_name}, node_data:`, node_data);
-                    const link_data = payload.links;
-                    console.info(`${function_name}, link_data:`, link_data);
-
-                    const svg = d3.select("#d3-graph");
-                    const tooltip = d3.select("#tooltip");
-                    const width = svg.node().getBoundingClientRect().width;
-                    const height = svg.node().getBoundingClientRect().height;
-
-                    console.debug(`${function_name}, svg:`, svg);
-                    console.debug(`${function_name}, tooltip:`, tooltip);
-                    console.debug(`${function_name}, width:`, width);
-                    console.debug(`${function_name}, height:`, height);
-
-                    const nodeRadius = 15;
-                    const node = svg.append("g")
-                          .attr("class", "nodes")
-                          .selectAll("g")
-                          .data(node_data)
-                          .enter().append("g")
-                          .attr("class", "node")
-                    // place the nodes at random positions
-                          .attr("transform", (d, i) => {
-                              const x = Math.random() * (width - nodeRadius * 2) + nodeRadius;
-                              const y = Math.random() * (height - nodeRadius * 2) + nodeRadius;
-                              return `translate(${x}, ${y})`;
-                          })
-                    ;
-
-                    const colorTradeWind = "#69b3a2";
-                    node.append("circle")
-                        .attr("r", nodeRadius)
-                        .attr("fill", colorTradeWind);
-
-                    node.append("text")
-                        .attr("dy", "0.75em")
-                        .attr("y", nodeRadius + 5) // Position text below the circle
-                        .text(d => d.name)
-                        .style("pointer-events", "none") // Make text not interfere with node click
-                    ;
-
-                    // Define arrow markers for directed graph links
-                    svg.append("defs").append("marker")
-                        .attr("id", "arrowhead")
-                        .attr("viewBox", "-0 -5 10 10")
-                        .attr("refX", 15) // Position of the arrowhead relative to the end of the line
-                        .attr("refY", 0)
-                        .attr("orient", "auto")
-                        .attr("markerWidth", 6)
-                        .attr("markerHeight", 6)
-                        .attr("xoverflow", "visible")
-                        .append("path")
-                        .attr("d", "M 0,-5 L 10,0 L 0,5")
-                        .attr("fill", "#999")
-                        .style("stroke", "none");
-
-                    const link = svg.append("g")
-                          .attr("class", "links")
-                          .selectAll("line")
-                          .data(link_data)
-                          .enter().append("line")
-                          .attr("class", "link")
-                          .attr("marker-end", "url(#arrowhead)");
-
-                    const simulation = d3.forceSimulation(node_data)
-                          .force("link", d3.forceLink(link_data).id(d => d.id).distance(100))
-                          .force("charge", d3.forceManyBody().strength(-300))
-                          .force("center", d3.forceCenter(width / 2, height / 2))
-                          .on("tick", () => update_positions(link, node));
-
-                    // record clicks on nodes
-                    node.on("click", function(event, d) {
-                            // 'this' refers to the node element that the event listener is attached to
-                            console.info("node click: this:", this);
-                            console.info("node click: event:", event);
-                            console.info("node click: event.target:", event.target);
-                            console.info("node click: d:", d);
-                            console.info("node click: d.id:", d.id);
-
-                            // Remove highlight from all nodes
-                            d3.selectAll(".node").classed("highlighted", false);
-                            d3.selectAll(".node text").classed("highlighted-text", false);
-
-                            // Add highlight to the clicked node
-                            d3.select(this).classed("highlighted", true);
-                            d3.select(this).select("text").classed("highlighted-text", true);
-
-                            // Let the server know which node was clicked
-                            const clicked_node_id = d.id;
-                            console.info("clicked_node_id:", clicked_node_id);
-                            Shiny.setInputValue("clicked_node_id", d.id);
-                        })
-                        .on("mouseover", function(event, d) {
-                            tooltip.transition()
-                                .duration(200)
-                                .style("opacity", .9);
-                            tooltip.html("Node: " + d.name + "<br/>ID: " + d.id)
-                                .style("left", (event.pageX + 10) + "px")
-                                .style("top", (event.pageY - 28) + "px");
-                        })
-                        .on("mouseout", function(d) {
-                            tooltip.transition()
-                                .duration(500)
-                                .style("opacity", 0);
-                        });
-                }
-            }
-            Shiny.outputBindings.register(
-                new NavigatorGraphOutputBinding(),
-                "shiny-d3-graph-output"
-            );
         }
       #+end_src
 *** Debugging Shiny
@@ -1578,6 +1629,138 @@
 
         return graph.subgraph(subgraph_nodes)
     #+end_src
+
+*** Data providers
+***** Shakespeare data
+
+      #+NAME: shakespeare_data
+      #+begin_src python :tangle src/navigator/shakespeare.py
+
+        import pandas as pd
+        import networkx as nx
+        from itertools import combinations
+        from typing import Any
+
+        def build_shakespeare_network(df: pd.DataFrame) -> nx.Graph:
+            """
+            Constructs a NetworkX graph representing character interactions in Shakespeare's plays.
+
+            Nodes represent a unique character within a specific play (e.g., 'play-name-character').
+            Edges connect characters who speak in the same scene.
+
+            Args:
+                df: The dataframe.
+
+            Returns:
+                A NetworkX Graph object with structured node and edge attributes.
+            """
+            required_columns = set("play_name,genre,character,act,scene,sentence,text,sex".split(','))
+            assert set(df.columns) > required_columns
+
+            # Group by play, character, and sex to get a summary for each character node.
+            character_data = df.groupby(['play_name', 'character', 'sex']).agg(
+                num_sentences=('sentence', 'count'),
+                num_acts=('act', 'nunique')
+            ).reset_index()
+
+            # Add the number of unique scenes.
+            scenes_per_character = df.groupby(['play_name', 'character', 'act', 'scene']).size().reset_index(name='_count')
+            scenes_per_character = scenes_per_character.groupby(['play_name', 'character']).size().reset_index(name='num_scenes')
+
+            character_data = character_data.merge(scenes_per_character, on=['play_name', 'character'])
+
+            # Prepare a dictionary for node attributes, keyed by the unique node ID.
+            node_attributes: dict[tuple[str, str], dict[str, Any]] = {}
+            for _, row in character_data.iterrows():
+                node_id = (row['play_name'], row['character'])
+                node_attributes[node_id] = {
+                    'play_name': row['play_name'],
+                    'character': row['character'],
+                    'num_acts': row['num_acts'],
+                    'num_scenes': row['num_scenes'],
+                    'num_sentences': row['num_sentences'],
+                    'sex': row['sex']
+                }
+
+            # --- 2. Process Edge Data ---
+            # Find all interactions (characters speaking in the same scene).
+            # Group by the scene identifier to find co-occurring characters.
+            interactions = df.groupby(['play_name', 'act', 'scene'])['character'].apply(set).reset_index(name='characters_in_scene')
+
+            edge_attributes: dict[tuple[str,str,str], dict[str, Any]] = {}
+
+            sentences_by_scene_and_character = df.groupby(['play_name', 'act', 'scene', 'character']).size()
+            for _, row in interactions.iterrows():
+                play_name = row['play_name']
+                act = row['act']
+                scene = row['scene']
+
+                characters_in_scene = row['characters_in_scene']
+
+                # Get all unique pairs of characters in this scene.
+                for char1, char2 in combinations(set(characters_in_scene), 2):
+                    edge_key = (play_name, char1, char2)
+                    sentences_char1 = sentences_by_scene_and_character.loc[play_name, act, scene, char1]
+                    sentences_char2 = sentences_by_scene_and_character.loc[play_name, act, scene, char2]
+
+                    # If the edge doesn't exist yet, initialize it.
+                    if edge_key not in edge_attributes:
+                        edge_attributes[edge_key] = {
+                            'play_name': play_name,
+                            'interactions': []
+                        }
+
+                    # Append the current scene's interaction data.
+                    edge_attributes[edge_key]['interactions'].append({
+                        'act': act,
+                        'scene': scene,
+                        'sentences_char1': sentences_char1,
+                        'sentences_char2': sentences_char2
+                    })
+
+            # --- 3. Build the NetworkX Graph ---
+            G = nx.Graph()
+
+            for node_id, attributes in node_attributes.items():
+                G.add_node(node_id, **attributes)
+
+            for edge_key, attributes in edge_attributes.items():
+                play, char1, char2 = edge_key
+                G.add_edge((play, char1), (play, char2), **attributes)
+
+            return G
+
+        def main():
+            import sys
+
+            if len(sys.argv) != 2:
+                print("Usage: python script.py <path_to_csv>")
+                sys.exit(1)
+            path_to_csv = sys.argv[1]
+            df = pd.read_csv(path_to_csv)
+            graph = build_shakespeare_network(df)
+            print(f"jm - {len(graph.edges)=}")
+            print(f"jm - {len(graph.nodes)=}")
+            print(graph.nodes(data=True))
+        #    print(graph.edges(data=True))
+
+
+        if __name__ == '__main__':
+            main()
+        #     # --- Example of Conversion to JSON ---
+        #     # For a simple JSON representation of the graph structure.
+        #     # import json
+        #     # json_data = nx.node_link_data(graph)
+        #     # with open('shakespeare_graph.json', 'w') as f:
+        #     #     json.dump(json_data, f, indent=2)
+        #
+        #     # --- Example of Conversion to DataFrame ---
+        #     # Convert node attributes to a DataFrame.
+        #     # nodes_df = pd.DataFrame.from_dict(dict(graph.nodes(data=True)), orient='index')
+        #     # print("\n--- Nodes DataFrame ---")
+        #     # print(nodes_df.head())
+      #+end_src
+
 * Footnotes
   :PROPERTIES:
   :CUSTOM_ID: footnotes
