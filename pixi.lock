@@ -127,6 +127,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/overrides-7.7.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/packaging-24.2-pyhd8ed1ab_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/pandas-2.2.3-py313ha87cce1_3.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/pandas-stubs-2.3.0.250703-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pandocfilters-1.5.0-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/parso-0.8.4-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pexpect-4.9.0-pyhd8ed1ab_1.conda
@@ -182,6 +183,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/traitlets-5.14.3-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/traittypes-0.2.1-pyh9f0ad1d_2.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/types-python-dateutil-2.9.0.20241206-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/types-pytz-2025.2.0.20250516-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/typing-extensions-4.13.0-h9fa5a19_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/typing_extensions-4.13.0-pyh29332c3_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/typing_utils-0.1.0-pyhd8ed1ab_1.conda
@@ -1604,7 +1606,7 @@ packages:
 - pypi: .
   name: navigator
   version: 0.1.0
-  sha256: 0c0a401670a422c8b9acc207b2fda2b18f2dd840d20581cd1065da36443e19cf
+  sha256: 6499742cd9a7f2db6f59aa051d3f08a606d0d9fe5602afebdadf05328dc3993d
   requires_dist:
   - ipysigma>=0.24.5,<0.25
   - shinyswatch>=0.9.0,<0.10
@@ -1871,6 +1873,19 @@ packages:
   - pkg:pypi/pandas?source=hash-mapping
   size: 15449675
   timestamp: 1744431142188
+- conda: https://conda.anaconda.org/conda-forge/noarch/pandas-stubs-2.3.0.250703-pyhd8ed1ab_0.conda
+  sha256: a799c0a3305cb039d65c3c0ce947bdba2b3af6c4037c84b64f5c2e8582efd29e
+  md5: 8c104fd98aeb21b03900a9e6164db62c
+  depends:
+  - numpy >=1.26.0
+  - python >=3.10
+  - types-pytz >=2022.1.1
+  license: BSD-3-Clause
+  license_family: BSD
+  purls:
+  - pkg:pypi/pandas-stubs?source=hash-mapping
+  size: 98362
+  timestamp: 1751552041434
 - conda: https://conda.anaconda.org/conda-forge/noarch/pandocfilters-1.5.0-pyhd8ed1ab_0.tar.bz2
   sha256: 2bb9ba9857f4774b85900c2562f7e711d08dd48e2add9bee4e1612fbee27e16f
   md5: 457c2c8c08e54905d6954e79cb5b5db9
@@ -2606,6 +2621,16 @@ packages:
   - pkg:pypi/types-python-dateutil?source=hash-mapping
   size: 22104
   timestamp: 1733612458611
+- conda: https://conda.anaconda.org/conda-forge/noarch/types-pytz-2025.2.0.20250516-pyhd8ed1ab_0.conda
+  sha256: feabb4bf7f18285ba041a61d32f30336455f8b53d773c92fd5fddd34188918d6
+  md5: 795bb35771205d19d6ff110b5d0eb83f
+  depends:
+  - python >=3.9
+  license: Apache-2.0 AND MIT
+  purls:
+  - pkg:pypi/types-pytz?source=hash-mapping
+  size: 19677
+  timestamp: 1747397547475
 - conda: https://conda.anaconda.org/conda-forge/noarch/typing-extensions-4.13.0-h9fa5a19_1.conda
   sha256: 4dc1002493f05bf4106e09f0de6df57060c9aab97ad709392ab544ceb62faadd
   md5: 3fbcc45b908040dca030d3f78ed9a212
