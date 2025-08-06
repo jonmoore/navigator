@@ -1,5 +1,5 @@
 # org-generated files
-/*.html
+# /*.html
 src/navigator/*.py
 src/www/gen/
 

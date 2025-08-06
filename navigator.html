@@ -1,0 +1,2124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2025-08-06 Wed 00:31 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Building a Graph Navigator in Python</title>
+<meta name="author" content="Jonathan Moore" />
+<meta name="generator" content="Org Mode" />
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/readtheorg.css"/>
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/search.css"/>
+<link rel="stylesheet" type="text/css" href="src/www/patches.css"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/search.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/readtheorg.js"></script>
+</head>
+<body>
+<div id="content" class="content">
+<h1 class="title">Building a Graph Navigator in Python</h1>
+<div id="table-of-contents" role="doc-toc">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents" role="doc-toc">
+<ul>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#org41a6df8">Targets</a></li>
+<li><a href="#org5f18465">Supporting packages</a>
+<ul>
+<li><a href="#jupyter-widgets">Jupyter Widgets</a></li>
+<li><a href="#cytoscape-js">Cytoscape.js</a></li>
+<li><a href="#shinywidgets">shinywidgets</a></li>
+<li><a href="#ipycytoscape">ipycytoscape</a></li>
+<li><a href="#org7e027fa">ipysigma</a></li>
+<li><a href="#org9eeb36e">Pyvis</a></li>
+<li><a href="#orge697c5e">D3</a></li>
+<li><a href="#org222433b">d3blocks</a></li>
+<li><a href="#org9bdbafd">d3graph</a></li>
+<li><a href="#orgcfb3aad">ipydagred3</a></li>
+<li><a href="#orge5bd654">ipyelk</a></li>
+<li><a href="#org93b88f0">Dash</a></li>
+<li><a href="#orgaedf332">Bokeh</a></li>
+<li><a href="#org708aade">Altair</a></li>
+</ul>
+</li>
+<li><a href="#methods-for-creating-custom-components-in-shiny-for-python">Using Shiny</a>
+<ul>
+<li><a href="#org2a5ea21">Ways to extend Shiny</a>
+<ul>
+<li><a href="#org5101769">Including JavaScript directly</a></li>
+<li><a href="#orgc640219">One-off custom components</a>
+<ul>
+<li><a href="#org5f19267">JavaScript output binding</a></li>
+<li><a href="#orgeffbfc4">Python server-side code</a></li>
+</ul>
+</li>
+<li><a href="#org41716a1">Custom component packages</a></li>
+</ul>
+</li>
+<li><a href="#techniques-for-wrapping-cytoscapejs-for-shiny-for-python">Using Cytoscape.js</a>
+<ul>
+<li><a href="#org9686f13">Code</a>
+<ul>
+<li><a href="#orgcdbc5e8">Ipyleaflet Shiny Express app</a></li>
+<li><a href="#org0316e03">Cytoscape utils</a></li>
+<li><a href="#org4bf71ef">Cytoscape Shiny Express app with full redraw</a></li>
+<li><a href="#app-core-ipycyto-nx-full">Cytoscape Shiny Core app with full redraw</a></li>
+<li><a href="#app-core-ipycyto-cyto-full">Cytoscape Shiny Core app with full redraw, no networkx</a></li>
+<li><a href="#org42ac3ac">Ipyleaflet Shiny Core app with incremental redraw</a></li>
+<li><a href="#org8ddd3da">Cytoscape Shiny Core app with incremental redraw</a></li>
+</ul>
+</li>
+<li><a href="#org4d609a0">Conclusion</a></li>
+</ul>
+</li>
+<li><a href="#orgd837a33">Using ipysigma</a>
+<ul>
+<li><a href="#org97a055a">Code</a>
+<ul>
+<li><a href="#org1cfddf4">ipysigma Shiny Core app with full redraw</a></li>
+<li><a href="#orga564766">ipysigma Shiny Core node navigator</a></li>
+</ul>
+</li>
+<li><a href="#org31186a9">Conclusion</a></li>
+</ul>
+</li>
+<li><a href="#org27e7009">Using pyvis</a>
+<ul>
+<li><a href="#org1bd80bf">pyvis Shiny Core node navigator</a></li>
+<li><a href="#org9ecb917">Conclusion</a></li>
+</ul>
+</li>
+<li><a href="#org2faada5">D3</a>
+<ul>
+<li><a href="#org7a062c2">D3 navigator</a></li>
+</ul>
+</li>
+<li><a href="#orgfd941b3">Debugging Shiny</a>
+<ul>
+<li><a href="#org971cc7d">Websockets logging</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#org0336711">Utilities</a>
+<ul>
+<li><a href="#org3aead1c">Generic utilities</a></li>
+<li><a href="#orgb695e04">Graph utilities</a></li>
+<li><a href="#org0bcf899">Data providers</a>
+<ul>
+<li><a href="#orga5dc3f8">Shakespeare data</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-introduction" class="outline-2">
+<h2 id="introduction">Introduction</h2>
+<div class="outline-text-2" id="text-introduction">
+<p>
+Developing browser-based applications for
+the exploration and visualization of directed acyclic graphs (DAGs)
+is a significant challenge in Python.
+The combination of web application frameworks like
+Shiny for Python<sup><a id="fnr.shiny-overview" class="footref" href="#fn.shiny-overview" role="doc-backlink">1</a></sup>,
+component frameworks like <a href="#jupyter-widgets">Jupyter Widgets</a>, and
+graph visualization libraries integrated with these
+offer an attractive possible solution.
+This report explores using different combinations of packages
+to achieve our goals.
+</p>
+</div>
+</div>
+<div id="outline-container-org41a6df8" class="outline-2">
+<h2 id="org41a6df8">Targets</h2>
+<div class="outline-text-2" id="text-org41a6df8">
+<p>
+We want to create an application that, in rough priority order:
+</p>
+<ol class="org-ol">
+<li>Displays a directed acyclic graph</li>
+<li>Supports user interactions driving server-side actions</li>
+<li>Supports user interactions driving UI elements mediated by server-side code</li>
+<li>Supports the above with incremental redrawing of updated UI elements</li>
+</ol>
+
+<p>
+Also, our preferred order for architectures is:
+</p>
+<ol class="org-ol">
+<li>Primarily Python and server-side driven, with generated front-end Javascript,
+e.g. Shiny for Python, Bokeh or Plotly Dash.</li>
+<li>As above but with R rather than Python (i.e. R Shiny).</li>
+<li>Primarily front-end driven, with lightweight Javascript or Typescript calling
+into a mostly separate back-end API written in Python.  A simple D3 or React
+front-end might be a candidate here.</li>
+<li>Anything else (e.g. other languages, heavy front-end frameworks).</li>
+</ol>
+</div>
+</div>
+<div id="outline-container-org5f18465" class="outline-2">
+<h2 id="org5f18465">Supporting packages</h2>
+<div class="outline-text-2" id="text-org5f18465">
+</div>
+<div id="outline-container-jupyter-widgets" class="outline-3">
+<h3 id="jupyter-widgets">Jupyter Widgets</h3>
+<div class="outline-text-3" id="text-jupyter-widgets">
+<p>
+Jupyter widgets, also known as ipywidgets, are interactive HTML widgets for Jupyter notebooks.
+They allow developers to create GUI-like elements within notebooks.
+Widgets let users interact with plots, images, and data tables, modify inputs, and see results in real time.
+They include components like sliders, buttons, and text boxes,
+which can link to Python functions and data events, allowing dynamic computation and visualization.
+</p>
+
+<p>
+Application frameworks like Bokeh, Dash, and Shiny for Python support
+using Jupyter widgets to add interaction capabilities.
+This lets developers build browser-based applications with
+the same widget components that are used in Jupyter notebook environments.
+</p>
+</div>
+</div>
+<div id="outline-container-cytoscape-js" class="outline-3">
+<h3 id="cytoscape-js">Cytoscape.js</h3>
+<div class="outline-text-3" id="text-cytoscape-js">
+<p>
+Cytoscape.js (<a href="https://js.cytoscape.org/">https://js.cytoscape.org/</a>) is an open-source JavaScript library
+for visualizing and analyzing network data.
+It serves as a building block for
+creating interactive network visualizations in web browsers<sup><a id="fnr.cytoscapejs-and-cytoscape" class="footref" href="#fn.cytoscapejs-and-cytoscape" role="doc-backlink">2</a></sup>.
+It's optimized, has no external dependencies, and works with most modern browsers.
+Features include pan and zoom, node and edge styling, layout algorithms,
+and support for graph theory algorithms.
+</p>
+
+<p>
+Core to Cytoscape.js is the graph instance, initialized with a DOM container,
+an array of elements (nodes and edges), styling rules, and a layout algorithm.
+It uses a JSON format to represent graph data,
+defining nodes and edges as JavaScript objects
+with unique identifiers and source-target relationships.
+CSS-based styling allows customization of nodes and edges based on data attributes.
+The library provides an API for programmatic interaction, including
+modifying elements, applying layouts, and managing user interactions.
+Numerous examples and demos available online help showcase its capabilities.
+</p>
+</div>
+</div>
+<div id="outline-container-shinywidgets" class="outline-3">
+<h3 id="shinywidgets">shinywidgets</h3>
+<div class="outline-text-3" id="text-shinywidgets">
+<p>
+The shinywidgets Python package (<a href="https://shiny.posit.co/py/docs/jupyter-widgets.html">https://shiny.posit.co/py/docs/jupyter-widgets.html</a>)
+enables the integration of ipywidgets (Jupyter Widgets) into Shiny for Python applications.
+It is part of the ipywidgets ecosystem,
+in which popular Python packages provide interactive widgets including:
+</p>
+<ul class="org-ul">
+<li>Visualization, with tools like Altair, Bokeh, and Plotly</li>
+<li>Mapping, featuring Pydeck and ipyleaflet</li>
+<li>Data display, utilizing ipydatagrid and ipysheet</li>
+<li>3D rendering, through ipyvolume and pythreejs</li>
+<li>Media, with ipywebrtc</li>
+</ul>
+
+<p>
+This integration allows for
+seamless rendering, efficient updates, and responsive user interactions
+within Shiny applications using ipywidgets.
+</p>
+</div>
+</div>
+<div id="outline-container-ipycytoscape" class="outline-3">
+<h3 id="ipycytoscape">ipycytoscape</h3>
+<div class="outline-text-3" id="text-ipycytoscape">
+<p>
+ipycytoscape (<a href="https://ipycytoscape.readthedocs.io/en/master/">https://ipycytoscape.readthedocs.io/en/master/</a>)
+is an interactive widget for Jupyter notebooks that
+leverages the Cytoscape.js library
+to provide dynamic graph visualizations.
+Its target users are data scientists and researchers who work with network data,
+as it allows users to create, interact with, and
+customize graphical representations of network structures
+using Jupyter widgets.  It supports interactivity by allowing the user to bind actions to graph events,
+like clicks or node selections.
+</p>
+</div>
+</div>
+<div id="outline-container-org7e027fa" class="outline-3">
+<h3 id="org7e027fa">ipysigma</h3>
+<div class="outline-text-3" id="text-org7e027fa">
+<p>
+ipysigma is a Jupyter widget built on Sigma.js,
+designed to render interactive network visualizations effortlessly.
+It integrates with popular Python libraries such as networkx and igraph,
+allowing users to map graph structures and metrics into visual formats.
+ipysigma emphasizes customizable visualization features,
+focusing on node and edge properties like color, size, and shape,
+while supporting efficient rendering of large graphs.
+It also offers interactive capabilities,
+such as synchronized views for comparing features within the same graph.
+</p>
+
+<p>
+For further information, you can visit
+</p>
+<ul class="org-ul">
+<li>the <a href="https://github.com/medialab/ipysigma">ipysigma GitHub repository</a> and</li>
+<li>the <a href="https://pypi.org/project/ipysigma/">PyPI page for ipysigma</a>.</li>
+<li>this <a href="https://archive.fosdem.org/2023/schedule/event/graph_ipysigma/">talk at FOSDEM 2023</a></li>
+</ul>
+
+<p>
+ipysigma's main use cases are for exploring graph structure and data
+rather than graph-driven interactivity which may not be a good fit here.
+</p>
+</div>
+</div>
+<div id="outline-container-org9eeb36e" class="outline-3">
+<h3 id="org9eeb36e">Pyvis</h3>
+<div class="outline-text-3" id="text-org9eeb36e">
+<ul class="org-ul">
+<li><b>Basis:</b> Wraps the vis.js JavaScript library.</li>
+<li><b>Features:</b> Designed to make creating interactive network graphs easy
+with just a few lines of Python code.
+It allows for interactive exploration and physics adjustments directly
+within a Jupyter notebook or exported HTML file.</li>
+<li><b>Links:</b>
+<ul class="org-ul">
+<li><a href="https://pyvis.readthedocs.io/en/latest/">https://pyvis.readthedocs.io/en/latest/</a></li>
+<li><a href="https://arxiv.org/abs/2006.04951">https://arxiv.org/abs/2006.04951</a></li>
+</ul></li>
+<li><b>Note:</b>
+<ul class="org-ul">
+<li>Impressive interactivity capabilities,
+including a built-in control panel to control layout parameters.</li>
+<li>Doesn't have a native option to display using ipywidgets.
+There is a way to display in a Jupyter notebook
+by changing the arguments to the constructor.</li>
+<li>It is possible to include pyvis components in Shiny directly,
+without using py-shinywidgets,
+as noted in this response to a request for support in py-shinywidgets:
+<a href="https://github.com/posit-dev/py-shinywidgets/issues/63">https://github.com/posit-dev/py-shinywidgets/issues/63</a>.</li>
+</ul></li>
+<li><b>Conclusion:</b>
+<ul class="org-ul">
+<li>Displays graphs using an external HTML file, so rejected.</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orge697c5e" class="outline-3">
+<h3 id="orge697c5e">D3</h3>
+<div class="outline-text-3" id="text-orge697c5e">
+<ul class="org-ul">
+<li><b>Basis:</b> Pure JavaScript library</li>
+<li><b>Features:</b> Provides a highly customizable framework for interactive visualizations.
+Low-level in terms of the graphical primitives it offers,
+but high-level in that it provides supporting tooling and offers
+a way to compose sophisticated visualizations from fairly simple elements.</li>
+<li><b>Note:</b>
+<ul class="org-ul">
+<li>Writing "ground-up" visualizations with D3 is actually quite easy,
+even for someone not familiar with Javascript if using an LLM coding assistant.
+The resulting code can be directly embedded in HTML and
+deployed anywhere that will accept fragments of generic HTML documents,
+e.g. Confluence.</li>
+<li>Using D3 directly would essentially be a two-language approach
+with Javascript on the front end and Python on the back end.
+The front-end Javascript can also be extended to call external services,
+e.g. to get data or to trigger server-side calculations.
+The main session state and focus of the design
+moves partly into the Jaavscript world in this approach.</li>
+<li>This was an approach I hadn't taken seriously until
+playing around with it in Confluence, and calling out to external data sources.
+Language model support for wiring up the boilerplate to get started with
+was especially helpful.</li>
+<li>Other UI elements would still have to come from somewhere,
+e.g. 1) Shiny, Dash or similar, 2) a javascript framework like react, or 3)
+something like htmx.</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org222433b" class="outline-3">
+<h3 id="org222433b">d3blocks</h3>
+<div class="outline-text-3" id="text-org222433b">
+<ul class="org-ul">
+<li><a href="https://github.com/d3blocks/d3blocks">https://github.com/d3blocks/d3blocks</a></li>
+<li><b>*Basis:</b> Python library for generating Javascript</li>
+<li><b>*Features:</b> Create stand-alone and interactive d3 charts.
+Supports a range of widely-used chart types.</li>
+<li><b>*Notes:</b></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org9bdbafd" class="outline-3">
+<h3 id="org9bdbafd">d3graph</h3>
+<div class="outline-text-3" id="text-org9bdbafd">
+<ul class="org-ul">
+<li><a href="https://github.com/erdogant/d3graph">https://github.com/erdogant/d3graph</a></li>
+<li><b>*Basis:</b> Python package</li>
+<li><b>*Features:</b> Simplifies creating networks in D3</li>
+<li><b>*Notes:</b></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgcfb3aad" class="outline-3">
+<h3 id="orgcfb3aad">ipydagred3</h3>
+<div class="outline-text-3" id="text-orgcfb3aad">
+<ul class="org-ul">
+<li><b>Basis:</b> Uses dagre-d3 library.</li>
+<li><b>Features:</b> Specifically designed for drawing Directed Acyclic Graphs (DAGs) within JupyterLab.</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orge5bd654" class="outline-3">
+<h3 id="orge5bd654">ipyelk</h3>
+<div class="outline-text-3" id="text-orge5bd654">
+<ul class="org-ul">
+<li><b>Basis:</b> Uses the Eclipse Layout Kernel (ELK) via elkjs.</li>
+<li><b>Features:</b> Provides sophisticated layout algorithms, potentially useful for complex diagrams.
+Mentioned as having potential for features like collapsing/expanding subgraphs.</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org93b88f0" class="outline-3">
+<h3 id="org93b88f0">Dash</h3>
+<div class="outline-text-3" id="text-org93b88f0">
+<ul class="org-ul">
+<li><b>Basis:</b> Built on Plotly.js.</li>
+<li><b>Features:</b> A very versatile library for creating a wide range of interactive plots, including
+network graphs, often using NetworkX data structures as input.
+It offers extensive customization and works seamlessly in Jupyter notebooks and Dash web applications.
+You can create interactive scatter plots for nodes and line plots for edges.</li>
+<li><b>Note:</b>
+<ul class="org-ul">
+<li>Search results highlight Plotly frequently for general interactive visualizations in Jupyter.</li>
+<li>Plotly has dedicated support for cytoscape through <a href="https://dash.plotly.com/cytoscape/">Dash Cytoscape</a>.
+The documentation describes how to
+use callbacks triggered by clicks to add and remove nodes.
+This seems to be dong using Dash's own facilities for managing
+inputs, outputs and state
+rather than using the Cytoscape graph.
+Presumably the graph is redrawn each time,
+unless they have a workaround for Cytoscape's bugs.</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgaedf332" class="outline-3">
+<h3 id="orgaedf332">Bokeh</h3>
+<div class="outline-text-3" id="text-orgaedf332">
+<ul class="org-ul">
+<li><b>Basis:</b> Bokeh's own JS library.</li>
+<li><b>Features:</b> Excellent for creating interactive, web-based visualizations, including network graphs.
+Known for high-performance interactivity, handling large datasets,
+and streaming data capabilities. Integrates well with Jupyter.</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org708aade" class="outline-3">
+<h3 id="org708aade">Altair</h3>
+<div class="outline-text-3" id="text-org708aade">
+<ul class="org-ul">
+<li><b>Basis:</b> Built on Vega-Lite, a declarative grammar.</li>
+<li><b>Features:</b> Focuses on a declarative approach, simplifying the creation
+of complex statistical visualizations.
+Does not directly support network graphs, although
+the <a href="https://altair-viz.github.io/getting_started/resources.html#nx-altair">nx_altair</a> package provides some basic support.</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-methods-for-creating-custom-components-in-shiny-for-python" class="outline-2">
+<h2 id="methods-for-creating-custom-components-in-shiny-for-python">Using Shiny</h2>
+<div class="outline-text-2" id="text-methods-for-creating-custom-components-in-shiny-for-python">
+</div>
+<div id="outline-container-org2a5ea21" class="outline-3">
+<h3 id="org2a5ea21">Ways to extend Shiny</h3>
+<div class="outline-text-3" id="text-org2a5ea21">
+<p>
+Shiny provides several approaches for extending its built-in component library
+with arbitrary JavaScript functionality,
+allowing one to create richer and more interactive user interfaces.
+</p>
+</div>
+<div id="outline-container-org5101769" class="outline-4">
+<h4 id="org5101769">Including JavaScript directly</h4>
+<div class="outline-text-4" id="text-org5101769">
+<p>
+Shiny allows including JavaScript files
+directly within an application's static assets directory (typically named www)
+or via functions like <code>ui.include_js</code><sup><a id="fnr.shiny-python-js" class="footref" href="#fn.shiny-python-js" role="doc-backlink">3</a></sup>.
+This enables the execution of JavaScript code on the client-side,
+allowing for interaction with the DOM and integration with JavaScript libraries.
+</p>
+
+<p>
+While this method is straightforward for adding simple JavaScript functionality,
+wrapping a complex library like Cytoscape.js
+often benefits from the more structured approaches offered by creating
+either one-off custom components or custom component packages.
+</p>
+</div>
+</div>
+<div id="outline-container-orgc640219" class="outline-4">
+<h4 id="orgc640219">One-off custom components</h4>
+<div class="outline-text-4" id="text-orgc640219">
+<p>
+One-off custom JavaScript components<sup><a id="fnr.shiny-custom-js" class="footref" href="#fn.shiny-custom-js" role="doc-backlink">4</a></sup> are developed for specific applications.
+</p>
+
+<p>
+This allows the integration of specific JavaScript libraries
+without the need to create a full component package.
+</p>
+
+<p>
+To create a one-off custom component, you need to write the following:
+</p>
+<ol class="org-ol">
+<li>A JavaScript output binding that tells Shiny how to render the component in the browser</li>
+<li>A Python output function to describe the HTML output element in the user interface.
+This refers to the JavaScript output binding.</li>
+<li>A Python render decorator to transfer data from the server to the client.
+This may refer to the Python output function to provide automated output.</li>
+</ol>
+
+<p>
+Although not covered here, communication can also occur in the reverse direction,
+from JavaScript to Python,
+by using Shiny's input bindings or custom messages
+</p>
+<ul class="org-ul">
+<li>Input bindings allow JavaScript components to send data back to the Shiny server
+when user interactions occur.</li>
+<li>Custom messages provide a more flexible mechanism for asynchronous communication,
+enabling more complex interactions between JavaScript and Python.</li>
+</ul>
+<p>
+For guidance on creating input bindings,
+see the "Custom components package" page in the Shiny documentation<sup><a id="fnr.shiny-custom-components" class="footref" href="#fn.shiny-custom-components" role="doc-backlink">5</a></sup>,
+which describes how to create a custom component for Shiny inputs.
+</p>
+</div>
+<div id="outline-container-org5f19267" class="outline-5">
+<h5 id="org5f19267">JavaScript output binding</h5>
+<div class="outline-text-5" id="text-org5f19267">
+<p>
+The output binding typically includes two key methods:
+<code>find()</code> and <code>renderValue()</code>.
+</p>
+
+<p>
+Some sample code:
+</p>
+<div class="org-src-container">
+<pre class="src src-javascript"><span class="org-keyword">class</span> TabulatorOutputBinding <span class="org-keyword">extends</span> Shiny.OutputBinding {
+    <span class="org-comment-delimiter">// </span><span class="org-comment">Find element to render in</span>
+    find(scope) { ... }
+
+    <span class="org-comment-delimiter">// </span><span class="org-comment">Render output element in the found element</span>
+    renderValue(el, payload) { ... }
+}
+
+<span class="org-comment-delimiter">// </span><span class="org-comment">Register the binding</span>
+Shiny.outputBindings.register(
+    <span class="org-keyword">new</span> <span class="org-type">TabulatorOutputBinding</span>(),
+    <span class="org-string">"shiny-tabulator-output"</span>
+);
+</pre>
+</div>
+
+<p>
+The <code>find()</code> method is responsible for locating the HTML element in the Shiny application
+where the component will be rendered.
+This is often done by targeting
+a specific CSS class or ID assigned to a div element in the UI.
+</p>
+
+<p>
+The <code>renderValue()</code> method contains the core logic
+for initializing and updating the JavaScript display.
+This method receives data from the Python backend, typically in a JSON format,
+and uses it to configure the component's elements, style, and layout.
+</p>
+</div>
+</div>
+<div id="outline-container-orgeffbfc4" class="outline-5">
+<h5 id="orgeffbfc4">Python server-side code</h5>
+<div class="outline-text-5" id="text-orgeffbfc4">
+</div>
+<ul class="org-ul">
+<li><a id="org3704147"></a>Output function<br />
+<div class="outline-text-6" id="text-org3704147">
+<p>
+On the Python side, an output function needs to be defined
+to place the designated HTML element in the Shiny application's user interface.
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>Sample Python Code defining an output_ function</label><pre class="src src-python"><span class="org-keyword">from</span> shiny <span class="org-keyword">import</span> App, Inputs, ui
+<span class="org-keyword">from</span> shiny.module <span class="org-keyword">import</span> resolve_id
+
+<span class="org-keyword">from</span> htmltools <span class="org-keyword">import</span> HTMLDependency
+
+<span class="org-variable-name">tabulator_dep</span> <span class="org-operator">=</span> HTMLDependency(
+    <span class="org-string">"tabulator"</span>,
+    <span class="org-string">"5.5.2"</span>,
+    source<span class="org-operator">=</span>{<span class="org-string">"subdir"</span>: <span class="org-string">"tabulator"</span>},
+    script<span class="org-operator">=</span>{<span class="org-string">"src"</span>: <span class="org-string">"tableComponent.js"</span>, <span class="org-string">"type"</span>: <span class="org-string">"module"</span>},
+    stylesheet<span class="org-operator">=</span>{<span class="org-string">"href"</span>: <span class="org-string">"tabulator.min.css"</span>},
+    all_files<span class="org-operator">=</span><span class="org-constant">True</span>,
+)
+
+<span class="org-keyword">def</span> <span class="org-function-name">output_tabulator</span>(<span class="org-builtin">id</span>, height<span class="org-operator">=</span><span class="org-string">"200px"</span>):
+    <span class="org-keyword">return</span> ui.div(
+        tabulator_dep,
+        <span class="org-comment-delimiter"># </span><span class="org-comment">Use resolve_id so that our component will work in a module</span>
+        <span class="org-builtin">id</span><span class="org-operator">=</span>resolve_id(<span class="org-builtin">id</span>),
+        class_<span class="org-operator">=</span><span class="org-string">"shiny-tabulator-output"</span>,
+        style<span class="org-operator">=</span>f<span class="org-string">"height: </span>{height}<span class="org-string">"</span>,
+    )
+</pre>
+</div>
+
+<p>
+The <code>htmltools.HTMLDependency</code> class is used to ensure
+that the necessary JavaScript and CSS assets and the custom output binding
+are included in the Shiny application.
+</p>
+</div>
+</li>
+<li><a id="orgf9fecb7"></a>Render decorator<br />
+<div class="outline-text-6" id="text-orgf9fecb7">
+<p>
+Additionally, a render decorator is needed to
+transform values returned from the functions it decorates into
+data to be passed to the JavaScript <code>renderValue()</code> method,
+generally using a JSON-serializable structure.
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>Sample Python code defining a render decorator</label><pre class="src src-python"><span class="org-keyword">from</span> shiny.render.renderer <span class="org-keyword">import</span> Jsonifiable, Renderer
+
+<span class="org-keyword">class</span> <span class="org-type">render_tabulator</span>(Renderer[pd.DataFrame]):
+    <span class="org-doc">"""</span>
+<span class="org-doc">    Render a pandas dataframe as a tabulator table.</span>
+<span class="org-doc">    """</span>
+
+    <span class="org-keyword">def</span> <span class="org-function-name">auto_output_ui</span>(<span class="org-keyword">self</span>):
+        <span class="org-doc">"""</span>
+<span class="org-doc">        Express UI for the tabulator renderer</span>
+<span class="org-doc">        """</span>
+        <span class="org-keyword">return</span> ui.output_tabulator(<span class="org-keyword">self</span>.output_name)
+
+    <span class="org-keyword">async def</span> <span class="org-function-name">transform</span>(<span class="org-keyword">self</span>, value: pd.DataFrame) <span class="org-operator">-&gt;</span> Jsonifiable:
+        <span class="org-doc">"""</span>
+<span class="org-doc">        Transform a pandas dataframe into a JSONifiable object that can be</span>
+<span class="org-doc">        passed to the tabulator HTML dependency.</span>
+<span class="org-doc">        """</span>
+        <span class="org-keyword">if</span> <span class="org-keyword">not</span> <span class="org-builtin">isinstance</span>(value, pd.DataFrame):
+            <span class="org-comment-delimiter"># </span><span class="org-comment">Throw an error if the value is not a dataframe</span>
+            <span class="org-keyword">raise</span> <span class="org-type">TypeError</span>(f<span class="org-string">"Expected a pandas.DataFrame, got </span>{<span class="org-builtin">type</span>(value)}<span class="org-string">. "</span>)
+
+        <span class="org-comment-delimiter"># </span><span class="org-comment">Get data from dataframe as a list of lists where each inner list is a</span>
+        <span class="org-comment-delimiter"># </span><span class="org-comment">row, column names as array of strings and types of each column as an</span>
+        <span class="org-comment-delimiter"># </span><span class="org-comment">array of strings</span>
+        <span class="org-keyword">return</span> {
+            <span class="org-string">"data"</span>: value.values.tolist(),
+            <span class="org-string">"columns"</span>: value.columns.tolist(),
+            <span class="org-string">"type_hints"</span>: value.dtypes.astype(<span class="org-builtin">str</span>).tolist(),
+        }
+</pre>
+</div>
+
+<p>
+An implementation of <code>Renderer</code> produces a class to be used as a decorator and
+requires at least 3 things:
+</p>
+
+<ol class="org-ol">
+<li>auto_output_ui (jm: possibly only needed for Shiny Express)</li>
+<li>either a transform or render function, and</li>
+<li>a value type parameter for the Renderer class.</li>
+</ol>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org41716a1" class="outline-4">
+<h4 id="org41716a1">Custom component packages</h4>
+<div class="outline-text-4" id="text-org41716a1">
+<p>
+A custom component package
+allows reusing integrations across multiple applications.
+</p>
+
+<p>
+The development process involves
+building the front-end component using JavaScript or TypeScript,
+packaging it with necessary metadata and build scripts,
+and then using <code>shiny-bindings-react</code> to connect to Shiny's reactivity system.
+</p>
+
+<p>
+For details see the "Custom components package" page in the Shiny documentation<sup><a id="fnr.shiny-custom-components.5" class="footref" href="#fn.shiny-custom-components" role="doc-backlink">5</a></sup>.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-techniques-for-wrapping-cytoscapejs-for-shiny-for-python" class="outline-3">
+<h3 id="techniques-for-wrapping-cytoscapejs-for-shiny-for-python">Using Cytoscape.js</h3>
+<div class="outline-text-3" id="text-techniques-for-wrapping-cytoscapejs-for-shiny-for-python">
+<p>
+Since Shiny provides the <code>shinywidgets</code> package for integrating Jupyter widgets, and
+<a href="#ipycytoscape">ipycytoscape</a> provides a Jupyter widget package for Cytoscape.js,
+the obvious option is to use these together.
+</p>
+
+<p>
+This should allow using Cytoscape.js in Shiny
+without creating a custom JavaScript component, or integrating Cytoscape.js ad hoc.
+</p>
+</div>
+<div id="outline-container-org9686f13" class="outline-4">
+<h4 id="org9686f13">Code</h4>
+<div class="outline-text-4" id="text-org9686f13">
+</div>
+<div id="outline-container-orgcdbc5e8" class="outline-5">
+<h5 id="orgcdbc5e8">Ipyleaflet Shiny Express app</h5>
+<div class="outline-text-5" id="text-orgcdbc5e8">
+<p>
+This demonstrates that we can use reactive.effect to update ipywidgets in Shiny.  It's
+taken from <a href="https://shiny.posit.co/py/docs/jupyter-widgets.html#efficient-updates">https://shiny.posit.co/py/docs/jupyter-widgets.html#efficient-updates</a>
+</p>
+
+<p>
+It can be run with e.g.
+</p>
+
+<pre class="example">
+shiny run --reload --log-level debug src/navigator/leaflet_express.py
+</pre>
+
+
+<p>
+This seems to work well, even though the Javascript component involved,
+a full mapping user interface, is quite complex.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">import</span> ipyleaflet <span class="org-keyword">as</span> ipyl
+<span class="org-keyword">import</span> shiny
+<span class="org-keyword">import</span> shinywidgets <span class="org-keyword">as</span> sw
+<span class="org-keyword">import</span> shiny.express
+
+<span class="org-keyword">from</span> .utils <span class="org-keyword">import</span> trace
+
+<span class="org-variable-name">city_centers</span> <span class="org-operator">=</span> {
+    <span class="org-string">"London"</span>: (51.5074, 0.1278),
+    <span class="org-string">"Paris"</span>: (48.8566, 2.3522),
+    <span class="org-string">"New York"</span>: (40.7128, <span class="org-operator">-</span>74.0060),
+}
+
+shiny.express.ui.input_select(<span class="org-string">"center"</span>, <span class="org-string">"Center"</span>, choices<span class="org-operator">=</span><span class="org-builtin">list</span>(city_centers.keys()))
+
+
+<span class="org-type">@sw.render_widget</span>
+<span class="org-keyword">def</span> <span class="org-function-name">map</span>():
+    <span class="org-keyword">return</span> ipyl.Map(zoom<span class="org-operator">=</span>4)
+
+
+<span class="org-type">@shiny.reactive.effect</span>
+<span class="org-type">@trace</span>
+<span class="org-keyword">def</span> <span class="org-function-name">_</span>():
+    <span class="org-builtin">map</span>.widget.<span class="org-variable-name">center</span> <span class="org-operator">=</span> city_centers[shiny.express.<span class="org-builtin">input</span>.center()]
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org0316e03" class="outline-5">
+<h5 id="org0316e03">Cytoscape utils</h5>
+<div class="outline-text-5" id="text-org0316e03">
+<p>
+Some utilities for making graphs using ipycytoscape.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">from</span> ipycytoscape <span class="org-keyword">import</span> Graph, Node, Edge
+<span class="org-keyword">import</span> networkx <span class="org-keyword">as</span> nx
+
+
+<span class="org-keyword">def</span> <span class="org-function-name">_node_id</span>(obj, prefix: <span class="org-builtin">str</span>) <span class="org-operator">-&gt;</span> <span class="org-builtin">str</span>:
+    <span class="org-doc">"""Return a string node id for the given object"""</span>
+    <span class="org-keyword">return</span> prefix <span class="org-operator">+</span> <span class="org-builtin">str</span>(obj)
+
+
+<span class="org-keyword">def</span> <span class="org-function-name">cyto_node</span>(obj, prefix: <span class="org-builtin">str</span> <span class="org-operator">=</span> <span class="org-string">""</span>) <span class="org-operator">-&gt;</span> Node:
+    <span class="org-doc">"""Return a Node for the given object and prefix.  prefix is used in setting the node</span>
+<span class="org-doc">    ids.</span>
+<span class="org-doc">    """</span>
+    <span class="org-keyword">return</span> Node(data<span class="org-operator">=</span>{<span class="org-string">"id"</span>: _node_id(obj, prefix)})
+
+
+<span class="org-keyword">def</span> <span class="org-function-name">cyto_edge</span>(source, target, prefix: <span class="org-builtin">str</span> <span class="org-operator">=</span> <span class="org-string">""</span>) <span class="org-operator">-&gt;</span> Edge:
+    <span class="org-doc">"""Return an Edge for the given source and target.  prefix is used in setting node ides."""</span>
+    <span class="org-keyword">return</span> Edge(
+        data<span class="org-operator">=</span>{<span class="org-string">"source"</span>: _node_id(source, prefix), <span class="org-string">"target"</span>: _node_id(target, prefix)}
+    )
+
+
+<span class="org-keyword">def</span> <span class="org-function-name">make_complete_cyto</span>(num_nodes: <span class="org-builtin">int</span>) <span class="org-operator">-&gt;</span> Graph:
+    <span class="org-doc">"""Return a complete graph with the given number of nodes."""</span>
+    <span class="org-variable-name">nx_complete_graph</span> <span class="org-operator">=</span> nx.complete_graph(num_nodes)
+    <span class="org-variable-name">cyto_complete_graph</span> <span class="org-operator">=</span> Graph()
+    <span class="org-variable-name">prefix</span> <span class="org-operator">=</span> <span class="org-string">"jmcc"</span>
+
+    cyto_complete_graph.add_nodes(
+        [cyto_node(nx_node, prefix) <span class="org-keyword">for</span> nx_node <span class="org-keyword">in</span> nx_complete_graph.nodes()]
+    )
+
+    cyto_complete_graph.add_edges(
+        [cyto_edge(u, v, prefix) <span class="org-keyword">for</span> u, v <span class="org-keyword">in</span> nx_complete_graph.edges()]
+    )
+
+    <span class="org-keyword">return</span> cyto_complete_graph
+
+
+<span class="org-keyword">def</span> <span class="org-function-name">cyto_node_ids</span>(g: Graph) <span class="org-operator">-&gt;</span> <span class="org-builtin">list</span>[<span class="org-builtin">str</span>]:
+    <span class="org-doc">"""Return a list of node ids for the graph."""</span>
+    <span class="org-keyword">return</span> [n.data[<span class="org-string">"id"</span>] <span class="org-keyword">for</span> n <span class="org-keyword">in</span> g.nodes]
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org4bf71ef" class="outline-5">
+<h5 id="org4bf71ef">Cytoscape Shiny Express app with full redraw</h5>
+<div class="outline-text-5" id="text-org4bf71ef">
+<p>
+This is a Shiny Express App that displays an ipycytoscape Graph, with number of nodes
+driven by a reactive input.
+</p>
+
+<p>
+This partially works:
+</p>
+<ul class="org-ul">
+<li>It displays the initial cytoscape graph for up to c. 20 nodes</li>
+<li>It responds to events like mouseover on nodes</li>
+</ul>
+
+<p>
+However it has major bugs:
+</p>
+<ul class="org-ul">
+<li><p>
+With more nodes, e.g. 30 it fails, with an error
+</p>
+<pre class="example">
+Cannot read properties of undefined (reading 'on_some_change')
+</pre></li>
+<li><p>
+Even with only a few nodes, updating the input frequently fails with an error
+</p>
+<pre class="example">
+Cannot read properties of undefined (reading 'on_some_change')
+</pre></li>
+<li>These errors appear to be more common with <code>--log-level=debug</code>.</li>
+</ul>
+
+<p>
+It can be run with
+</p>
+<pre class="example">
+shiny run --reload --log-level debug src/navigator/cyto_express_full.py
+</pre>
+
+
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">import</span> os
+
+<span class="org-keyword">import</span> shiny.express
+<span class="org-keyword">import</span> shinywidgets <span class="org-keyword">as</span> sw
+
+<span class="org-keyword">import</span> networkx <span class="org-keyword">as</span> nx
+<span class="org-keyword">from</span> ipycytoscape <span class="org-keyword">import</span> CytoscapeWidget
+
+<span class="org-keyword">from</span> navigator.utils <span class="org-keyword">import</span> log_clicks, log_mouseovers, trace
+
+<span class="org-variable-name">INITIAL_NUM_NODES</span> <span class="org-operator">=</span> <span class="org-builtin">int</span>(os.environ.get(<span class="org-string">"NAVIGATOR_INITIAL_NUM_NODES"</span>, 5))
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">For Shiny Express the UI elements are inferred from inline ui and render expressions.</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">These cannot be made into assignment statements</span>
+shiny.express.ui.h2(<span class="org-string">"Cytoscape Graph (Express API)"</span>)
+shiny.express.ui.input_numeric(<span class="org-string">"num_nodes"</span>, <span class="org-string">"Number of nodes:"</span>, INITIAL_NUM_NODES, <span class="org-builtin">min</span><span class="org-operator">=</span>1)
+
+<span class="org-type">@sw.render_widget</span>
+<span class="org-type">@trace</span>
+<span class="org-keyword">def</span> <span class="org-function-name">graph</span>():
+    <span class="org-variable-name">num_nodes</span> <span class="org-operator">=</span> shiny.express.<span class="org-builtin">input</span>.num_nodes()
+    <span class="org-variable-name">widget</span> <span class="org-operator">=</span> CytoscapeWidget()
+    widget.on(<span class="org-string">"node"</span>, <span class="org-string">"mouseover"</span>, log_mouseovers)
+    widget.on(<span class="org-string">"node"</span>, <span class="org-string">"click"</span>, log_clicks)
+    widget.graph.add_graph_from_networkx(nx.complete_graph(num_nodes))
+    <span class="org-keyword">return</span> widget
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-app-core-ipycyto-nx-full" class="outline-5">
+<h5 id="app-core-ipycyto-nx-full">Cytoscape Shiny Core app with full redraw</h5>
+<div class="outline-text-5" id="text-app-core-ipycyto-nx-full">
+<p>
+This is a Shiny Core App that displays an ipycytoscape Graph, with number of nodes
+driven by a reactive input.
+</p>
+
+<p>
+It has similar issues to the corresponding Shiny Express app.
+</p>
+
+<p>
+It can be run with
+</p>
+<pre class="example">
+shiny run --reload --log-level debug src/navigator/cyto_core_full.py
+</pre>
+
+
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">import</span> os
+
+<span class="org-keyword">from</span> shiny <span class="org-keyword">import</span> App, ui, Session
+<span class="org-keyword">import</span> shinywidgets <span class="org-keyword">as</span> sw
+
+<span class="org-keyword">import</span> networkx <span class="org-keyword">as</span> nx
+<span class="org-keyword">from</span> ipycytoscape <span class="org-keyword">import</span> CytoscapeWidget
+
+<span class="org-keyword">from</span> navigator.utils <span class="org-keyword">import</span> log_clicks, log_mouseovers, trace
+
+<span class="org-variable-name">INITIAL_NUM_NODES</span> <span class="org-operator">=</span> <span class="org-builtin">int</span>(os.environ.get(<span class="org-string">"NAVIGATOR_INITIAL_NUM_NODES"</span>, 5))
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">For Shiny Core the UI elements are defined explicitly in a page container</span>
+<span class="org-variable-name">app_ui</span> <span class="org-operator">=</span> ui.page_fluid(
+    ui.h2(<span class="org-string">"Cytoscape Graph (Core API)"</span>),
+    ui.input_numeric(<span class="org-string">"num_nodes"</span>, <span class="org-string">"Number of nodes:"</span>, value<span class="org-operator">=</span>INITIAL_NUM_NODES, <span class="org-builtin">min</span><span class="org-operator">=</span>1),
+    sw.output_widget(<span class="org-string">"graph_output"</span>),
+)
+
+<span class="org-keyword">def</span> <span class="org-function-name">server</span>(<span class="org-builtin">input</span>, output, session: Session):
+    <span class="org-comment-delimiter"># </span><span class="org-comment">Note: @sw.render_widget handles the @render.display/@output automatically</span>
+    <span class="org-comment-delimiter"># </span><span class="org-comment">when the function name matches the output_widget ID.</span>
+    <span class="org-type">@sw.render_widget</span>
+    <span class="org-type">@trace</span>
+    <span class="org-keyword">def</span> <span class="org-function-name">graph_output</span>():
+        <span class="org-variable-name">num_nodes</span> <span class="org-operator">=</span> <span class="org-builtin">input</span>.num_nodes()
+        <span class="org-variable-name">widget</span> <span class="org-operator">=</span> CytoscapeWidget()
+        widget.on(<span class="org-string">"node"</span>, <span class="org-string">"mouseover"</span>, log_mouseovers)
+        widget.on(<span class="org-string">"node"</span>, <span class="org-string">"click"</span>, log_clicks)
+        widget.graph.add_graph_from_networkx(nx.complete_graph(num_nodes))
+        <span class="org-keyword">return</span> widget
+
+<span class="org-variable-name">app</span> <span class="org-operator">=</span> App(app_ui, server)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-app-core-ipycyto-cyto-full" class="outline-5">
+<h5 id="app-core-ipycyto-cyto-full">Cytoscape Shiny Core app with full redraw, no networkx</h5>
+<div class="outline-text-5" id="text-app-core-ipycyto-cyto-full">
+<p>
+This is a Shiny Core App that displays an ipycytoscape Graph, with number of nodes
+driven by a reactive input.  The Cytoscape graph is constructed explicitly rather than
+using ipycytoscape's <code>add_graph_from</code> methods.
+</p>
+
+<p>
+It has similar issues to the <a href="#app-core-ipycyto-nx-full">corresponding Shiny Core app using networkx</a>, but less
+severe in that it works properly with more nodes in the graph; changing the number of
+nodes in the graph generally works when &lt;= 7.
+</p>
+
+<p>
+It can be run with
+</p>
+<pre class="example">
+shiny run --reload --log-level debug src/navigator/cyto_core_full2.py
+</pre>
+
+
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">import</span> os
+
+<span class="org-keyword">from</span> shiny <span class="org-keyword">import</span> App, ui, Session
+<span class="org-keyword">import</span> shinywidgets <span class="org-keyword">as</span> sw
+
+<span class="org-keyword">from</span> ipycytoscape <span class="org-keyword">import</span> CytoscapeWidget
+
+<span class="org-keyword">from</span> navigator.cyto_utils <span class="org-keyword">import</span> make_complete_cyto
+<span class="org-keyword">from</span> navigator.utils <span class="org-keyword">import</span> log_clicks, log_mouseovers, trace
+
+<span class="org-variable-name">INITIAL_NUM_NODES</span> <span class="org-operator">=</span> <span class="org-builtin">int</span>(os.environ.get(<span class="org-string">"NAVIGATOR_INITIAL_NUM_NODES"</span>, 5))
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">For Shiny Core the UI elements are defined explicitly in a page container</span>
+<span class="org-variable-name">app_ui</span> <span class="org-operator">=</span> ui.page_fluid(
+    ui.h2(<span class="org-string">"Cytoscape Graph (Core API, Cytoscape graph)"</span>),
+    ui.input_numeric(<span class="org-string">"num_nodes"</span>, <span class="org-string">"Number of nodes:"</span>, value<span class="org-operator">=</span>INITIAL_NUM_NODES, <span class="org-builtin">min</span><span class="org-operator">=</span>1),
+    sw.output_widget(<span class="org-string">"graph_output"</span>),
+)
+
+<span class="org-keyword">def</span> <span class="org-function-name">server</span>(<span class="org-builtin">input</span>, output, session: Session):
+    <span class="org-comment-delimiter"># </span><span class="org-comment">Note: @sw.render_widget handles the @render.display/@output automatically</span>
+    <span class="org-comment-delimiter"># </span><span class="org-comment">when the function name matches the output_widget ID.</span>
+    <span class="org-type">@sw.render_widget</span>
+    <span class="org-type">@trace</span>
+    <span class="org-keyword">def</span> <span class="org-function-name">graph_output</span>():
+        <span class="org-variable-name">num_nodes</span> <span class="org-operator">=</span> <span class="org-builtin">input</span>.num_nodes()
+        <span class="org-variable-name">widget</span> <span class="org-operator">=</span> CytoscapeWidget(graph <span class="org-operator">=</span> make_complete_cyto(num_nodes<span class="org-operator">=</span>num_nodes))
+        widget.on(<span class="org-string">"node"</span>, <span class="org-string">"mouseover"</span>, log_mouseovers)
+        widget.on(<span class="org-string">"node"</span>, <span class="org-string">"click"</span>, log_clicks)
+        <span class="org-keyword">return</span> widget
+
+<span class="org-variable-name">app</span> <span class="org-operator">=</span> App(app_ui, server)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org42ac3ac" class="outline-5">
+<h5 id="org42ac3ac">Ipyleaflet Shiny Core app with incremental redraw</h5>
+<div class="outline-text-5" id="text-org42ac3ac">
+<p>
+The approach here is based on
+the Brownian motion example in the Shiny for Python repo
+at <a href="https://github.com/posit-dev/py-shiny/tree/main/examples/brownian">https://github.com/posit-dev/py-shiny/tree/main/examples/brownian</a>
+</p>
+
+<p>
+Each call of the server function leads to creating exactly one widget,
+which is then registered explicitly.
+Subsequent events trigger reactive updates, which mutate the widget.
+</p>
+
+<pre class="example">
+shiny run --reload --log-level debug src/navigator/leaflet_core.py
+</pre>
+
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">import</span> ipyleaflet
+<span class="org-keyword">import</span> shiny
+<span class="org-keyword">import</span> shinywidgets
+
+<span class="org-variable-name">city_centers</span> <span class="org-operator">=</span> {
+    <span class="org-string">"London"</span>: (51.5074, 0.1278),
+    <span class="org-string">"Paris"</span>: (48.8566, 2.3522),
+    <span class="org-string">"New York"</span>: (40.7128, <span class="org-operator">-</span>74.0060),
+}
+<span class="org-variable-name">map_id</span> <span class="org-operator">=</span> <span class="org-string">"three_cities"</span>
+
+<span class="org-variable-name">app_ui</span> <span class="org-operator">=</span> shiny.ui.page_fixed(
+    shiny.ui.h2(<span class="org-string">"Ipyleaflet widget, Shiny Core, incremental redraw"</span>),
+    shiny.ui.input_select(<span class="org-string">"center"</span>, <span class="org-string">"Center"</span>, choices<span class="org-operator">=</span><span class="org-builtin">list</span>(city_centers)),
+    shinywidgets.output_widget(map_id)
+    )
+
+<span class="org-keyword">def</span> <span class="org-function-name">server</span>(<span class="org-builtin">input</span>, _output, _session):
+    <span class="org-variable-name">widget</span> <span class="org-operator">=</span> ipyleaflet.Map(zoom<span class="org-operator">=</span>4)
+    shinywidgets.register_widget(map_id, widget)
+
+    <span class="org-type">@shiny.reactive.effect</span>
+    <span class="org-keyword">def</span> <span class="org-function-name">_</span>():
+        widget.<span class="org-variable-name">center</span> <span class="org-operator">=</span> city_centers[<span class="org-builtin">input</span>.center()]  <span class="org-comment-delimiter"># </span><span class="org-comment">pyright: ignore[reportOptionalMemberAccess]</span>
+
+<span class="org-variable-name">app</span> <span class="org-operator">=</span> shiny.App(app_ui, server)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org8ddd3da" class="outline-5">
+<h5 id="org8ddd3da">Cytoscape Shiny Core app with incremental redraw</h5>
+<div class="outline-text-5" id="text-org8ddd3da">
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">import</span> os
+
+<span class="org-keyword">import</span> networkx <span class="org-keyword">as</span> nx
+<span class="org-keyword">import</span> shiny
+<span class="org-keyword">import</span> shinywidgets
+<span class="org-keyword">from</span> ipycytoscape <span class="org-keyword">import</span> CytoscapeWidget
+
+<span class="org-keyword">from</span> navigator.cyto_utils <span class="org-keyword">import</span> make_complete_cyto
+
+<span class="org-variable-name">INITIAL_NUM_NODES</span> <span class="org-operator">=</span> <span class="org-builtin">int</span>(os.environ.get(<span class="org-string">"NAVIGATOR_INITIAL_NUM_NODES"</span>, 1))
+
+<span class="org-variable-name">graph_id</span> <span class="org-operator">=</span> <span class="org-string">"graph_output"</span>
+
+<span class="org-variable-name">app_ui</span> <span class="org-operator">=</span> shiny.ui.page_fluid(
+    shiny.ui.h2(<span class="org-string">"Cytoscape Graph (Core API, Cytoscape graph)"</span>),
+    shiny.ui.input_numeric(<span class="org-string">"num_nodes"</span>, <span class="org-string">"Number of nodes:"</span>, value<span class="org-operator">=</span>INITIAL_NUM_NODES, <span class="org-builtin">min</span><span class="org-operator">=</span>0),
+    shinywidgets.output_widget(graph_id),
+)
+
+<span class="org-variable-name">app_ui</span> <span class="org-operator">=</span> shiny.ui.page_fluid(
+    shiny.ui.h2(<span class="org-string">"Cytoscape Graph (Core API, Cytoscape graph)"</span>),
+    shiny.ui.input_numeric(<span class="org-string">"num_nodes"</span>, <span class="org-string">"Number of nodes:"</span>, value<span class="org-operator">=</span>INITIAL_NUM_NODES, <span class="org-builtin">min</span><span class="org-operator">=</span>0),
+    shinywidgets.output_widget(graph_id),
+)
+
+<span class="org-keyword">def</span> <span class="org-function-name">server</span>(<span class="org-builtin">input</span>, _output, _session: shiny.Session):
+    <span class="org-variable-name">widget</span> <span class="org-operator">=</span> CytoscapeWidget(graph <span class="org-operator">=</span> make_complete_cyto(num_nodes<span class="org-operator">=</span>INITIAL_NUM_NODES))
+    shinywidgets.register_widget(graph_id, widget)
+
+    <span class="org-type">@shiny.reactive.effect</span>
+    <span class="org-keyword">def</span> <span class="org-function-name">_</span>():
+        <span class="org-variable-name">num_nodes</span> <span class="org-operator">=</span> <span class="org-builtin">input</span>.num_nodes()
+        <span class="org-builtin">print</span>(f<span class="org-string">"updating for reactive effect </span>{num_nodes<span class="org-operator">=</span>}<span class="org-string">"</span>)
+        <span class="org-variable-name">g</span> <span class="org-operator">=</span> widget.graph
+        g.clear()
+        g.add_graph_from_networkx(nx.complete_graph(num_nodes))
+        <span class="org-builtin">print</span>(<span class="org-string">"finished updating"</span>)
+<span class="org-keyword">def</span> <span class="org-function-name">server</span>(<span class="org-builtin">input</span>, _output, _session: shiny.Session):
+    <span class="org-variable-name">widget</span> <span class="org-operator">=</span> CytoscapeWidget(graph <span class="org-operator">=</span> make_complete_cyto(num_nodes<span class="org-operator">=</span>INITIAL_NUM_NODES))
+    shinywidgets.register_widget(graph_id, widget)
+
+    <span class="org-type">@shiny.reactive.effect</span>
+    <span class="org-keyword">def</span> <span class="org-function-name">_</span>():
+        <span class="org-variable-name">num_nodes</span> <span class="org-operator">=</span> <span class="org-builtin">input</span>.num_nodes()
+        <span class="org-builtin">print</span>(f<span class="org-string">"updating for reactive effect </span>{num_nodes<span class="org-operator">=</span>}<span class="org-string">"</span>)
+        <span class="org-variable-name">g</span> <span class="org-operator">=</span> widget.graph
+        g.clear()
+        g.add_graph_from_networkx(nx.complete_graph(num_nodes))
+        <span class="org-builtin">print</span>(<span class="org-string">"finished updating"</span>)
+
+<span class="org-variable-name">app</span> <span class="org-operator">=</span> shiny.App(app_ui, server)
+
+<span class="org-keyword">def</span> <span class="org-function-name">main</span>():
+    <span class="org-keyword">pass</span>
+
+<span class="org-keyword">if</span> <span class="org-builtin">__name__</span> <span class="org-operator">==</span> <span class="org-string">'__main__'</span>:
+    main()
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-org4d609a0" class="outline-4">
+<h4 id="org4d609a0">Conclusion</h4>
+<div class="outline-text-4" id="text-org4d609a0">
+<p>
+ipyctoscape is not a viable candidate to work from.
+</p>
+
+<p>
+Although it has an attractive feature set,
+it is not nearly reliable enough to be productive to work with.
+</p>
+
+<p>
+At first I thought this might be due to
+using the package in Shiny rather than in Jupyter but
+there are basic problems in that too,
+e.g. see <a href="https://github.com/cytoscape/ipycytoscape/issues/322">https://github.com/cytoscape/ipycytoscape/issues/322</a>.
+</p>
+
+<p>
+The functionality for manipulating graphs
+after they have been displayed is completely broken and
+has clearly never been tested on even basic uses cases like the one in issue 322.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgd837a33" class="outline-3">
+<h3 id="orgd837a33">Using ipysigma</h3>
+<div class="outline-text-3" id="text-orgd837a33">
+</div>
+<div id="outline-container-org97a055a" class="outline-4">
+<h4 id="org97a055a">Code</h4>
+<div class="outline-text-4" id="text-org97a055a">
+</div>
+<div id="outline-container-org1cfddf4" class="outline-5">
+<h5 id="org1cfddf4">ipysigma Shiny Core app with full redraw</h5>
+<div class="outline-text-5" id="text-org1cfddf4">
+<p>
+This is a Shiny Core App that displays an ipysigma Graph, with number of nodes
+driven by a reactive input.
+</p>
+
+<p>
+It can be run with
+</p>
+<div class="org-src-container">
+<pre class="src src-bash">shiny run --reload --log-level debug src/navigator/ipysigma_core_full.py
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">import</span> os
+
+<span class="org-keyword">import</span> shinywidgets <span class="org-keyword">as</span> sw
+<span class="org-keyword">import</span> networkx <span class="org-keyword">as</span> nx
+<span class="org-keyword">from</span> ipysigma <span class="org-keyword">import</span> Sigma
+<span class="org-keyword">from</span> shiny <span class="org-keyword">import</span> App, ui, Session
+
+<span class="org-keyword">from</span> navigator.utils <span class="org-keyword">import</span> trace
+
+<span class="org-variable-name">INITIAL_NUM_NODES</span> <span class="org-operator">=</span> <span class="org-builtin">int</span>(os.environ.get(<span class="org-string">"NAVIGATOR_INITIAL_NUM_NODES"</span>, 5))
+
+<span class="org-variable-name">app_ui</span> <span class="org-operator">=</span> ui.page_fluid(
+    ui.h2(<span class="org-string">"Ipysigma Graph (Core API), full redraw"</span>),
+    ui.input_numeric(<span class="org-string">"num_nodes"</span>, <span class="org-string">"Number of nodes:"</span>, value<span class="org-operator">=</span>INITIAL_NUM_NODES, <span class="org-builtin">min</span><span class="org-operator">=</span>1),
+    sw.output_widget(<span class="org-string">"graph_output"</span>),
+)
+
+<span class="org-keyword">def</span> <span class="org-function-name">server</span>(<span class="org-builtin">input</span>, _output, _session: Session):
+    <span class="org-comment-delimiter"># </span><span class="org-comment">pyright: ignore[reportUnusedFunction=false]</span>
+    <span class="org-type">@sw.render_widget</span>
+    <span class="org-type">@trace</span>
+    <span class="org-keyword">def</span> <span class="org-function-name">graph_output</span>():
+        <span class="org-variable-name">num_nodes</span> <span class="org-operator">=</span> <span class="org-builtin">input</span>.num_nodes()
+        <span class="org-variable-name">nx_graph</span> <span class="org-operator">=</span> nx.complete_graph(num_nodes)
+
+        <span class="org-variable-name">widget</span> <span class="org-operator">=</span> Sigma(nx_graph)
+        <span class="org-keyword">return</span> widget
+
+<span class="org-variable-name">app</span> <span class="org-operator">=</span> App(app_ui, server)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orga564766" class="outline-5">
+<h5 id="orga564766">ipysigma Shiny Core node navigator</h5>
+<div class="outline-text-5" id="text-orga564766">
+<p>
+This is a Shiny Core App that displays an ipysigma Graph,
+with the choice of nodes displayed driven by
+the user's selection of nodes on the displayed graph.
+Initially no nodes are selected,
+and in this state the entire underlying graph is shown.
+When the user selects a node, then
+the displayed graph is restricted to the selected node and its neighbors.
+When this happens the graph is re-rendered completely,
+including recomputing its layout.
+The layout is determined by ipysigma's default layout engine.
+</p>
+
+<p>
+It can be run with
+</p>
+<div class="org-src-container">
+<pre class="src src-bash">shiny run --reload --log-level debug src/navigator/ipysigma_core_navigator.py
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-python" id="org72f25ba"><span class="org-keyword">import</span> os
+<span class="org-keyword">from</span> typing <span class="org-keyword">import</span> cast
+
+<span class="org-keyword">import</span> ipywidgets
+<span class="org-keyword">import</span> pandas <span class="org-keyword">as</span> pd
+<span class="org-keyword">import</span> shiny
+<span class="org-keyword">import</span> shinywidgets
+<span class="org-keyword">import</span> networkx <span class="org-keyword">as</span> nx
+<span class="org-keyword">from</span> ipysigma <span class="org-keyword">import</span> Sigma
+<span class="org-keyword">from</span> shiny <span class="org-keyword">import</span> App, ui, Session
+
+<span class="org-keyword">import</span> navigator.graph_utils <span class="org-keyword">as</span> graph_utils
+
+<span class="org-variable-name">app_ui</span> <span class="org-operator">=</span> ui.page_fluid(
+    ui.h2(<span class="org-string">"Ipysigma Graph (Core API), node navigator"</span>),
+    shinywidgets.output_widget(<span class="org-string">'graph_output'</span>),
+    ui.output_text(<span class="org-string">'selected_node_description'</span>),
+    ui.output_table(<span class="org-string">'node_data'</span>)
+)
+
+
+<span class="org-keyword">def</span> <span class="org-function-name">server</span>(_input, _output, _session: Session):
+    <span class="org-variable-name">initial_num_nodes</span>: <span class="org-builtin">int</span> <span class="org-operator">=</span> <span class="org-builtin">int</span>(os.environ.get(<span class="org-string">"NAVIGATOR_INITIAL_NUM_NODES"</span>, 5))
+    <span class="org-variable-name">base_graph</span>: <span class="org-type">nx</span>.<span class="org-type">Graph</span> <span class="org-operator">=</span> graph_utils.create_cycle_graph(n<span class="org-operator">=</span>initial_num_nodes)
+    <span class="org-variable-name">selected_node_reactive</span> <span class="org-operator">=</span> shiny.reactive.Value[<span class="org-builtin">int</span> <span class="org-operator">|</span> <span class="org-constant">None</span>](<span class="org-constant">None</span>)
+
+    <span class="org-type">@shinywidgets.render_widget</span>
+    <span class="org-keyword">def</span> <span class="org-function-name">graph_output</span>() <span class="org-operator">-&gt;</span> Sigma:
+        <span class="org-doc">"""Return the ipysigma graph to render.</span>
+
+<span class="org-doc">        Reactive reads:</span>
+<span class="org-doc">          selected_node_reactive</span>
+<span class="org-doc">        """</span>
+        <span class="org-variable-name">selected_node</span> <span class="org-operator">=</span> selected_node_reactive.get()
+        <span class="org-keyword">if</span> selected_node <span class="org-keyword">is</span> <span class="org-constant">None</span>:
+            <span class="org-variable-name">graph</span> <span class="org-operator">=</span> base_graph
+            <span class="org-variable-name">extra_kwargs</span> <span class="org-operator">=</span> {}
+        <span class="org-keyword">else</span>:
+            <span class="org-variable-name">graph</span> <span class="org-operator">=</span> graph_utils.node_and_neighbors(base_graph, selected_node)
+            <span class="org-variable-name">extra_kwargs</span> <span class="org-operator">=</span> <span class="org-builtin">dict</span>(selected_node<span class="org-operator">=</span>selected_node)
+
+        <span class="org-keyword">return</span> Sigma(
+            graph,
+            start_layout<span class="org-operator">=</span>5,
+            raw_node_size<span class="org-operator">=</span><span class="org-keyword">lambda</span> _: 24,
+            raw_node_border_size<span class="org-operator">=</span><span class="org-keyword">lambda</span> _: 4,
+            raw_node_border_color<span class="org-operator">=</span><span class="org-keyword">lambda</span> _: <span class="org-string">'blue'</span>,
+            show_all_labels<span class="org-operator">=</span><span class="org-constant">True</span>,
+            raw_node_label_size<span class="org-operator">=</span><span class="org-keyword">lambda</span> _: 18,
+            raw_edge_size<span class="org-operator">=</span><span class="org-keyword">lambda</span> _: 4,
+            raw_edge_color<span class="org-operator">=</span><span class="org-keyword">lambda</span>: <span class="org-string">'red'</span>,
+            <span class="org-operator">**</span>extra_kwargs
+        )
+
+    <span class="org-type">@shiny.render.text</span>
+    <span class="org-keyword">def</span> <span class="org-function-name">selected_node_description</span>() <span class="org-operator">-&gt;</span> <span class="org-builtin">str</span>:
+        <span class="org-doc">"""Return a text description of the selected node.</span>
+
+<span class="org-doc">        Reactive reads:</span>
+<span class="org-doc">          graph_output.widget</span>
+
+<span class="org-doc">        Reactive sets:</span>
+<span class="org-doc">          focus_node_reactive</span>
+<span class="org-doc">        """</span>
+        <span class="org-variable-name">widget</span> <span class="org-operator">=</span> cast(ipywidgets.Widget, graph_output.widget)
+        <span class="org-variable-name">selected_node_read</span> <span class="org-operator">=</span> shinywidgets.reactive_read(widget, names<span class="org-operator">=</span><span class="org-string">"selected_node"</span>)
+        selected_node: <span class="org-builtin">int</span> <span class="org-operator">|</span> <span class="org-constant">None</span> <span class="org-operator">=</span> (
+            <span class="org-builtin">int</span>(selected_node_read) <span class="org-keyword">if</span> selected_node_read <span class="org-keyword">is</span> <span class="org-keyword">not</span> <span class="org-constant">None</span> <span class="org-keyword">else</span> <span class="org-constant">None</span>
+        )
+        selected_node_reactive.<span class="org-builtin">set</span>(value<span class="org-operator">=</span>selected_node)
+        <span class="org-keyword">return</span> f<span class="org-string">"The selected node is: </span>{selected_node}<span class="org-string">"</span>
+
+    <span class="org-type">@shiny.render.table</span>
+    <span class="org-keyword">def</span> <span class="org-function-name">node_data</span>() <span class="org-operator">-&gt;</span> pd.DataFrame:  <span class="org-comment-delimiter"># </span><span class="org-comment">pyright: ignore[reportUnusedFunction]</span>
+        <span class="org-doc">"""Return a DataFrame with data about the selected node.</span>
+
+<span class="org-doc">        Reactive reads:</span>
+<span class="org-doc">          focus_node_reactive</span>
+<span class="org-doc">        """</span>
+        <span class="org-variable-name">selected_node</span> <span class="org-operator">=</span> selected_node_reactive.get()
+        <span class="org-keyword">if</span> selected_node <span class="org-keyword">is</span> <span class="org-keyword">not</span> <span class="org-constant">None</span>:
+            <span class="org-comment-delimiter"># </span><span class="org-comment">Generate some example data for the selected node</span>
+            <span class="org-variable-name">data</span> <span class="org-operator">=</span> {
+                <span class="org-string">"Attribute"</span>: [<span class="org-string">"Node"</span>, <span class="org-string">"Degree"</span>, <span class="org-string">"Clustering Coefficient"</span>],
+                <span class="org-string">"Value"</span>: [
+                    selected_node,
+                    nx.degree(base_graph, selected_node),
+                    nx.clustering(base_graph, selected_node)
+                ]
+            }
+            <span class="org-variable-name">df</span> <span class="org-operator">=</span> pd.DataFrame(data)
+        <span class="org-keyword">else</span>:
+            <span class="org-comment-delimiter"># </span><span class="org-comment">Return an empty DataFrame as a placeholder</span>
+            <span class="org-variable-name">df</span> <span class="org-operator">=</span> pd.DataFrame(columns<span class="org-operator">=</span>[<span class="org-string">"Attribute"</span>, <span class="org-string">"Value"</span>])
+        <span class="org-keyword">return</span> df
+
+
+<span class="org-variable-name">app</span> <span class="org-operator">=</span> App(app_ui, server)
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-org31186a9" class="outline-4">
+<h4 id="org31186a9">Conclusion</h4>
+<div class="outline-text-4" id="text-org31186a9">
+<p>
+The combination of ipysigma with Shiny for Python is a viable candidate to build on.
+</p>
+
+<p>
+Importantly, ipysigma appears to be robust enough to work with.
+Unlike ipycytoscape, the core functionality seems to work,
+and implementing the core functionality needed for output navigation
+was straightforward to do within Shiny's paradigms.
+Notably, the package seems to have been developed by people who use it for network analysis,
+rather than as an exercise in wrapping tools for others.
+</p>
+
+<p>
+The main downside of the package is that it is relatively unpopular and
+the maintenance is sporadic, with a small group of maintainers,
+a low (but non-zero) rate of commits and
+a significant number of bugs outstanding;
+there were 15 at the time of writing with some in quite basic areas like <a href="https://github.com/medialab/ipysigma/issues/129">svg export</a>.
+</p>
+
+<p>
+A secondary downside is that the general appearance is quite "geeky" and less
+polished than the containers available through Bokeh, Plotly, etc.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org27e7009" class="outline-3">
+<h3 id="org27e7009">Using pyvis</h3>
+<div class="outline-text-3" id="text-org27e7009">
+</div>
+<div id="outline-container-org1bd80bf" class="outline-4">
+<h4 id="org1bd80bf">pyvis Shiny Core node navigator</h4>
+<div class="outline-text-4" id="text-org1bd80bf">
+<p>
+This is a Shiny Core App that displays a graph using pyvis.
+</p>
+
+<p>
+It's based on <a href="https://github.com/posit-dev/py-shinywidgets/issues/63">https://github.com/posit-dev/py-shinywidgets/issues/63</a>
+</p>
+
+<p>
+It can be run with
+</p>
+<div class="org-src-container">
+<pre class="src src-bash">shiny run --reload --log-level debug src/navigator/pyvis_core_navigator.py
+</pre>
+</div>
+
+<p>
+Note that pyvis operates, as here, by saving an HTML file.
+Nothing in the documentation at
+<a href="https://pyvis.readthedocs.io/en/latest/documentation.html">https://pyvis.readthedocs.io/en/latest/documentation.html</a>
+indicates that any other mode is supported.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python" id="org15add4a"><span class="org-keyword">import</span> os
+<span class="org-keyword">from</span> pathlib <span class="org-keyword">import</span> Path
+
+<span class="org-keyword">import</span> shiny
+<span class="org-keyword">import</span> networkx <span class="org-keyword">as</span> nx
+<span class="org-keyword">from</span> pyvis.network <span class="org-keyword">import</span> Network
+<span class="org-keyword">from</span> shiny <span class="org-keyword">import</span> App, ui
+
+<span class="org-keyword">import</span> navigator.graph_utils <span class="org-keyword">as</span> graph_utils
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">Use a static_assets folder for holding the Network()'s html file</span>
+
+<span class="org-variable-name">WWW</span> <span class="org-operator">=</span> Path(__file__).resolve().parent.parent <span class="org-operator">/</span> <span class="org-string">"www"</span>
+
+<span class="org-variable-name">PYVIS_OUTPUT_ID</span> <span class="org-operator">=</span> <span class="org-string">"pyvis"</span>
+
+<span class="org-variable-name">app_ui</span> <span class="org-operator">=</span> ui.page_fluid(
+    ui.output_ui(PYVIS_OUTPUT_ID),
+)
+
+<span class="org-keyword">def</span> <span class="org-function-name">server</span>(<span class="org-builtin">input</span>: shiny.Inputs, output: shiny.Outputs, _session: shiny.Session):
+    <span class="org-variable-name">initial_num_nodes</span>: <span class="org-builtin">int</span> <span class="org-operator">=</span> <span class="org-builtin">int</span>(os.environ.get(<span class="org-string">"NAVIGATOR_INITIAL_NUM_NODES"</span>, 5))
+
+    <span class="org-type">@output</span>(<span class="org-builtin">id</span><span class="org-operator">=</span>PYVIS_OUTPUT_ID)
+    <span class="org-type">@shiny.render.ui</span>
+    <span class="org-keyword">def</span> <span class="org-function-name">_</span>():
+        <span class="org-variable-name">G</span>: <span class="org-type">nx</span>.<span class="org-type">Graph</span> <span class="org-operator">=</span> graph_utils.create_cycle_graph(n<span class="org-operator">=</span>initial_num_nodes)
+        <span class="org-variable-name">net</span> <span class="org-operator">=</span> Network()
+        net.from_nx(G)
+        net.toggle_drag_nodes(<span class="org-constant">True</span>)
+
+        <span class="org-variable-name">f</span> <span class="org-operator">=</span> WWW <span class="org-operator">/</span> f<span class="org-string">"</span>{PYVIS_OUTPUT_ID}<span class="org-string">.html"</span>
+        <span class="org-variable-name">new_content</span> <span class="org-operator">=</span> net.generate_html(local<span class="org-operator">=</span><span class="org-constant">False</span>)
+
+        <span class="org-keyword">try</span>:
+            <span class="org-variable-name">current_content</span> <span class="org-operator">=</span> f.read_text()
+        <span class="org-keyword">except</span> <span class="org-type">FileNotFoundError</span>:
+            <span class="org-variable-name">current_content</span> <span class="org-operator">=</span> <span class="org-constant">None</span>
+
+        <span class="org-comment-delimiter"># </span><span class="org-comment">avoid triggering an endless loop of reloads because a watched file changes</span>
+        <span class="org-keyword">if</span> new_content <span class="org-operator">!=</span> current_content:
+            f.write_text(new_content)
+
+        <span class="org-keyword">return</span> ui.tags.iframe(
+            src<span class="org-operator">=</span>PYVIS_OUTPUT_ID <span class="org-operator">+</span> <span class="org-string">".html"</span>,
+            style<span class="org-operator">=</span><span class="org-string">"height:600px;width:100%;"</span>,
+            scrolling<span class="org-operator">=</span><span class="org-string">"no"</span>,
+            seamless<span class="org-operator">=</span><span class="org-string">"seamless"</span>,
+            frameBorder<span class="org-operator">=</span><span class="org-string">"0"</span>,
+        )
+
+<span class="org-variable-name">app</span> <span class="org-operator">=</span> App(app_ui, server, static_assets<span class="org-operator">=</span>WWW)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org9ecb917" class="outline-4">
+<h4 id="org9ecb917">Conclusion</h4>
+<div class="outline-text-4" id="text-org9ecb917">
+<p>
+pyvis is not a useful option given how it operates using external HTML files,
+although the underlying VisJS library might be useful.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org2faada5" class="outline-3">
+<h3 id="org2faada5">D3</h3>
+<div class="outline-text-3" id="text-org2faada5">
+</div>
+<div id="outline-container-org7a062c2" class="outline-4">
+<h4 id="org7a062c2">D3 navigator</h4>
+<div class="outline-text-4" id="text-org7a062c2">
+<p>
+This is a Shiny Core App that displays a graph using D3.
+</p>
+
+<p>
+It's based on the Tabulator sample for <a href="#orgc640219">Shiny one-off custom components</a>.
+</p>
+
+<p>
+It can be run with
+</p>
+<div class="org-src-container">
+<pre class="src src-bash">shiny run --reload --log-level debug src/navigator/d3_core_navigator.py
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-python" id="orga585cc7"><span class="org-keyword">from</span> pathlib <span class="org-keyword">import</span> Path
+<span class="org-keyword">import</span> pandas <span class="org-keyword">as</span> pd
+
+<span class="org-keyword">import</span> htmltools
+<span class="org-keyword">import</span> shiny
+<span class="org-keyword">import</span> shinyswatch
+<span class="org-keyword">from</span> shiny <span class="org-keyword">import</span> App, ui, render
+<span class="org-keyword">from</span> shiny.module <span class="org-keyword">import</span> resolve_id
+<span class="org-keyword">from</span> shiny.render.renderer <span class="org-keyword">import</span> Jsonifiable, Renderer
+
+<span class="org-keyword">import</span> navigator.shakespeare <span class="org-keyword">as</span> shakespeare
+
+<span class="org-variable-name">www_dir</span> <span class="org-operator">=</span> Path(__file__).parent.parent <span class="org-operator">/</span> <span class="org-string">'www'</span>
+<span class="org-variable-name">PLAY_DATA</span> <span class="org-operator">=</span> shakespeare.CharacterNetwork(pd.read_csv(www_dir <span class="org-operator">/</span> <span class="org-string">'data'</span> <span class="org-operator">/</span> <span class="org-string">'shakespeare_plays.csv'</span>))
+
+<span class="org-variable-name">d3_dep</span> <span class="org-operator">=</span> htmltools.HTMLDependency(
+    <span class="org-string">"d3graph"</span>,
+    <span class="org-string">"0.0.0"</span>,
+    source<span class="org-operator">=</span>{<span class="org-string">"subdir"</span>: <span class="org-builtin">str</span>(www_dir <span class="org-operator">/</span> <span class="org-string">"gen"</span>)},
+    script<span class="org-operator">=</span>{<span class="org-string">"src"</span>: <span class="org-string">"d3_navigator.js"</span>, <span class="org-string">"type"</span>: <span class="org-string">"module"</span>},
+    stylesheet<span class="org-operator">=</span>{<span class="org-string">"href"</span>: <span class="org-string">"d3_navigator.css"</span>},
+    all_files<span class="org-operator">=</span><span class="org-constant">True</span>,
+)
+
+<span class="org-keyword">class</span> <span class="org-type">render_d3graph</span>(Renderer[<span class="org-builtin">dict</span>]):
+    <span class="org-doc">"""</span>
+<span class="org-doc">    Render a dict as a D3 graph.</span>
+<span class="org-doc">    """</span>
+    <span class="org-keyword">async def</span> <span class="org-function-name">transform</span>(<span class="org-keyword">self</span>, value: <span class="org-builtin">dict</span>) <span class="org-operator">-&gt;</span> Jsonifiable:
+        <span class="org-doc">"""</span>
+<span class="org-doc">        Transform a dict representing a graph into a JSONifiable object that can be</span>
+<span class="org-doc">        displayed using D3.</span>
+<span class="org-doc">        """</span>
+        <span class="org-keyword">assert</span> <span class="org-builtin">isinstance</span>(value, <span class="org-builtin">dict</span>)
+        <span class="org-keyword">assert</span> <span class="org-builtin">set</span>(value) <span class="org-operator">==</span> {<span class="org-string">'nodes'</span>, <span class="org-string">'links'</span>}
+
+        <span class="org-keyword">return</span> value
+
+<span class="org-variable-name">app_ui</span> <span class="org-operator">=</span> ui.page_fluid(
+    ui.tags.head(
+        ui.tags.title(<span class="org-string">"D3.js Directed Graph in Shiny"</span>),
+        d3_dep,
+    ),
+    ui.div(
+        <span class="org-builtin">id</span><span class="org-operator">=</span>resolve_id(<span class="org-string">"d3Graph"</span>),
+        class_<span class="org-operator">=</span><span class="org-string">"shiny-d3-graph-output"</span>,
+    ),
+    ui.h2(<span class="org-string">"D3.js Directed Graph Example"</span>),
+    ui.input_select(
+        <span class="org-builtin">id</span><span class="org-operator">=</span><span class="org-string">"play_name"</span>,
+        label<span class="org-operator">=</span><span class="org-string">"Choose a play:"</span>,
+        choices<span class="org-operator">=</span>PLAY_DATA.play_names,
+        selected<span class="org-operator">=</span><span class="org-string">'Hamlet'</span>,
+    ),
+    ui.layout_columns(
+        ui.tags.svg(
+            <span class="org-builtin">id</span><span class="org-operator">=</span><span class="org-string">"d3-graph"</span>,
+            style<span class="org-operator">=</span><span class="org-string">"height: 600px; border: 1px solid black;"</span>,
+        ),
+        ui.output_ui(<span class="org-string">"formatted_dict_output"</span>),
+        col_widths<span class="org-operator">=</span>{<span class="org-string">"xl"</span>: (8, 4)},
+    ),
+    ui.div(<span class="org-builtin">id</span><span class="org-operator">=</span><span class="org-string">"tooltip"</span>),
+    theme<span class="org-operator">=</span>shinyswatch.theme.cerulean,
+)
+
+
+<span class="org-keyword">def</span> <span class="org-function-name">server</span>(<span class="org-builtin">input</span>: shiny.Inputs, output: shiny.Outputs, _session: shiny.Session):
+    <span class="org-type">@render_d3graph</span>
+    <span class="org-keyword">def</span> <span class="org-function-name">d3Graph</span>():
+        <span class="org-variable-name">play_name</span> <span class="org-operator">=</span> <span class="org-builtin">input</span>.play_name()
+        <span class="org-variable-name">graph_data</span> <span class="org-operator">=</span> {
+            <span class="org-string">'nodes'</span>: [
+                {
+                    <span class="org-string">'id'</span>: node[1],
+                    <span class="org-string">'name'</span>: node[1],
+                }
+                <span class="org-keyword">for</span> node <span class="org-keyword">in</span> PLAY_DATA.graph.nodes
+                <span class="org-keyword">if</span> node[0] <span class="org-operator">==</span> play_name
+            ],
+            <span class="org-string">'links'</span>: [
+                {
+                    <span class="org-string">'source'</span>: edge[0][1],
+                    <span class="org-string">'target'</span>: edge[1][1],
+                }
+                <span class="org-keyword">for</span> edge <span class="org-keyword">in</span> PLAY_DATA.graph.edges
+                <span class="org-keyword">if</span> edge[0][0] <span class="org-operator">==</span> play_name
+                ]
+        }
+        <span class="org-keyword">return</span> graph_data
+
+    <span class="org-type">@output</span>
+    <span class="org-type">@render.ui</span>
+    <span class="org-keyword">def</span> <span class="org-function-name">formatted_dict_output</span>():
+        <span class="org-variable-name">play_name</span> <span class="org-operator">=</span> <span class="org-builtin">input</span>.play_name()
+        <span class="org-variable-name">node_id</span> <span class="org-operator">=</span> <span class="org-builtin">input</span>.focus_node_id()
+        <span class="org-variable-name">html_content</span> <span class="org-operator">=</span> <span class="org-string">"&lt;div&gt;"</span>
+        <span class="org-keyword">if</span> node_id:
+            <span class="org-variable-name">node_data</span> <span class="org-operator">=</span> <span class="org-builtin">dict</span>(PLAY_DATA.graph.nodes[(play_name, node_id)])
+            <span class="org-keyword">for</span> key, value <span class="org-keyword">in</span> node_data.items():
+                <span class="org-variable-name">html_content</span> <span class="org-operator">+=</span> f<span class="org-string">"&lt;p&gt;&lt;b&gt;</span>{key}<span class="org-string">:&lt;/b&gt; </span>{value}<span class="org-string">&lt;/p&gt;"</span>
+        <span class="org-variable-name">html_content</span> <span class="org-operator">+=</span> <span class="org-string">"&lt;/div&gt;"</span>
+        <span class="org-keyword">return</span> ui.HTML(html_content)
+
+<span class="org-variable-name">app</span> <span class="org-operator">=</span> App(app_ui, server, static_assets <span class="org-operator">=</span> www_dir)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-js2" id="orgf5295aa">import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm"; // Using d3 v7 ESM
+
+function update_positions(link, node, width, height) {
+    node.attr("transform", d =&gt; {
+        const x = d.x = Math.max(10, Math.min(width - 10, d.x));
+        const y = d.y = Math.max(10, Math.min(height - 10, d.y));
+        return `translate(${x},${y})`;
+    });
+
+    link
+        .attr("x1", d =&gt; d.source.x)
+        .attr("y1", d =&gt; d.source.y)
+        .attr("x2", d =&gt; d.target.x)
+        .attr("y2", d =&gt; d.target.y);
+}
+
+if (Shiny) {
+    class NavigatorGraphOutputBinding extends Shiny.OutputBinding {
+        find(scope) {
+            const found = scope.find(".shiny-d3-graph-output");
+            return found;
+        }
+
+        renderValue(el, payload) {
+            const node_data = payload.nodes;
+            const link_data = payload.links;
+
+            const svg = d3.select("#d3-graph").call(d3.zoom().on("zoom", function () {
+                console.info("zoom detected");
+                svg.attr("transform", d3.event.transform);
+            }));
+
+            const tooltip = d3.select("#tooltip");
+            const width = svg.node().getBoundingClientRect().width;
+            const height = svg.node().getBoundingClientRect().height;
+
+            const nodeRadius = 15;
+            const linkGroup = svg.selectAll(".links")
+                .data([null])
+                .join("g")
+                .attr("class", "links");
+            const nodeGroup = svg.selectAll(".nodes")
+                .data([null])
+                .join("g")
+                .attr("class", "nodes");
+            const defs = svg.selectAll("defs")
+                  .data([null])
+                  .join("defs");
+
+            // Use a key function (d.id) to ensure D3 correctly matches data to elements
+            const node = nodeGroup.selectAll("g")
+                .data(node_data, d =&gt; d.id)
+                .join(
+                    enter =&gt; {
+                        const nodeEnter = enter.append("g")
+                            .attr("class", "node")
+                            .attr("transform", d =&gt; {
+                                // Position new nodes randomly within the SVG
+                                const x = Math.random() * (width - nodeRadius * 2) + nodeRadius;
+                                const y = Math.random() * (height - nodeRadius * 2) + nodeRadius;
+                                return `translate(${x}, ${y})`;
+                            });
+                        nodeEnter.append("circle")
+                            .attr("r", nodeRadius);
+                        nodeEnter.append("text")
+                            .attr("dy", "0.75em")
+                            .attr("y", nodeRadius + 5) // Position text below the circle
+                            .text(d =&gt; d.name)
+                            .style("pointer-events", "none") // Make text not interfere with node click
+                        ;
+                        return nodeEnter;
+                    },
+                    update =&gt; update,
+                    exit =&gt; exit.remove()
+                );
+
+            const link = linkGroup.selectAll("line")
+                  .data(link_data, d =&gt; d.source.id + "-" + d.target.id)
+                  .join("line")
+                  .attr("class", "link")
+                  .attr("marker-end", "url(#arrowhead)");
+
+            // Define arrow markers for directed graph links
+            defs.selectAll("marker")
+                .data([null])
+                .join("marker")
+                .attr("id", "arrowhead")
+                .attr("viewBox", "-0 -5 10 10")
+                .attr("refX", 15) // Position of the arrowhead relative to the end of the line
+                .attr("refY", 0)
+                .attr("orient", "auto")
+                .attr("markerWidth", 6)
+                .attr("markerHeight", 6)
+                .attr("xoverflow", "visible")
+                .append("path")
+                .attr("d", "M 0,-5 L 10,0 L 0,5")
+                .attr("fill", "#999")
+                .style("stroke", "none");
+
+            const simulation = d3.forceSimulation(node_data)
+                  .force("link", d3.forceLink(link_data).id(d =&gt; d.id).distance(100))
+                  .force("charge", d3.forceManyBody().strength(-300))
+                  .force("center", d3.forceCenter(width / 2, height / 2))
+                  .on("tick", () =&gt; update_positions(link, node, width, height));
+
+            // record clicks on nodes
+            node.on("mouseover", function(event, d) {
+                    // 'this' refers to the node element that the event listener is attached to
+
+                    // Let the server know which node has focus
+                    const focus_node_id = d.id;
+                    Shiny.setInputValue("focus_node_id", d.id);
+
+                    // Remove highlight from all nodes
+                    d3.selectAll(".node").classed("highlighted", false);
+                    d3.selectAll(".node text").classed("highlighted-text", false);
+
+                    // Add highlight to the clicked node
+                    d3.select(this).classed("highlighted", true);
+                    d3.select(this).select("text").classed("highlighted-text", true);
+
+                    tooltip.transition()
+                        .duration(200)
+                        .style("opacity", .9);
+                    tooltip.html("Node: " + d.name + "&lt;br/&gt;ID: " + d.id)
+                        .style("left", (event.pageX + 10) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
+                .on("mouseout", function(d) {
+                    tooltip.transition()
+                        .duration(500)
+                        .style("opacity", 0);
+                });
+        }
+    }
+    Shiny.outputBindings.register(
+        new NavigatorGraphOutputBinding(),
+        "shiny-d3-graph-output"
+    );
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-css" id="org34873db"><span class="org-css-selector">body</span> { <span class="org-css-property">font-family</span>: <span class="org-string">'Inter'</span>, sans-serif; }
+
+<span class="org-css-selector">.node circle</span> {
+    <span class="org-css-property">fill</span>: <span class="custom-7">#69b3a2</span>;
+    <span class="org-css-property">stroke</span>: <span class="custom-6">#000000</span>;
+    <span class="org-css-property">stroke-width</span>: 1.5px;
+    <span class="org-css-property">transition</span>: all 0.2s ease-in-out; <span class="org-comment-delimiter">/* </span><span class="org-comment">Smooth transition for highlight</span><span class="org-comment-delimiter"> */</span>
+}
+
+<span class="org-css-selector">.node.highlighted circle</span> {
+    <span class="org-css-property">stroke-width</span>: 3px;
+    <span class="org-css-property">fill</span>: <span class="custom-5">#ff0000</span>;
+}
+
+<span class="org-css-selector">.link</span> {
+    <span class="org-css-property">stroke</span>: <span class="custom-4">#909090</span>;
+    <span class="org-css-property">stroke-opacity</span>: 0.6;
+    <span class="org-css-property">stroke-width</span>: 2px;
+    <span class="org-css-property">fill</span>: none; <span class="org-comment-delimiter">/* </span><span class="org-comment">Ensure links are lines, not filled shapes</span><span class="org-comment-delimiter"> */</span>
+}
+
+<span class="org-css-selector">.node text</span> {
+    <span class="org-css-property">font-size</span>: 10px;
+    <span class="org-css-property">pointer-events</span>: none; <span class="org-comment-delimiter">/* </span><span class="org-comment">Prevent text from interfering with drag</span><span class="org-comment-delimiter"> */</span>
+    <span class="org-css-property">text-anchor</span>: middle;
+    <span class="org-css-property">fill</span>: <span class="custom-3">#333</span>;
+    <span class="org-css-property">transition</span>: all 0.2s ease-in-out; <span class="org-comment-delimiter">/* </span><span class="org-comment">Smooth transition for highlight</span><span class="org-comment-delimiter"> */</span>
+}
+
+<span class="org-css-selector">.node text.highlighted-text</span> {
+    <span class="org-css-property">font-weight</span>: bold;
+    <span class="org-css-property">fill</span>: <span class="custom-5">#ff0000</span>;
+}
+
+<span class="org-css-selector">.tooltip</span> {
+    <span class="org-css-property">position</span>: absolute;
+    <span class="org-css-property">text-align</span>: center;
+    <span class="org-css-property">width</span>: auto;
+    <span class="org-css-property">height</span>: auto;
+    <span class="org-css-property">padding</span>: 8px;
+    <span class="org-css-property">background</span>: <span class="custom-2">lightsteelblue</span>;
+    <span class="org-css-property">border</span>: 0px;
+    <span class="org-css-property">border-radius</span>: 8px;
+    <span class="org-css-property">pointer-events</span>: none;
+    <span class="org-css-property">opacity</span>: 0;
+    <span class="org-css-property">transition</span>: opacity 0.2s;
+}
+
+<span class="org-css-selector">table</span> {
+    <span class="org-css-property">width</span>: 100%;
+    <span class="org-css-property">border-collapse</span>: collapse;
+    <span class="org-css-property">margin-top</span>: 10px;
+}
+
+<span class="org-css-selector">th, td</span> {
+    <span class="org-css-property">border</span>: 1px solid <span class="custom-1">#ddd</span>;
+    <span class="org-css-property">padding</span>: 8px;
+    <span class="org-css-property">text-align</span>: left;
+}
+
+<span class="org-css-selector">th</span> {
+    <span class="org-css-property">background-color</span>: <span class="custom">#f2f2f2</span>;
+}
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-orgfd941b3" class="outline-3">
+<h3 id="orgfd941b3">Debugging Shiny</h3>
+<div class="outline-text-3" id="text-orgfd941b3">
+</div>
+<div id="outline-container-org971cc7d" class="outline-4">
+<h4 id="org971cc7d">Websockets logging</h4>
+<div class="outline-text-4" id="text-org971cc7d">
+<ul class="org-ul">
+<li><a href="https://websockets.readthedocs.io/en/stable/topics/logging.html">https://websockets.readthedocs.io/en/stable/topics/logging.html</a></li>
+<li><a href="https://websockets.readthedocs.io/en/stable/reference/variables.html">https://websockets.readthedocs.io/en/stable/reference/variables.html</a></li>
+</ul>
+
+<p>
+Shiny uses websockets for communication.
+To increase log verbosity and avoid truncating messages we can run
+</p>
+<div class="org-src-container">
+<pre class="src src-bash"><span class="org-builtin">export</span> <span class="org-variable-name">WEBSOCKETS_MAX_LOG_SIZE</span>=10000
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-org0336711" class="outline-2">
+<h2 id="org0336711">Utilities</h2>
+<div class="outline-text-2" id="text-org0336711">
+</div>
+<div id="outline-container-org3aead1c" class="outline-3">
+<h3 id="org3aead1c">Generic utilities</h3>
+<div class="outline-text-3" id="text-org3aead1c">
+<p>
+We will need some utilities for debugging.
+</p>
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">import</span> functools
+<span class="org-keyword">import</span> sys
+<span class="org-keyword">from</span> pathlib <span class="org-keyword">import</span> Path
+
+
+<span class="org-keyword">def</span> <span class="org-function-name">trace</span>(func):
+    <span class="org-type">@functools.wraps</span>(func)
+    <span class="org-keyword">def</span> <span class="org-function-name">traced</span>(<span class="org-operator">*</span>args, <span class="org-operator">**</span>kwargs):
+        <span class="org-variable-name">func_name</span> <span class="org-operator">=</span> func.<span class="org-builtin">__name__</span>
+
+        <span class="org-variable-name">arg_str</span> <span class="org-operator">=</span> <span class="org-string">", "</span>.join(<span class="org-builtin">repr</span>(arg) <span class="org-keyword">for</span> arg <span class="org-keyword">in</span> args)
+        <span class="org-variable-name">kwarg_str</span> <span class="org-operator">=</span> <span class="org-string">", "</span>.join(f<span class="org-string">"</span>{key}<span class="org-string">=</span>{<span class="org-builtin">repr</span>(value)}<span class="org-string">"</span> <span class="org-keyword">for</span> key, value <span class="org-keyword">in</span> kwargs.items())
+        <span class="org-variable-name">all_args</span> <span class="org-operator">=</span> <span class="org-string">", "</span>.join(<span class="org-builtin">filter</span>(<span class="org-constant">None</span>, [arg_str, kwarg_str]))
+
+        <span class="org-builtin">print</span>(f<span class="org-string">"TRACE: Entering </span>{func_name}<span class="org-string">(</span>{all_args}<span class="org-string">)"</span>)
+
+        <span class="org-keyword">try</span>:
+            <span class="org-variable-name">result</span> <span class="org-operator">=</span> func(<span class="org-operator">*</span>args, <span class="org-operator">**</span>kwargs)
+            <span class="org-builtin">print</span>(f<span class="org-string">"TRACE: Exiting </span>{func_name}<span class="org-string"> with result: </span>{<span class="org-builtin">repr</span>(result)}<span class="org-string">"</span>)
+            <span class="org-keyword">return</span> result
+        <span class="org-keyword">except</span> <span class="org-type">Exception</span> <span class="org-keyword">as</span> e:
+            <span class="org-builtin">print</span>(f<span class="org-string">"TRACE: Exiting </span>{func_name}<span class="org-string"> with exception: </span>{e<span class="org-operator">=</span>}<span class="org-string">"</span>)
+            <span class="org-keyword">raise</span>
+
+    <span class="org-keyword">return</span> traced
+
+
+<span class="org-keyword">def</span> <span class="org-function-name">log_mouseovers</span>(node):
+    <span class="org-builtin">print</span>(f<span class="org-string">"mouseover: </span>{node}<span class="org-string">"</span>)
+
+
+<span class="org-keyword">def</span> <span class="org-function-name">log_clicks</span>(node):
+    <span class="org-builtin">print</span>(f<span class="org-string">"click: </span>{node}<span class="org-string">"</span>)
+
+<span class="org-keyword">def</span> <span class="org-function-name">print_traits</span>(widget):
+    <span class="org-doc">"""Print the traits for an ipython widget</span>
+<span class="org-doc">    """</span>
+    <span class="org-builtin">print</span>([t <span class="org-keyword">for</span> t <span class="org-keyword">in</span> widget.traits()
+           <span class="org-keyword">if</span> <span class="org-keyword">not</span> <span class="org-builtin">str</span>(t).startswith(<span class="org-string">'_'</span>)])
+
+<span class="org-keyword">def</span> <span class="org-function-name">bind_to_name</span>(name: <span class="org-builtin">str</span>):
+    <span class="org-doc">"""</span>
+<span class="org-doc">    A decorator that binds the decorated function to a specified string name</span>
+<span class="org-doc">    at the module/global level.</span>
+
+<span class="org-doc">    The function will be accessible via its original name and the new bound name.</span>
+
+<span class="org-doc">    Args:</span>
+<span class="org-doc">        name: The name to bind the function to at global scope.</span>
+<span class="org-doc">    """</span>
+    <span class="org-keyword">if</span> <span class="org-keyword">not</span> <span class="org-builtin">isinstance</span>(name, <span class="org-builtin">str</span>):
+        <span class="org-keyword">raise</span> <span class="org-type">TypeError</span>(<span class="org-string">"The name argument must be a string."</span>)
+
+    <span class="org-keyword">def</span> <span class="org-function-name">decorator</span>(func):
+        <span class="org-type">@functools.wraps</span>(func)
+        <span class="org-keyword">def</span> <span class="org-function-name">wrapper</span>(<span class="org-operator">*</span>args, <span class="org-operator">**</span>kwargs):
+            <span class="org-keyword">return</span> func(<span class="org-operator">*</span>args, <span class="org-operator">**</span>kwargs)
+        <span class="org-builtin">globals</span>()[name] <span class="org-operator">=</span> func
+        <span class="org-keyword">return</span> wrapper
+
+    <span class="org-keyword">return</span> decorator
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgb695e04" class="outline-3">
+<h3 id="orgb695e04">Graph utilities</h3>
+<div class="outline-text-3" id="text-orgb695e04">
+<p>
+We'll need some generic graph utilities; we'll build these on networkx for now.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">from</span> typing <span class="org-keyword">import</span> Any
+<span class="org-keyword">import</span> networkx <span class="org-keyword">as</span> nx
+
+<span class="org-keyword">def</span> <span class="org-function-name">create_cycle_graph</span>(n)<span class="org-operator">-&gt;</span> nx.Graph:
+    <span class="org-doc">"""</span>
+<span class="org-doc">    Creates a circular graph with nodes valued from 0 to n-1,</span>
+<span class="org-doc">    where each node is connected to its successor and predecessor mod n.</span>
+
+<span class="org-doc">    Args:</span>
+<span class="org-doc">      n: The number of nodes in the graph.</span>
+
+<span class="org-doc">    Returns:</span>
+<span class="org-doc">      A NetworkX graph object representing the circular graph.</span>
+<span class="org-doc">    """</span>
+    <span class="org-variable-name">G</span> <span class="org-operator">=</span> nx.cycle_graph(n)
+
+    <span class="org-keyword">return</span> G
+
+<span class="org-keyword">def</span> <span class="org-function-name">node_and_neighbors</span>(graph: nx.Graph, node: Any) <span class="org-operator">-&gt;</span> nx.Graph:
+  <span class="org-doc">"""</span>
+<span class="org-doc">  Returns a subgraph consisting of the given node and all its immediate neighbors.</span>
+
+<span class="org-doc">  Args:</span>
+<span class="org-doc">    graph: The input NetworkX undirected graph.</span>
+<span class="org-doc">    node: The node within the graph for which to get the subgraph.</span>
+
+<span class="org-doc">  Returns:</span>
+<span class="org-doc">    A NetworkX graph object representing the subgraph containing the</span>
+<span class="org-doc">    specified node and its neighbors.</span>
+
+<span class="org-doc">  Raises:</span>
+<span class="org-doc">    nx.NetworkXError: If the specified node is not in the graph.</span>
+<span class="org-doc">  """</span>
+  <span class="org-keyword">if</span> node <span class="org-keyword">not</span> <span class="org-keyword">in</span> graph:
+    <span class="org-keyword">raise</span> nx.NetworkXError(f<span class="org-string">"Node </span>{node}<span class="org-string"> is not in the graph."</span>)
+
+  <span class="org-variable-name">subgraph_nodes</span> <span class="org-operator">=</span> <span class="org-builtin">list</span>(graph.neighbors(node)) <span class="org-operator">+</span> [node]
+
+  <span class="org-keyword">return</span> graph.subgraph(subgraph_nodes)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org0bcf899" class="outline-3">
+<h3 id="org0bcf899">Data providers</h3>
+<div class="outline-text-3" id="text-org0bcf899">
+</div>
+<div id="outline-container-orga5dc3f8" class="outline-4">
+<h4 id="orga5dc3f8">Shakespeare data</h4>
+<div class="outline-text-4" id="text-orga5dc3f8">
+<div class="org-src-container">
+<pre class="src src-python" id="org684f37b"><span class="org-keyword">import</span> pandas <span class="org-keyword">as</span> pd
+<span class="org-keyword">import</span> networkx <span class="org-keyword">as</span> nx
+<span class="org-keyword">from</span> itertools <span class="org-keyword">import</span> combinations
+<span class="org-keyword">from</span> typing <span class="org-keyword">import</span> Any
+
+
+<span class="org-keyword">class</span> <span class="org-type">CharacterNetwork</span>:
+    <span class="org-keyword">def</span> <span class="org-function-name">__init__</span>(<span class="org-keyword">self</span>, df: pd.DataFrame):
+        <span class="org-doc">"""Initializes the CharacterNetwork with a dataframe containing character</span>
+<span class="org-doc">        interactions in Shakespeare's plays.</span>
+
+<span class="org-doc">        Nodes represent a unique character within a specific play (e.g., 'play-name-character').</span>
+<span class="org-doc">        Edges connect characters who speak in the same scene.</span>
+
+<span class="org-doc">        Args:</span>
+<span class="org-doc">            df: The dataframe, with columns:</span>
+<span class="org-doc">            - play_name</span>
+<span class="org-doc">            - genre</span>
+<span class="org-doc">            - act</span>
+<span class="org-doc">            - scene</span>
+<span class="org-doc">            - character</span>
+<span class="org-doc">            - sex</span>
+<span class="org-doc">            - sentence</span>
+<span class="org-doc">            - text</span>
+<span class="org-doc">        """</span>
+        <span class="org-keyword">self</span>.<span class="org-variable-name">df</span> <span class="org-operator">=</span> df
+        <span class="org-keyword">self</span>.<span class="org-variable-name">graph</span> <span class="org-operator">=</span> <span class="org-keyword">self</span>._build_shakespeare_network(<span class="org-keyword">self</span>.df)
+        <span class="org-keyword">self</span>.<span class="org-variable-name">play_names</span> <span class="org-operator">=</span> <span class="org-builtin">sorted</span>(<span class="org-builtin">set</span>(df[<span class="org-string">"play_name"</span>]))
+
+    @<span class="org-builtin">staticmethod</span>
+    <span class="org-keyword">def</span> <span class="org-function-name">_build_shakespeare_network</span>(df: pd.DataFrame) <span class="org-operator">-&gt;</span> nx.Graph:
+        <span class="org-variable-name">required_columns</span> <span class="org-operator">=</span> <span class="org-builtin">set</span>(
+            <span class="org-string">"play_name,genre,character,act,scene,sentence,text,sex"</span>.split(<span class="org-string">","</span>)
+        )
+        <span class="org-keyword">assert</span> <span class="org-builtin">set</span>(df.columns) <span class="org-operator">&gt;</span> required_columns
+
+        <span class="org-comment-delimiter"># </span><span class="org-comment">Add the number of unique scenes.</span>
+        <span class="org-variable-name">scenes_per_character</span> <span class="org-operator">=</span> (
+            df.groupby([<span class="org-string">"play_name"</span>, <span class="org-string">"character"</span>, <span class="org-string">"act"</span>, <span class="org-string">"scene"</span>])
+            .size()
+            .reset_index(name<span class="org-operator">=</span><span class="org-string">"_count"</span>)
+            .groupby([<span class="org-string">"play_name"</span>, <span class="org-string">"character"</span>])
+            .size()
+            .reset_index(name<span class="org-operator">=</span><span class="org-string">"num_scenes"</span>)
+        )
+
+        <span class="org-comment-delimiter"># </span><span class="org-comment">Group by play, character, and sex to get a summary for each character node.</span>
+        <span class="org-variable-name">character_data</span> <span class="org-operator">=</span> ((
+            df.groupby([<span class="org-string">"play_name"</span>, <span class="org-string">"character"</span>, <span class="org-string">"sex"</span>])
+            .agg(num_sentences<span class="org-operator">=</span>(<span class="org-string">"sentence"</span>, <span class="org-string">"count"</span>), num_acts<span class="org-operator">=</span>(<span class="org-string">"act"</span>, <span class="org-string">"nunique"</span>))
+            .reset_index()
+        ).merge(
+            scenes_per_character, on<span class="org-operator">=</span>[<span class="org-string">"play_name"</span>, <span class="org-string">"character"</span>]
+        ))
+
+        <span class="org-comment-delimiter"># </span><span class="org-comment">Prepare a dictionary for node attributes, keyed by the unique node ID.</span>
+        <span class="org-variable-name">node_attributes</span>: <span class="org-builtin">dict</span>[<span class="org-builtin">tuple</span>[<span class="org-builtin">str</span>, <span class="org-builtin">str</span>], <span class="org-builtin">dict</span>[<span class="org-builtin">str</span>, <span class="org-type">Any</span>]] <span class="org-operator">=</span> {}
+        <span class="org-keyword">for</span> _, row <span class="org-keyword">in</span> character_data.iterrows():
+            <span class="org-variable-name">node_id</span> <span class="org-operator">=</span> (row[<span class="org-string">"play_name"</span>], row[<span class="org-string">"character"</span>])
+            <span class="org-variable-name">node_attributes</span>[node_id] <span class="org-operator">=</span> {
+                <span class="org-string">"play"</span>: row[<span class="org-string">"play_name"</span>],
+                <span class="org-string">"character"</span>: row[<span class="org-string">"character"</span>],
+                <span class="org-string">"sex"</span>: row[<span class="org-string">"sex"</span>],
+                <span class="org-string">"acts"</span>: row[<span class="org-string">"num_acts"</span>],
+                <span class="org-string">"scenes"</span>: row[<span class="org-string">"num_scenes"</span>],
+                <span class="org-string">"sentences"</span>: row[<span class="org-string">"num_sentences"</span>],
+            }
+        <span class="org-comment-delimiter"># </span><span class="org-comment">Process Edge Data</span>
+        <span class="org-variable-name">interactions</span> <span class="org-operator">=</span> (
+            df.groupby([<span class="org-string">"play_name"</span>, <span class="org-string">"act"</span>, <span class="org-string">"scene"</span>])[<span class="org-string">"character"</span>]
+            .<span class="org-builtin">apply</span>(<span class="org-builtin">set</span>)
+            .reset_index(name<span class="org-operator">=</span><span class="org-string">"characters_in_scene"</span>)
+        )
+
+        <span class="org-variable-name">edge_attributes</span>: <span class="org-builtin">dict</span>[<span class="org-builtin">tuple</span>[<span class="org-builtin">str</span>, <span class="org-builtin">str</span>, <span class="org-builtin">str</span>], <span class="org-builtin">dict</span>[<span class="org-builtin">str</span>, <span class="org-type">Any</span>]] <span class="org-operator">=</span> {}
+
+        <span class="org-variable-name">sentences_by_scene_and_character</span> <span class="org-operator">=</span> df.groupby(
+            [<span class="org-string">"play_name"</span>, <span class="org-string">"act"</span>, <span class="org-string">"scene"</span>, <span class="org-string">"character"</span>]
+        ).size()
+        <span class="org-keyword">for</span> _, row <span class="org-keyword">in</span> interactions.iterrows():
+            <span class="org-variable-name">play_name</span> <span class="org-operator">=</span> row[<span class="org-string">"play_name"</span>]
+            <span class="org-variable-name">act</span> <span class="org-operator">=</span> row[<span class="org-string">"act"</span>]
+            <span class="org-variable-name">scene</span> <span class="org-operator">=</span> row[<span class="org-string">"scene"</span>]
+            <span class="org-variable-name">characters_in_scene</span> <span class="org-operator">=</span> row[<span class="org-string">"characters_in_scene"</span>]
+
+            <span class="org-comment-delimiter"># </span><span class="org-comment">Get all unique pairs of characters in this scene.</span>
+            <span class="org-keyword">for</span> char1, char2 <span class="org-keyword">in</span> combinations(<span class="org-builtin">set</span>(characters_in_scene), 2):
+                <span class="org-variable-name">edge_key</span> <span class="org-operator">=</span> (play_name, char1, char2)
+                <span class="org-variable-name">sentences_char1</span> <span class="org-operator">=</span> sentences_by_scene_and_character.loc[
+                    play_name, act, scene, char1
+                ]
+                <span class="org-variable-name">sentences_char2</span> <span class="org-operator">=</span> sentences_by_scene_and_character.loc[
+                    play_name, act, scene, char2
+                ]
+                <span class="org-keyword">if</span> edge_key <span class="org-keyword">not</span> <span class="org-keyword">in</span> edge_attributes:
+                    <span class="org-variable-name">edge_attributes</span>[edge_key] <span class="org-operator">=</span> {
+                        <span class="org-string">"play_name"</span>: play_name,
+                        <span class="org-string">"interactions"</span>: [],
+                    }
+                edge_attributes[edge_key][<span class="org-string">"interactions"</span>].append(
+                    {
+                        <span class="org-string">"act"</span>: act,
+                        <span class="org-string">"scene"</span>: scene,
+                        <span class="org-string">"sentences_char1"</span>: sentences_char1,
+                        <span class="org-string">"sentences_char2"</span>: sentences_char2,
+                    }
+                )
+
+        <span class="org-comment-delimiter"># </span><span class="org-comment">Build the NetworkX Graph</span>
+        <span class="org-variable-name">G</span> <span class="org-operator">=</span> nx.Graph()
+
+        <span class="org-keyword">for</span> node_id, attributes <span class="org-keyword">in</span> node_attributes.items():
+            G.add_node(node_id, <span class="org-operator">**</span>attributes)
+        <span class="org-variable-name">dn</span> <span class="org-operator">=</span> G.nodes[(<span class="org-string">"Winter's Tale"</span>, <span class="org-string">"Time"</span>)]
+
+        <span class="org-keyword">for</span> edge_key, attributes <span class="org-keyword">in</span> edge_attributes.items():
+            <span class="org-variable-name">play</span>, <span class="org-variable-name">char1</span>, <span class="org-variable-name">char2</span> <span class="org-operator">=</span> edge_key
+            G.add_edge((play, char1), (play, char2), <span class="org-operator">**</span>attributes)
+
+        <span class="org-keyword">return</span> G
+
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">Example usage:</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">character_network = CharacterNetwork(pd.read_csv(data_dir / 'shakespeare_plays.csv'))</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">play_names = character_network.play_names</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">sdg = character_network.graph</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">print(f"jm - {sdg=}")</span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footnotes">
+<h2 class="footnotes">Footnotes: </h2>
+<div id="text-footnotes">
+
+<div class="footdef"><sup><a id="fn.shiny-overview" class="footnum" href="#fnr.shiny-overview" role="doc-backlink">1</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">
+Overview &#x2013; Shiny for Python, <a href="https://shiny.posit.co/py/docs/overview.html">https://shiny.posit.co/py/docs/overview.html</a>
+</p></div></div>
+
+<div class="footdef"><sup><a id="fn.cytoscapejs-and-cytoscape" class="footnum" href="#fnr.cytoscapejs-and-cytoscape" role="doc-backlink">2</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">
+Cytoscape.js and Cytoscape &#x2014; Cytoscape User Manual, <a href="https://manual.cytoscape.org/en/stable/Cytoscape.js_and_Cytoscape.html">https://manual.cytoscape.org/en/stable/Cytoscape.js_and_Cytoscape.html</a>
+</p></div></div>
+
+<div class="footdef"><sup><a id="fn.shiny-python-js" class="footnum" href="#fnr.shiny-python-js" role="doc-backlink">3</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">
+Shiny for Python and JavaScript: How to Add JS Scripts to Your Dashboards - Appsilon,
+<a href="https://www.appsilon.com/post/shiny-for-python-javascript">https://www.appsilon.com/post/shiny-for-python-javascript</a>
+</p></div></div>
+
+<div class="footdef"><sup><a id="fn.shiny-custom-js" class="footnum" href="#fnr.shiny-custom-js" role="doc-backlink">4</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">
+Custom JavaScript component &#x2013; Shiny for Python, <a href="https://shiny.posit.co/py/docs/custom-component-one-off.html">https://shiny.posit.co/py/docs/custom-component-one-off.html</a>
+</p></div></div>
+
+<div class="footdef"><sup><a id="fn.shiny-custom-components" class="footnum" href="#fnr.shiny-custom-components" role="doc-backlink">5</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">
+Custom components package &#x2013; Shiny for Python, <a href="https://shiny.posit.co/py/docs/custom-components-pkg.html">https://shiny.posit.co/py/docs/custom-components-pkg.html</a>
+</p></div></div>
+
+
+</div>
+</div></div>
+<div id="postamble" class="status">
+<p class="author">Author: Jonathan Moore</p>
+<p class="date">Created: 2025-08-06 Wed 00:31</p>
+</div>
+</body>
+</html>
