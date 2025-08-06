@@ -11,8 +11,31 @@
 - [[#introduction][Introduction]]
 - [[#targets][Targets]]
 - [[#supporting-packages][Supporting packages]]
+    - [[#jupyter-widgets][Jupyter Widgets]]
+    - [[#cytoscapejs][Cytoscape.js]]
+    - [[#shinywidgets][shinywidgets]]
+    - [[#ipycytoscape][ipycytoscape]]
+    - [[#ipysigma][ipysigma]]
+    - [[#pyvis][Pyvis]]
+    - [[#d3][D3]]
+    - [[#d3blocks][d3blocks]]
+    - [[#d3graph][d3graph]]
+    - [[#ipydagred3][ipydagred3]]
+    - [[#ipyelk][ipyelk]]
+    - [[#dash][Dash]]
+    - [[#bokeh][Bokeh]]
+    - [[#altair][Altair]]
 - [[#using-shiny][Using Shiny]]
+    - [[#ways-to-extend-shiny][Ways to extend Shiny]]
+    - [[#using-cytoscapejs][Using Cytoscape.js]]
+    - [[#using-ipysigma][Using ipysigma]]
+    - [[#using-pyvis][Using pyvis]]
+    - [[#d3-1][D3]]
+    - [[#debugging-shiny][Debugging Shiny]]
 - [[#utilities][Utilities]]
+    - [[#generic-utilities][Generic utilities]]
+    - [[#graph-utilities][Graph utilities]]
+    - [[#data-providers][Data providers]]
 - [[#footnotes][Footnotes]]
 
 * Introduction
@@ -1102,7 +1125,6 @@
       #+NAME: d3_core_navigator
       #+begin_src python :tangle src/navigator/d3_core_navigator.py
         from pathlib import Path
-
         import pandas as pd
 
         import htmltools
@@ -1114,78 +1136,21 @@
 
         import navigator.shakespeare as shakespeare
 
-        src_dir = Path(__file__).parent.parent
-        www_dir = src_dir / 'www'
-        data_dir = src_dir / 'www' / 'data'
+        www_dir = Path(__file__).parent.parent / 'www'
+        PLAY_DATA = shakespeare.CharacterNetwork(pd.read_csv(www_dir / 'data' / 'shakespeare_plays.csv'))
 
-        sdf = pd.read_csv(data_dir / 'shakespeare_plays.csv')
-        play_names = sorted(set(sdf['play_name']))
-        print(f"jm - {sdf.head()=}")
-        print(f"jm - {sorted(play_names)=}")
-
-        sdg = shakespeare.build_shakespeare_network(sdf)
-        print(f"jm - {sdg=}")
-
-        print("loaded shakespeare data")
-        graph_data = {
-            "nodes": [
-                {"id": "A", "name": "Node A"},
-                {"id": "B", "name": "Node B"},
-                {"id": "C", "name": "Node C"},
-                {"id": "D", "name": "Node D"},
-                {"id": "E", "name": "Node E"},
-            ],
-            "links": [
-                {"source": "A", "target": "B"},
-                {"source": "B", "target": "C"},
-                {"source": "C", "target": "A"},
-                {"source": "A", "target": "D"},
-                {"source": "D", "target": "E"},
-            ],
-        }
-
-        # Sample DataFrames for each node
-        dataframes = {
-            "A": pd.DataFrame(
-                {
-                    "Product": ["Laptop", "Monitor", "Keyboard"],
-                    "Price": [1200, 300, 75],
-                    "Stock": [50, 120, 200],
-                }
-            ),
-            "B": pd.DataFrame(
-                {
-                    "City": ["New York", "Los Angeles", "Chicago"],
-                    "Population": [8.4, 3.9, 2.7],
-                    "Country": ["USA", "USA", "USA"],
-                }
-            ),
-            "C": pd.DataFrame(
-                {
-                    "Animal": ["Lion", "Tiger", "Bear"],
-                    "Habitat": ["Savannah", "Forest", "Forest"],
-                    "Diet": ["Carnivore", "Carnivore", "Omnivore"],
-                }
-            ),
-            "D": pd.DataFrame(
-                {
-                    "Course": ["Math", "Science", "History"],
-                    "Credits": [3, 4, 3],
-                    "Instructor": ["Prof. Smith", "Dr. Jones", "Ms. Davis"],
-                }
-            ),
-            "E": pd.DataFrame(
-                {
-                    "Language": ["Python", "JavaScript", "R"],
-                    "Paradigm": ["OOP", "Multi-paradigm", "Functional"],
-                    "Year": [1991, 1995, 1993],
-                }
-            ),
-        }
+        d3_dep = htmltools.HTMLDependency(
+            "d3graph",
+            "0.0.0",
+            source={"subdir": str(www_dir / "gen")},
+            script={"src": "d3_navigator.js", "type": "module"},
+            stylesheet={"href": "d3_navigator.css"},
+            all_files=True,
+        )
 
         class render_d3graph(Renderer[dict]):
             """
-            Render a pandas dataframe in d3.
+            Render a dict as a D3 graph.
             """
             async def transform(self, value: dict) -> Jsonifiable:
                 """
@@ -1196,15 +1161,6 @@
                 assert set(value) == {'nodes', 'links'}
 
                 return value
-
-        d3_dep = htmltools.HTMLDependency(
-            "d3graph",
-            "0.0.0",
-            source={"subdir": str(www_dir / "gen")},
-            script={"src": "d3_navigator.js", "type": "module"},
-            stylesheet={"href": "d3_navigator.css"},
-            all_files=True,
-        )
 
         app_ui = ui.page_fluid(
             ui.tags.head(
@@ -1219,33 +1175,23 @@
             ui.input_select(
                 id="play_name",
                 label="Choose a play:",
-                choices=play_names,
+                choices=PLAY_DATA.play_names,
                 selected='Hamlet',
             ),
-            ui.div(
+            ui.layout_columns(
                 ui.tags.svg(
                     id="d3-graph",
-                    style="width: 1200px; height: 600px; border: 1px solid black;",
+                    style="height: 600px; border: 1px solid black;",
                 ),
-                ui.div(id="tooltip"),
-                id="navigator-graph-container",
+                ui.output_ui("formatted_dict_output"),
+                col_widths={"xl": (8, 4)},
             ),
-            ui.div(ui.h3("Selected Node Data"),
-                   ui.output_table("dataframe_output")),
+            ui.div(id="tooltip"),
             theme=shinyswatch.theme.cerulean,
         )
 
 
         def server(input: shiny.Inputs, output: shiny.Outputs, _session: shiny.Session):
-            @output
-            @render.table
-            def dataframe_output():
-                node_id = input.clicked_node_id()
-
-                if node_id and node_id in dataframes:
-                    return dataframes[node_id]
-                return pd.DataFrame({"Info": ["Click a node to see its associated DataFrame!"]})
-
             @render_d3graph
             def d3Graph():
                 play_name = input.play_name()
@@ -1255,7 +1201,7 @@
                             'id': node[1],
                             'name': node[1],
                         }
-                        for node in sdg.nodes
+                        for node in PLAY_DATA.graph.nodes
                         if node[0] == play_name
                     ],
                     'links': [
@@ -1263,23 +1209,24 @@
                             'source': edge[0][1],
                             'target': edge[1][1],
                         }
-                        for edge in sdg.edges
+                        for edge in PLAY_DATA.graph.edges
                         if edge[0][0] == play_name
                         ]
                 }
-                print(f"jm - {play_name=}")
-                print(f"jm - {len(graph_data['nodes'])=}")
-                print(f"jm - {len(graph_data['links'])=}")
-                node_ids = set(n['id'] for n in graph_data['nodes'])
-                edge_node_ids = set(edge['source'] for edge in graph_data['links']) | set(edge['target'] for edge in graph_data['links'])
-                print(f"jm - {node_ids=}")
-                print(f"jm - {edge_node_ids=}")
-                print(f"jm - {node_ids-edge_node_ids=}")
-                print(f"jm - {edge_node_ids-node_ids=}")
-
-
-
                 return graph_data
+
+            @output
+            @render.ui
+            def formatted_dict_output():
+                play_name = input.play_name()
+                node_id = input.focus_node_id()
+                html_content = "<div>"
+                if node_id:
+                    node_data = dict(PLAY_DATA.graph.nodes[(play_name, node_id)])
+                    for key, value in node_data.items():
+                        html_content += f"<p><b>{key}:</b> {value}</p>"
+                html_content += "</div>"
+                return ui.HTML(html_content)
 
         app = App(app_ui, server, static_assets = www_dir)
       #+end_src
@@ -1313,7 +1260,11 @@
                     const node_data = payload.nodes;
                     const link_data = payload.links;
 
-                    const svg = d3.select("#d3-graph");
+                    const svg = d3.select("#d3-graph").call(d3.zoom().on("zoom", function () {
+                        console.info("zoom detected");
+                        svg.attr("transform", d3.event.transform);
+                    }));
+
                     const tooltip = d3.select("#tooltip");
                     const width = svg.node().getBoundingClientRect().width;
                     const height = svg.node().getBoundingClientRect().height;
@@ -1388,13 +1339,12 @@
                           .on("tick", () => update_positions(link, node, width, height));
 
                     // record clicks on nodes
-                    node.on("click", function(event, d) {
+                    node.on("mouseover", function(event, d) {
                             // 'this' refers to the node element that the event listener is attached to
-                            console.debug("node click: this:", this);
-                            console.debug("node click: event:", event);
-                            console.debug("node click: event.target:", event.target);
-                            console.debug("node click: d:", d);
-                            console.debug("node click: d.id:", d.id);
+
+                            // Let the server know which node has focus
+                            const focus_node_id = d.id;
+                            Shiny.setInputValue("focus_node_id", d.id);
 
                             // Remove highlight from all nodes
                             d3.selectAll(".node").classed("highlighted", false);
@@ -1404,12 +1354,6 @@
                             d3.select(this).classed("highlighted", true);
                             d3.select(this).select("text").classed("highlighted-text", true);
 
-                            // Let the server know which node was clicked
-                            const clicked_node_id = d.id;
-                            console.debug("clicked_node_id:", clicked_node_id);
-                            Shiny.setInputValue("clicked_node_id", d.id);
-                        })
-                        .on("mouseover", function(event, d) {
                             tooltip.transition()
                                 .duration(200)
                                 .style("opacity", .9);
@@ -1640,111 +1584,128 @@
         from itertools import combinations
         from typing import Any
 
-        def build_shakespeare_network(df: pd.DataFrame) -> nx.Graph:
-            """
-            Constructs a NetworkX graph representing character interactions in Shakespeare's plays.
 
-            Nodes represent a unique character within a specific play (e.g., 'play-name-character').
-            Edges connect characters who speak in the same scene.
+        class CharacterNetwork:
+            def __init__(self, df: pd.DataFrame):
+                """Initializes the CharacterNetwork with a dataframe containing character
+                interactions in Shakespeare's plays.
 
-            Args:
-                df: The dataframe, with columns:
-                - play_name
-                - genre
-                - act
-                - scene
-                - character
-                - sex
-                - sentence
-                - text
+                Nodes represent a unique character within a specific play (e.g., 'play-name-character').
+                Edges connect characters who speak in the same scene.
 
-            Returns:
-                A NetworkX Graph object with structured node and edge attributes.
-            """
-            required_columns = set("play_name,genre,character,act,scene,sentence,text,sex".split(','))
-            assert set(df.columns) > required_columns
+                Args:
+                    df: The dataframe, with columns:
+                    - play_name
+                    - genre
+                    - act
+                    - scene
+                    - character
+                    - sex
+                    - sentence
+                    - text
+                """
+                self.df = df
+                self.graph = self._build_shakespeare_network(self.df)
+                self.play_names = sorted(set(df["play_name"]))
 
-            # Group by play, character, and sex to get a summary for each character node.
-            character_data = df.groupby(['play_name', 'character', 'sex']).agg(
-                num_sentences=('sentence', 'count'),
-                num_acts=('act', 'nunique')
-            ).reset_index()
+            @staticmethod
+            def _build_shakespeare_network(df: pd.DataFrame) -> nx.Graph:
+                required_columns = set(
+                    "play_name,genre,character,act,scene,sentence,text,sex".split(",")
+                )
+                assert set(df.columns) > required_columns
 
-            # Add the number of unique scenes.
-            scenes_per_character = df.groupby(['play_name', 'character', 'act', 'scene']).size().reset_index(name='_count')
-            scenes_per_character = scenes_per_character.groupby(['play_name', 'character']).size().reset_index(name='num_scenes')
+                # Add the number of unique scenes.
+                scenes_per_character = (
+                    df.groupby(["play_name", "character", "act", "scene"])
+                    .size()
+                    .reset_index(name="_count")
+                    .groupby(["play_name", "character"])
+                    .size()
+                    .reset_index(name="num_scenes")
+                )
 
-            character_data = character_data.merge(scenes_per_character, on=['play_name', 'character'])
+                # Group by play, character, and sex to get a summary for each character node.
+                character_data = ((
+                    df.groupby(["play_name", "character", "sex"])
+                    .agg(num_sentences=("sentence", "count"), num_acts=("act", "nunique"))
+                    .reset_index()
+                ).merge(
+                    scenes_per_character, on=["play_name", "character"]
+                ))
 
-            # Prepare a dictionary for node attributes, keyed by the unique node ID.
-            node_attributes: dict[tuple[str, str], dict[str, Any]] = {}
-            for _, row in character_data.iterrows():
-                node_id = (row['play_name'], row['character'])
-                node_attributes[node_id] = {
-                    'play_name': row['play_name'],
-                    'character': row['character'],
-                    'num_acts': row['num_acts'],
-                    'num_scenes': row['num_scenes'],
-                    'num_sentences': row['num_sentences'],
-                    'sex': row['sex']
-                }
+                # Prepare a dictionary for node attributes, keyed by the unique node ID.
+                node_attributes: dict[tuple[str, str], dict[str, Any]] = {}
+                for _, row in character_data.iterrows():
+                    node_id = (row["play_name"], row["character"])
+                    node_attributes[node_id] = {
+                        "play": row["play_name"],
+                        "character": row["character"],
+                        "sex": row["sex"],
+                        "acts": row["num_acts"],
+                        "scenes": row["num_scenes"],
+                        "sentences": row["num_sentences"],
+                    }
+                # Process Edge Data
+                interactions = (
+                    df.groupby(["play_name", "act", "scene"])["character"]
+                    .apply(set)
+                    .reset_index(name="characters_in_scene")
+                )
 
-            # --- 2. Process Edge Data ---
-            # Find all interactions (characters speaking in the same scene).
-            # Group by the scene identifier to find co-occurring characters.
-            interactions = df.groupby(['play_name', 'act', 'scene'])['character'].apply(set).reset_index(name='characters_in_scene')
+                edge_attributes: dict[tuple[str, str, str], dict[str, Any]] = {}
 
-            edge_attributes: dict[tuple[str,str,str], dict[str, Any]] = {}
+                sentences_by_scene_and_character = df.groupby(
+                    ["play_name", "act", "scene", "character"]
+                ).size()
+                for _, row in interactions.iterrows():
+                    play_name = row["play_name"]
+                    act = row["act"]
+                    scene = row["scene"]
+                    characters_in_scene = row["characters_in_scene"]
 
-            sentences_by_scene_and_character = df.groupby(['play_name', 'act', 'scene', 'character']).size()
-            for _, row in interactions.iterrows():
-                play_name = row['play_name']
-                act = row['act']
-                scene = row['scene']
+                    # Get all unique pairs of characters in this scene.
+                    for char1, char2 in combinations(set(characters_in_scene), 2):
+                        edge_key = (play_name, char1, char2)
+                        sentences_char1 = sentences_by_scene_and_character.loc[
+                            play_name, act, scene, char1
+                        ]
+                        sentences_char2 = sentences_by_scene_and_character.loc[
+                            play_name, act, scene, char2
+                        ]
+                        if edge_key not in edge_attributes:
+                            edge_attributes[edge_key] = {
+                                "play_name": play_name,
+                                "interactions": [],
+                            }
+                        edge_attributes[edge_key]["interactions"].append(
+                            {
+                                "act": act,
+                                "scene": scene,
+                                "sentences_char1": sentences_char1,
+                                "sentences_char2": sentences_char2,
+                            }
+                        )
 
-                characters_in_scene = row['characters_in_scene']
+                # Build the NetworkX Graph
+                G = nx.Graph()
 
-                # Get all unique pairs of characters in this scene.
-                for char1, char2 in combinations(set(characters_in_scene), 2):
-                    edge_key = (play_name, char1, char2)
-                    sentences_char1 = sentences_by_scene_and_character.loc[play_name, act, scene, char1]
-                    sentences_char2 = sentences_by_scene_and_character.loc[play_name, act, scene, char2]
-                    if edge_key not in edge_attributes:
-                        edge_attributes[edge_key] = {
-                            'play_name': play_name,
-                            'interactions': []
-                        }
-                    edge_attributes[edge_key]['interactions'].append({
-                        'act': act,
-                        'scene': scene,
-                        'sentences_char1': sentences_char1,
-                        'sentences_char2': sentences_char2
-                    })
+                for node_id, attributes in node_attributes.items():
+                    G.add_node(node_id, **attributes)
+                dn = G.nodes[("Winter's Tale", "Time")]
 
-            # --- 3. Build the NetworkX Graph ---
-            G = nx.Graph()
+                for edge_key, attributes in edge_attributes.items():
+                    play, char1, char2 = edge_key
+                    G.add_edge((play, char1), (play, char2), **attributes)
 
-            for node_id, attributes in node_attributes.items():
-                G.add_node(node_id, **attributes)
+                return G
 
-            for edge_key, attributes in edge_attributes.items():
-                play, char1, char2 = edge_key
-                G.add_edge((play, char1), (play, char2), **attributes)
 
-            return G
-
-        def main():
-            import sys
-
-            if len(sys.argv) != 2:
-                print("Usage: python script.py <path_to_csv>")
-                sys.exit(1)
-            path_to_csv = sys.argv[1]
-            df = pd.read_csv(path_to_csv)
-            graph = build_shakespeare_network(df)
-            print(f"jm - {len(graph.edges)=}")
-            print(f"jm - {len(graph.nodes)=}")
-            print(graph.nodes(data=True))
+        # Example usage:
+        # character_network = CharacterNetwork(pd.read_csv(data_dir / 'shakespeare_plays.csv'))
+        # play_names = character_network.play_names
+        # sdg = character_network.graph
+        # print(f"jm - {sdg=}")
       #+end_src
 
 * Footnotes
@@ -1771,4 +1732,5 @@
   :END:
   ;; Local Variables:
   ;; eval: (add-hook 'after-save-hook #'org-babel-tangle nil t)
+  ;; toc-org-max-depth: 3
   ;; End:
