@@ -1309,6 +1309,59 @@
             return string_id;
         }
 
+        function getRadiusScale(node_data, {radiusAttr,
+                                            minRadius,
+                                            maxRadius}) {
+            const minRadiusAttr = d3.min(node_data, d => d[radiusAttr]);
+            const maxRadiusAttr = d3.max(node_data, d => d[radiusAttr]);
+            return d3.scaleSqrt()
+                .domain([minRadiusAttr, maxRadiusAttr])
+                .range([minRadius, maxRadius]);
+        }
+
+        function getLinkWidthScale(link_data) {
+            const linkStrengthExtent = d3.extent(link_data, d => d.interaction_strength);
+            return d3.scaleSqrt()
+                .domain(linkStrengthExtent)
+                .range([0, 10]);
+        }
+
+        function getLinkColorScale(link_data) {
+            const linkStrengthExtent = d3.extent(link_data, d => d.interaction_strength);
+            return d3.scaleSqrt()
+                .domain(linkStrengthExtent)
+                .range(["#fff", "#f00"]);
+        }
+
+        function createLink(linkGroup, link_data) {
+            const linkWidthScale = getLinkWidthScale(link_data);
+            const linkColorScale = getLinkColorScale(link_data);
+            return linkGroup.selectAll("line")
+                .data(link_data, link_string_id)
+                .join("line")
+                .attr("class", "link")
+        //        .attr("marker-end", "url(#arrowhead)")
+                .attr("stroke-width", d => linkWidthScale(d.interaction_strength))
+                .attr("stroke", d => linkColorScale(d.interaction_strength))
+            ;
+        }
+
+        function createSimulation({
+            node_data,
+            link_data,
+            width,
+            height,
+            radiusAttr,
+            radiusScale
+        }) {
+            // warning: forceLink modifies link_data. See https://d3js.org/d3-force/link
+            return d3.forceSimulation(node_data)
+                  .force("link", d3.forceLink(link_data).id(node => node.id).distance(100))
+                  .force("charge", d3.forceManyBody().strength(-50))
+                  .force("center", d3.forceCenter(width / 2, height / 2))
+                  .force("collide", d3.forceCollide().radius(d => radiusScale(d[radiusAttr]) + 2));
+        }
+
         if (Shiny) {
             class NavigatorGraphOutputBinding extends Shiny.OutputBinding {
                 find(scope) {
@@ -1320,9 +1373,10 @@
                     const node_data = payload.nodes;
                     const link_data = payload.links;
 
-                    const svg = d3.select("#d3-graph").call(d3.zoom().on("zoom", function () {
+                    const svg = d3.select("#d3-graph").call(d3.zoom().on("zoom", (event) => {
                         console.info("zoom detected");
-                        svg.attr("transform", d3.event.transform);
+                        console.info("event", event);
+                        svg.attr("transform", event.transform);
                     }));
 
                     const tooltip = d3.select("#tooltip");
@@ -1341,15 +1395,11 @@
                           .data([null])
                           .join("defs");
 
-                    // Use number of sentences to set radius
-                    const radiusAttr = 'sentences';
-                    const minRadiusAttr = d3.min(node_data, d => d[radiusAttr]);
-                    const maxRadiusAttr = d3.max(node_data, d => d[radiusAttr]);
-                    const minRadius = 5;
-                    const maxRadius = 25;
-                    const radiusScale = d3.scaleSqrt()
-                          .domain([minRadiusAttr, maxRadiusAttr])
-                          .range([minRadius, maxRadius]);
+                    const radiusAttr = "sentences";
+                    const radiusScale = getRadiusScale(node_data,
+                                                       {radiusAttr: radiusAttr,
+                                                        minRadius: 5,
+                                                        maxRadius: 25});
 
                     // Use a key function (d.id) to ensure D3 correctly matches data to elements
                     const node = nodeGroup.selectAll("g")
@@ -1360,8 +1410,8 @@
                                         .attr("class", "node")
                                         .attr("transform", d => {
                                             // Position new nodes randomly within the SVG
-                                            const x = Math.random() * (width - maxRadius * 2) + maxRadius;
-                                            const y = Math.random() * (height - maxRadius * 2) + maxRadius;
+                                            const x = Math.random() * width;
+                                            const y = Math.random() * height;
                                             return `translate(${x}, ${y})`;
                                         });
                                   nodeEnter.append("circle")
@@ -1377,54 +1427,18 @@
                               update => update,
                               exit => exit.remove()
                           );
-                    // warning: forceLink modifies link_data. See https://d3js.org/d3-force/link
-                    // Initially, the source and target attribute values are strings, to be
-                    // matched to the node id attributes. The source and target are updated to
-                    // references to corresponding node /objects/.
-                    const simulation = d3.forceSimulation(node_data)
-                          .force("link", d3.forceLink(link_data).id(node=>node.id).distance(100))
-                          .force("charge", d3.forceManyBody().strength(-50))
-                          .force("center", d3.forceCenter(width / 2, height / 2))
-                          .force("collide", d3.forceCollide().radius(d => radiusScale(d[radiusAttr]) + 2))
-                          .on("tick", () => update_positions(link, node, width, height));
+                    // warning: createSimulation modifies link_data
+                    const simulation = createSimulation({
+                        node_data: node_data,
+                        link_data: link_data,
+                        width: width,
+                        height: height,
+                        radiusAttr: radiusAttr,
+                        radiusScale: radiusScale
+                    });
+                    const link = createLink(linkGroup, link_data);
+                    simulation.on("tick", () => update_positions(link, node, width, height));
 
-                    const linkStrengthExtent = d3.extent(link_data, d => d.interaction_strength);
-                    console.debug("linkStrengthExtent", linkStrengthExtent);
-                    const linkWidthScale = d3.scaleSqrt()
-                          .domain(linkStrengthExtent)
-                          .range([0, 10]);
-
-                    const linkColorScale = d3.scaleSqrt()
-                          .domain(linkStrengthExtent)
-                          .range(["#fff", "#f00"]); // Example: from light gray to steel blue
-                    const link = linkGroup.selectAll("line")
-                          .data(link_data, link_string_id)
-                          .join("line")
-                          .attr("class", "link")
-                          .attr("marker-end", "url(#arrowhead)")
-                          .attr("stroke-width", d => linkWidthScale(d.interaction_strength))
-                          .attr("stroke", d => linkColorScale(d.interaction_strength))
-                    ;
-
-                    // Define arrow markers for directed graph links
-                    defs.selectAll("marker")
-                        .data([null])
-                        .join("marker")
-                        .attr("id", "arrowhead")
-                        .attr("viewBox", "-0 -5 10 10")
-                        .attr("refX", 15) // Position of the arrowhead relative to the end of the line
-                        .attr("refY", 0)
-                        .attr("orient", "auto")
-                        .attr("markerWidth", 6)
-                        .attr("markerHeight", 6)
-                        .attr("xoverflow", "visible")
-                        .append("path")
-                        .attr("d", "M 0,-5 L 10,0 L 0,5")
-                        .attr("fill", "#999")
-                        .style("stroke", "none");
-
-
-                    // record clicks on nodes
                     node.on("mouseover", function(event, d) {
                         // 'this' refers to the node element that the event listener is attached to
 
@@ -1442,7 +1456,7 @@
 
                         // Highlight links related to the node in red
                         link.filter(l => (l.source === d) || (l.target === d))
-                                .classed("highlighted-link", true);
+                            .classed("highlighted-link", true);
 
                         tooltip.transition()
                             .duration(200)
@@ -1472,6 +1486,7 @@
                         })
                     ;
                 }
+
             }
             Shiny.outputBindings.register(
                 new NavigatorGraphOutputBinding(),
