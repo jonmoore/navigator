@@ -1125,6 +1125,7 @@
       #+NAME: d3_core_navigator
       #+begin_src python :tangle src/navigator/d3_core_navigator.py
         from pathlib import Path
+        import networkx as nx
         import pandas as pd
 
         import htmltools
@@ -1136,10 +1137,12 @@
 
         import navigator.shakespeare as shakespeare
 
-        www_dir = Path(__file__).parent.parent / 'www'
-        PLAY_DATA = shakespeare.CharacterNetwork(pd.read_csv(www_dir / 'data' / 'shakespeare_plays.csv'))
+        www_dir = Path(__file__).parent.parent / "www"
+        PLAY_DATA = shakespeare.CharacterNetwork(
+            pd.read_csv(www_dir / "data" / "shakespeare_plays.csv", index_col=0)
+        )
 
-        d3_dep = htmltools.HTMLDependency(
+        d3_dependency = htmltools.HTMLDependency(
             "d3graph",
             "0.0.0",
             source={"subdir": str(www_dir / "gen")},
@@ -1148,24 +1151,53 @@
             all_files=True,
         )
 
-        class render_d3graph(Renderer[dict]):
+
+        class render_character_graph(Renderer[nx.Graph]):
             """
             Render a dict as a D3 graph.
             """
-            async def transform(self, value: dict) -> Jsonifiable:
-                """
-                Transform a dict representing a graph into a JSONifiable object that can be
-                displayed using D3.
-                """
-                assert isinstance(value, dict)
-                assert set(value) == {'nodes', 'links'}
 
-                return value
+            async def transform(self, value: nx.Graph) -> Jsonifiable:
+                """Transform a networkx graph representing character interactions in
+                Shakespeare's plays into a Jsonifiable object.
+                """
+                assert isinstance(value, nx.Graph)
+                G = value
+
+                def node_id_as_str(node) -> str:
+                    return ", ".join(node)
+
+                ret_val = {
+                    "nodes": [
+                        {
+                            "id": node_id_as_str(node_id),
+                            "play": node_id[0],
+                            "name": node_id[1],
+                            "sentences": node_attributes['sentences'],
+                        }
+                        for node_id, node_attributes in G.nodes(data=True)
+                    ],
+                    "links": [
+                        {
+                            "source": node_id_as_str(source),
+                            "target": node_id_as_str(target),
+                            **edge_attributes,
+                        }
+                        for source, target, edge_attributes in G.edges(data=True)
+                    ],
+                }
+                for link in ret_val['links']:
+                    interactions = link['interactions']
+                    link['interaction_strength'] = sum(interaction['sentences_char1']*interaction['sentences_char2']
+                                               for interaction in interactions)
+
+                return ret_val
+
 
         app_ui = ui.page_fluid(
             ui.tags.head(
                 ui.tags.title("D3.js Directed Graph in Shiny"),
-                d3_dep,
+                d3_dependency,
             ),
             ui.div(
                 id=resolve_id("d3Graph"),
@@ -1176,14 +1208,17 @@
                 id="play_name",
                 label="Choose a play:",
                 choices=PLAY_DATA.play_names,
-                selected='Hamlet',
+                selected="Hamlet",
             ),
             ui.layout_columns(
                 ui.tags.svg(
                     id="d3-graph",
                     style="height: 600px; border: 1px solid black;",
                 ),
-                ui.output_ui("formatted_dict_output"),
+                ui.div(
+                    ui.output_ui("focus_character_output"),
+                    ui.output_ui("focus_interaction_output")
+                ),
                 col_widths={"xl": (8, 4)},
             ),
             ui.div(id="tooltip"),
@@ -1192,43 +1227,61 @@
 
 
         def server(input: shiny.Inputs, output: shiny.Outputs, _session: shiny.Session):
-            @render_d3graph
+            @render_character_graph
             def d3Graph():
                 play_name = input.play_name()
-                graph_data = {
-                    'nodes': [
-                        {
-                            'id': node[1],
-                            'name': node[1],
-                        }
-                        for node in PLAY_DATA.graph.nodes
-                        if node[0] == play_name
-                    ],
-                    'links': [
-                        {
-                            'source': edge[0][1],
-                            'target': edge[1][1],
-                        }
-                        for edge in PLAY_DATA.graph.edges
-                        if edge[0][0] == play_name
-                        ]
+
+                return nx.subgraph_view(
+                    PLAY_DATA.graph, filter_node=lambda n: n[0] == play_name
+                )
+
+            @staticmethod
+            def character_html(character_graph: nx.Graph, *, play: str, name: str) -> ui.Tag:
+                """Return html representing a character"""
+                assert isinstance(character_graph, nx.Graph)
+                assert isinstance(play, str)
+                assert isinstance(name, str)
+
+                character_id = (play, name)
+                character_data = {
+                    "character_id": str(character_id),
+                    **character_graph.nodes[character_id],
                 }
-                return graph_data
+
+                return ui.div(
+                    *(
+                        ui.p(ui.strong(f"{key}:"), str(value))
+                        for key, value in character_data.items()
+                    ),
+                )
 
             @output
             @render.ui
-            def formatted_dict_output():
-                play_name = input.play_name()
-                node_id = input.focus_node_id()
-                html_content = "<div>"
-                if node_id:
-                    node_data = dict(PLAY_DATA.graph.nodes[(play_name, node_id)])
-                    for key, value in node_data.items():
-                        html_content += f"<p><b>{key}:</b> {value}</p>"
-                html_content += "</div>"
-                return ui.HTML(html_content)
+            def focus_character_output():
+                focus_character = input.focus_character()
+                html = character_html(
+                    PLAY_DATA.graph, play=focus_character["play"], name=focus_character["name"]
+                )
+                return ui.HTML(html)
 
-        app = App(app_ui, server, static_assets = www_dir)
+            @render.table
+            def focus_interaction_output():
+                interaction = input.focus_interaction()
+
+                source_name = interaction['source']['name']
+                source_play = interaction['source']['play']
+                target_name = interaction['target']['name']
+                target_play = interaction['target']['play']
+                interactions = PLAY_DATA.graph.edges[
+                    (source_play, source_name),
+                    (target_play, target_name),
+                    ]['interactions']
+                return pd.DataFrame(interactions).rename(columns={
+                    'sentences_char1': f"Sentences by {source_name}",
+                    'sentences_char2': f"Sentences by {target_name}"
+                })
+
+        app = App(app_ui, server, static_assets=www_dir)
       #+end_src
 
       #+NAME: d3_graph_component_js
@@ -1247,6 +1300,13 @@
                 .attr("y1", d => d.source.y)
                 .attr("x2", d => d.target.x)
                 .attr("y2", d => d.target.y);
+        }
+
+
+        function link_string_id(d, i) {
+            // return an identifying hash for a link, as a string
+            const string_id = `${d.source.id}--${d.target.id}`;
+            return string_id;
         }
 
         if (Shiny) {
@@ -1269,51 +1329,82 @@
                     const width = svg.node().getBoundingClientRect().width;
                     const height = svg.node().getBoundingClientRect().height;
 
-                    const nodeRadius = 15;
                     const linkGroup = svg.selectAll(".links")
-                        .data([null])
-                        .join("g")
-                        .attr("class", "links");
+                          .data([null])
+                          .join("g")
+                          .attr("class", "links");
                     const nodeGroup = svg.selectAll(".nodes")
-                        .data([null])
-                        .join("g")
-                        .attr("class", "nodes");
+                          .data([null])
+                          .join("g")
+                          .attr("class", "nodes");
                     const defs = svg.selectAll("defs")
                           .data([null])
                           .join("defs");
 
+                    // Use number of sentences to set radius
+                    const radiusAttr = 'sentences';
+                    const minRadiusAttr = d3.min(node_data, d => d[radiusAttr]);
+                    const maxRadiusAttr = d3.max(node_data, d => d[radiusAttr]);
+                    const minRadius = 5;
+                    const maxRadius = 25;
+                    const radiusScale = d3.scaleSqrt()
+                          .domain([minRadiusAttr, maxRadiusAttr])
+                          .range([minRadius, maxRadius]);
+
                     // Use a key function (d.id) to ensure D3 correctly matches data to elements
                     const node = nodeGroup.selectAll("g")
-                        .data(node_data, d => d.id)
-                        .join(
-                            enter => {
-                                const nodeEnter = enter.append("g")
-                                    .attr("class", "node")
-                                    .attr("transform", d => {
-                                        // Position new nodes randomly within the SVG
-                                        const x = Math.random() * (width - nodeRadius * 2) + nodeRadius;
-                                        const y = Math.random() * (height - nodeRadius * 2) + nodeRadius;
-                                        return `translate(${x}, ${y})`;
-                                    });
-                                nodeEnter.append("circle")
-                                    .attr("r", nodeRadius);
-                                nodeEnter.append("text")
-                                    .attr("dy", "0.75em")
-                                    .attr("y", nodeRadius + 5) // Position text below the circle
-                                    .text(d => d.name)
-                                    .style("pointer-events", "none") // Make text not interfere with node click
-                                ;
-                                return nodeEnter;
-                            },
-                            update => update,
-                            exit => exit.remove()
-                        );
+                          .data(node_data, d => d.id)
+                          .join(
+                              enter => {
+                                  const nodeEnter = enter.append("g")
+                                        .attr("class", "node")
+                                        .attr("transform", d => {
+                                            // Position new nodes randomly within the SVG
+                                            const x = Math.random() * (width - maxRadius * 2) + maxRadius;
+                                            const y = Math.random() * (height - maxRadius * 2) + maxRadius;
+                                            return `translate(${x}, ${y})`;
+                                        });
+                                  nodeEnter.append("circle")
+                                      .attr("r", d => radiusScale(d[radiusAttr]));
+                                  nodeEnter.append("text")
+                                      .attr("dy", "0.75em")
+                                      .attr("y", d => radiusScale(d[radiusAttr]) + 5) // Position text below the circle
+                                      .text(d => d.name)
+                                      .style("pointer-events", "none") // Make text not interfere with node click
+                                  ;
+                                  return nodeEnter;
+                              },
+                              update => update,
+                              exit => exit.remove()
+                          );
+                    // warning: forceLink modifies link_data. See https://d3js.org/d3-force/link
+                    // Initially, the source and target attribute values are strings, to be
+                    // matched to the node id attributes. The source and target are updated to
+                    // references to corresponding node /objects/.
+                    const simulation = d3.forceSimulation(node_data)
+                          .force("link", d3.forceLink(link_data).id(node=>node.id).distance(100))
+                          .force("charge", d3.forceManyBody().strength(-50))
+                          .force("center", d3.forceCenter(width / 2, height / 2))
+                          .force("collide", d3.forceCollide().radius(d => radiusScale(d[radiusAttr]) + 2))
+                          .on("tick", () => update_positions(link, node, width, height));
 
+                    const linkStrengthExtent = d3.extent(link_data, d => d.interaction_strength);
+                    console.debug("linkStrengthExtent", linkStrengthExtent);
+                    const linkWidthScale = d3.scaleSqrt()
+                          .domain(linkStrengthExtent)
+                          .range([0, 10]);
+
+                    const linkColorScale = d3.scaleSqrt()
+                          .domain(linkStrengthExtent)
+                          .range(["#fff", "#f00"]); // Example: from light gray to steel blue
                     const link = linkGroup.selectAll("line")
-                          .data(link_data, d => d.source.id + "-" + d.target.id)
+                          .data(link_data, link_string_id)
                           .join("line")
                           .attr("class", "link")
-                          .attr("marker-end", "url(#arrowhead)");
+                          .attr("marker-end", "url(#arrowhead)")
+                          .attr("stroke-width", d => linkWidthScale(d.interaction_strength))
+                          .attr("stroke", d => linkColorScale(d.interaction_strength))
+                    ;
 
                     // Define arrow markers for directed graph links
                     defs.selectAll("marker")
@@ -1332,40 +1423,54 @@
                         .attr("fill", "#999")
                         .style("stroke", "none");
 
-                    const simulation = d3.forceSimulation(node_data)
-                          .force("link", d3.forceLink(link_data).id(d => d.id).distance(100))
-                          .force("charge", d3.forceManyBody().strength(-300))
-                          .force("center", d3.forceCenter(width / 2, height / 2))
-                          .on("tick", () => update_positions(link, node, width, height));
 
                     // record clicks on nodes
                     node.on("mouseover", function(event, d) {
-                            // 'this' refers to the node element that the event listener is attached to
+                        // 'this' refers to the node element that the event listener is attached to
 
-                            // Let the server know which node has focus
-                            const focus_node_id = d.id;
-                            Shiny.setInputValue("focus_node_id", d.id);
+                        // Let the server know which character has focus
+                        Shiny.setInputValue("focus_character", {"play": d.play,
+                                                                "name": d.name});
 
-                            // Remove highlight from all nodes
-                            d3.selectAll(".node").classed("highlighted", false);
-                            d3.selectAll(".node text").classed("highlighted-text", false);
+                        // Remove highlight from all nodes
+                        d3.selectAll(".node").classed("highlighted", false);
+                        d3.selectAll(".node text").classed("highlighted-text", false);
 
-                            // Add highlight to the clicked node
-                            d3.select(this).classed("highlighted", true);
-                            d3.select(this).select("text").classed("highlighted-text", true);
+                        // Add highlight to the clicked node
+                        d3.select(this).classed("highlighted", true);
+                        d3.select(this).select("text").classed("highlighted-text", true);
 
-                            tooltip.transition()
-                                .duration(200)
-                                .style("opacity", .9);
-                            tooltip.html("Node: " + d.name + "<br/>ID: " + d.id)
-                                .style("left", (event.pageX + 10) + "px")
-                                .style("top", (event.pageY - 28) + "px");
-                        })
-                        .on("mouseout", function(d) {
+                        // Highlight links related to the node in red
+                        link.filter(l => (l.source === d) || (l.target === d))
+                                .classed("highlighted-link", true);
+
+                        tooltip.transition()
+                            .duration(200)
+                            .style("opacity", .9);
+                        tooltip.html("Node: " + d.name + "<br/>ID: " + d.id)
+                            .style("left", (event.pageX + 10) + "px")
+                            .style("top", (event.pageY - 28) + "px");
+                    })
+                        .on("mouseout", function(event, d) {
+                            console.debug("node mouseout, d: ", d);
+                            link.classed("highlighted-link", false);
                             tooltip.transition()
                                 .duration(500)
                                 .style("opacity", 0);
                         });
+
+                    link
+                        .on("mouseover", (event, d) => {
+                            Shiny.setInputValue("focus_interaction", {"source": {"play": d.source.play,
+                                                                                 "name": d.source.name},
+                                                                      "target": {"play": d.target.play,
+                                                                                 "name": d.target.name}});
+
+                        })
+                        .on("mouseout", (event, d) => {
+                            console.debug(`Mouse out link from ${d.source.id} to ${d.target.id} with strength ${d.interaction_strength}`);
+                        })
+                    ;
                 }
             }
             Shiny.outputBindings.register(
@@ -1392,10 +1497,14 @@
         }
 
         .link {
-            stroke: #909090;
+            /* stroke: #909090; */
             stroke-opacity: 0.6;
             stroke-width: 2px;
             fill: none; /* Ensure links are lines, not filled shapes */
+        }
+
+        .highlighted-link {
+          stroke: #f00; /* Red color for highlighted links */
         }
 
         .node text {
@@ -1579,14 +1688,184 @@
 
       #+NAME: shakespeare_data
       #+begin_src python :tangle src/navigator/shakespeare.py
-        import pandas as pd
-        import networkx as nx
+        import re
+        import warnings
         from itertools import combinations
-        from typing import Any
+        from typing import Any, Iterable
+
+        import pandas as pd
+        import pandas.testing as pdt
+        import networkx as nx
+        from thefuzz import process as thefuzz_process
+
+
+        def calculate_candidate_character_replacements(
+            character_names: pd.Series, min_similarity_score: int
+        ) -> dict[str, str]:
+            """Calculate candidate replacements to clean a Series of character names by
+            standardizing strings using fuzzy matching.
+
+            Args:
+
+                series: The input Series.
+
+                min_similarity_score: The minimum fuzzy matching score (0-100) to consider a
+                    string a potential match.
+
+            Returns:
+                A mapping from current character names to cleaned ones, where these are different
+            """
+
+            def strip_name(name: str) -> str:
+                name = name.strip()
+                name = re.sub(r"  +", " ", name)
+                name = re.sub(r"[^a-zA-Z]+$", "", name)
+                return name
+
+            def best_match(
+                name: str, stripped_names: Iterable[str], min_similarity_score: int
+            ) -> str:
+                stripped_name = strip_name(name)
+                extracted = thefuzz_process.extractOne(stripped_name, stripped_names)
+                if extracted is None:
+                    return stripped_name
+                best_match, score = extracted
+                if score < min_similarity_score:
+                    return stripped_name
+                else:
+                    return best_match
+
+            replacements = {}
+            replacement_values = set()
+            for name in character_names.value_counts().index:  # most frequent values first
+                replacements[name] = best_match(name, replacement_values, min_similarity_score)
+                replacement_values.add(replacements[name])
+
+            return {
+                name: mapped_name
+                for name, mapped_name in replacements.items()
+                if name != mapped_name
+            }
 
 
         class CharacterNetwork:
-            def __init__(self, df: pd.DataFrame):
+            REQUIRED_COLUMNS = "play_name,genre,character,act,scene,sentence,text,sex".split(
+                ","
+            )
+
+            KNOWN_CHARACTER_FIXES: dict[str, dict[str, str]] = {
+                "Richard III": {
+                    "Of Buckingham": "Ghost of Buckingham",
+                    "Of Prince Edward": "Ghost of Prince Edward",
+                },
+                "Henry VI, part 1": {"Su Ffolk": "Suffolk"},
+                "Othello": {"Second Gentlemen": "Second Gentleman"},
+                "Romeo and Juliet": {"Lady  Capulet": "Lady Capulet"},
+                "Hamlet": {
+                    "Guildenstern:": "Guildenstern",
+                    "Rosencrantz:": "Rosencrantz",
+                },
+                "Taming of the Shrew": {"Katarina": "Katharina"},
+                "Henry VI, part 2": {"First Murder": "First Murderer"},
+                "Measure for Measure": {"Pomphey": "Pompey"},
+            }
+
+            KNOWN_CHARACTER_NON_FIXES: set[tuple[str, str]] = {
+                ("Antony and Cleopatra", "Attendants"),
+                ("Coriolanus", "Citizen"),
+                ("Henry IV, part 2", "King Henry V"),
+                ("Henry VI, part 2", "Servant"),
+                ("Timon of Athens", "Servants"),
+            }
+
+            # Names not referring to definite characters.  These are not so interesting to look at
+            # and may represent different people.
+            INDEFINITE_NAMES = [
+                '& C',
+                'A Lord',
+                'A Patrician',
+                'A Player',
+                'All',
+                'All Citizens',
+                'All Conspirators',
+                'All Ladies',
+                'All Lords',
+                'All Servants',
+                'All The Goths',
+                'All The Lords',
+                'All The People',
+                'Another',
+                'As Long As You Or I',
+                'Attendant',
+                'Attendants',
+                'Both Citizens',
+                'Both Murderers',
+                'Both Tribunes',
+                'Boy',
+                'Captain',
+                'Children',
+                'Chorus',
+                'Citizen',
+                'Citizens',
+                'Clown',
+                'Commons',
+                'Court',
+                'Courtezan',
+                'Crier',
+                'Gentleman',
+                'Gentlemen',
+                'Gentlewoman',
+                'Girl',
+                'Guard',
+                'Knight',
+                'Knights',
+                'Lady',
+                'Lieutenant',
+                'Lord',
+                'Lords',
+                'Man',
+                'Merchant',
+                'Messenger',
+                'Mother',
+                'Musician',
+                'Nobleman',
+                'Nurse',
+                'Officer',
+                'Old Athenian',
+                'Old Lady',
+                'Old Man',
+                'Outlaws',
+                'Page',
+                'Players',
+                'Prince',
+                'Princes',
+                'Princess',
+                'Prologue',
+                'Sailor',
+                'Scout',
+                'Senator',
+                'Senators',
+                'Sergeant',
+                'Servant',
+                'Servants',
+                'Shepard',
+                'Shepherd',
+                'Sheriff',
+                'Soldier',
+                'Soldiers',
+                'Some Others',
+                'Some Speak',
+                'Soothsayer',
+                'Steward',
+                'Townsman',
+                'Travellers',
+                'Watch',
+                'Watchman',
+                'Wife',
+            ]
+
+
+            def __init__(self, df: pd.DataFrame, min_similarity_score: int = 92):
                 """Initializes the CharacterNetwork with a dataframe containing character
                 interactions in Shakespeare's plays.
 
@@ -1603,17 +1882,73 @@
                     - sex
                     - sentence
                     - text
+
+                    min_similarity_score: minimum Levenshtein-based similarity score to warn if
+                       character name matches are found for
                 """
-                self.df = df
-                self.graph = self._build_shakespeare_network(self.df)
+                self.df = CharacterNetwork.clean_playdata(df, min_similarity_score)
+                self.graph = CharacterNetwork._build_shakespeare_network(self.df)
                 self.play_names = sorted(set(df["play_name"]))
 
             @staticmethod
-            def _build_shakespeare_network(df: pd.DataFrame) -> nx.Graph:
-                required_columns = set(
-                    "play_name,genre,character,act,scene,sentence,text,sex".split(",")
+            def clean_playdata(df: pd.DataFrame, min_similarity_score: int) -> pd.DataFrame:
+                """Return a cleaned version of df.
+
+                Character names are replaced based on previously checked replacements.
+
+                Warnings are issued if there are any candidate replacements not among those
+                previously known or ruled out, based on a fuzzy-matching analysis of the character
+                names.
+
+                Args:
+
+                  min_similarity_score: the threshold above which character names are
+                    candidates for consolidation. Corresponds to the score returned from
+                    `thefuzz.process.extractOne`.
+                """
+                assert set(df.columns) == set(CharacterNetwork.REQUIRED_COLUMNS)
+
+                # 1. Apply previously known fixes
+                dfr = df.copy()
+                dfr["character"] = dfr.groupby("play_name")["character"].transform(
+                    lambda s: s.replace(
+                        CharacterNetwork.KNOWN_CHARACTER_FIXES.get(s.name) or {}
+                    )
                 )
-                assert set(df.columns) > required_columns
+
+                # 2. Warn if there are any candidate fixes not previously known
+                play_mappings = dfr.groupby("play_name").apply(
+                    lambda group_df: calculate_candidate_character_replacements(
+                        group_df["character"], min_similarity_score=min_similarity_score
+                    )
+                )
+
+                assert isinstance(play_mappings, pd.Series)
+
+                play_mappings = {
+                    play: {
+                        original: replacement
+                        for original, replacement in replacements.items()
+                        if (play, original) not in CharacterNetwork.KNOWN_CHARACTER_NON_FIXES
+                    }
+                    for play, replacements in play_mappings.items()
+                }
+                for play, replacements in play_mappings.items():
+                    if replacements:
+                        warnings.warn(
+                            f"Candidate character replacements found in play {play}: {replacements}"
+                        )
+
+                assert set(dfr.columns) == set(CharacterNetwork.REQUIRED_COLUMNS)
+
+                # Remove entries with names not referring to definite characters
+                dfr = dfr[~dfr['character'].isin(CharacterNetwork.INDEFINITE_NAMES)]
+
+                return dfr
+
+            @staticmethod
+            def _build_shakespeare_network(df: pd.DataFrame) -> nx.Graph:
+                assert set(df.columns) == set(CharacterNetwork.REQUIRED_COLUMNS)
 
                 # Add the number of unique scenes.
                 scenes_per_character = (
@@ -1626,13 +1961,11 @@
                 )
 
                 # Group by play, character, and sex to get a summary for each character node.
-                character_data = ((
+                character_data = (
                     df.groupby(["play_name", "character", "sex"])
                     .agg(num_sentences=("sentence", "count"), num_acts=("act", "nunique"))
                     .reset_index()
-                ).merge(
-                    scenes_per_character, on=["play_name", "character"]
-                ))
+                ).merge(scenes_per_character, on=["play_name", "character"])
 
                 # Prepare a dictionary for node attributes, keyed by the unique node ID.
                 node_attributes: dict[tuple[str, str], dict[str, Any]] = {}
@@ -1682,8 +2015,8 @@
                             {
                                 "act": act,
                                 "scene": scene,
-                                "sentences_char1": sentences_char1,
-                                "sentences_char2": sentences_char2,
+                                "sentences_char1": int(sentences_char1),
+                                "sentences_char2": int(sentences_char2),
                             }
                         )
 
@@ -1692,7 +2025,6 @@
 
                 for node_id, attributes in node_attributes.items():
                     G.add_node(node_id, **attributes)
-                dn = G.nodes[("Winter's Tale", "Time")]
 
                 for edge_key, attributes in edge_attributes.items():
                     play, char1, char2 = edge_key
