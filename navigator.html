@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2025-08-16 Sat 15:43 -->
+<!-- 2025-08-16 Sat 18:31 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Building a Graph Navigator in Python</title>
@@ -27,91 +27,87 @@
 <div id="text-table-of-contents" role="doc-toc">
 <ul>
 <li><a href="#introduction">Introduction</a></li>
-<li><a href="#org3a6b6e0">Targets</a></li>
-<li><a href="#org1969659">Supporting packages</a>
+<li><a href="#org994c2b1">Targets</a></li>
+<li><a href="#orga25eaca">Supporting packages</a>
 <ul>
 <li><a href="#jupyter-widgets">Jupyter Widgets</a></li>
 <li><a href="#cytoscape-js">Cytoscape.js</a></li>
 <li><a href="#shinywidgets">shinywidgets</a></li>
 <li><a href="#ipycytoscape">ipycytoscape</a></li>
-<li><a href="#orgaadecf9">ipysigma</a></li>
-<li><a href="#org3f0364b">Pyvis</a></li>
-<li><a href="#orge29b17d">D3</a></li>
-<li><a href="#org6a7d6e3">d3blocks</a></li>
-<li><a href="#orgadad254">d3graph</a></li>
-<li><a href="#orgaffb89a">ipydagred3</a></li>
-<li><a href="#org795a6f1">ipyelk</a></li>
-<li><a href="#org46d8fd4">Dash</a></li>
-<li><a href="#orgdcc20ce">Bokeh</a></li>
-<li><a href="#org04dcba7">Altair</a></li>
+<li><a href="#orga08847d">ipysigma</a></li>
+<li><a href="#orgd16572d">Pyvis</a></li>
+<li><a href="#org95bff88">D3</a></li>
+<li><a href="#org97023c2">d3blocks</a></li>
+<li><a href="#org4af2e2e">d3graph</a></li>
+<li><a href="#org91f2698">ipydagred3</a></li>
+<li><a href="#org90cb478">ipyelk</a></li>
+<li><a href="#orgd6f1729">Dash</a></li>
+<li><a href="#org9dd3a85">Bokeh</a></li>
+<li><a href="#org645ed7e">Altair</a></li>
 </ul>
 </li>
 <li><a href="#methods-for-creating-custom-components-in-shiny-for-python">Using Shiny</a>
 <ul>
-<li><a href="#org9c05258">Ways to extend Shiny</a>
+<li><a href="#orgd27e7f8">Ways to extend Shiny</a>
 <ul>
-<li><a href="#org880b7f1">Including JavaScript directly</a></li>
-<li><a href="#orgd3d0491">One-off custom components</a>
+<li><a href="#org14408af">Including JavaScript directly</a></li>
+<li><a href="#orga25bc46">One-off custom components</a>
 <ul>
-<li><a href="#orgecfb20a">JavaScript output binding</a></li>
-<li><a href="#orgb160b44">Python server-side code</a></li>
+<li><a href="#orgab2e47d">JavaScript output binding</a></li>
+<li><a href="#org90110c9">Python server-side code</a></li>
 </ul>
 </li>
-<li><a href="#org72cb4e6">Custom component packages</a></li>
+<li><a href="#orgd9d3b4b">Custom component packages</a></li>
 </ul>
 </li>
-<li><a href="#org357dd80">D3</a>
-<ul>
-<li><a href="#org065b38f">D3 navigator</a></li>
-</ul>
-</li>
+<li><a href="#orgf301996">Using D3</a></li>
 <li><a href="#techniques-for-wrapping-cytoscapejs-for-shiny-for-python">Using Cytoscape.js</a>
 <ul>
-<li><a href="#org48f284c">Code</a>
+<li><a href="#org15f1573">Code</a>
 <ul>
-<li><a href="#orgd1bada0">Ipyleaflet Shiny Express app</a></li>
-<li><a href="#orge7475c6">Cytoscape utils</a></li>
-<li><a href="#orgfe9b9b4">Cytoscape Shiny Express app with full redraw</a></li>
+<li><a href="#org5b41e12">Ipyleaflet Shiny Express app</a></li>
+<li><a href="#org260e0d6">Cytoscape utils</a></li>
+<li><a href="#orgb817072">Cytoscape Shiny Express app with full redraw</a></li>
 <li><a href="#app-core-ipycyto-nx-full">Cytoscape Shiny Core app with full redraw</a></li>
 <li><a href="#app-core-ipycyto-cyto-full">Cytoscape Shiny Core app with full redraw, no networkx</a></li>
-<li><a href="#org0952b58">Ipyleaflet Shiny Core app with incremental redraw</a></li>
-<li><a href="#org5a126c9">Cytoscape Shiny Core app with incremental redraw</a></li>
+<li><a href="#orgecbfb2f">Ipyleaflet Shiny Core app with incremental redraw</a></li>
+<li><a href="#org2e26793">Cytoscape Shiny Core app with incremental redraw</a></li>
 </ul>
 </li>
-<li><a href="#orgadfcd78">Conclusion</a></li>
+<li><a href="#org1cbc9b3">Conclusion</a></li>
 </ul>
 </li>
-<li><a href="#org7ca704c">Using ipysigma</a>
+<li><a href="#org03e7c2c">Using ipysigma</a>
 <ul>
-<li><a href="#orgbf51b6c">Code</a>
+<li><a href="#orgc1ae7df">Code</a>
 <ul>
-<li><a href="#orge5f95a9">ipysigma Shiny Core app with full redraw</a></li>
-<li><a href="#orgb5b3ca4">ipysigma Shiny Core node navigator</a></li>
+<li><a href="#org1c9c0b1">ipysigma Shiny Core app with full redraw</a></li>
+<li><a href="#orga521fc6">ipysigma Shiny Core node navigator</a></li>
 </ul>
 </li>
-<li><a href="#org32cf88e">Conclusion</a></li>
+<li><a href="#org55141c4">Conclusion</a></li>
 </ul>
 </li>
-<li><a href="#org9a8d27e">Using pyvis</a>
+<li><a href="#org5b55775">Using pyvis</a>
 <ul>
-<li><a href="#orgb3b511b">pyvis Shiny Core node navigator</a></li>
-<li><a href="#org6028384">Conclusion</a></li>
+<li><a href="#orgf245b92">pyvis Shiny Core node navigator</a></li>
+<li><a href="#org7ddb277">Conclusion</a></li>
 </ul>
 </li>
-<li><a href="#org2c2de0f">Debugging Shiny</a>
+<li><a href="#org0c6b57c">Debugging Shiny</a>
 <ul>
-<li><a href="#org8d0ec2e">Websockets logging</a></li>
+<li><a href="#org705709a">Websockets logging</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#org296fa88">Utilities</a>
+<li><a href="#org8d1a60c">Utilities</a>
 <ul>
-<li><a href="#org25117ab">Generic utilities</a></li>
-<li><a href="#org1080472">Graph utilities</a></li>
-<li><a href="#org3f53aea">Data providers</a>
+<li><a href="#org029bdf5">Generic utilities</a></li>
+<li><a href="#orgb6bea6c">Graph utilities</a></li>
+<li><a href="#org9639887">Data providers</a>
 <ul>
-<li><a href="#org9ec2f10">Shakespeare data</a></li>
+<li><a href="#orga060856">Shakespeare data</a></li>
 </ul>
 </li>
 </ul>
@@ -136,9 +132,9 @@ to achieve our goals.
 </p>
 </div>
 </div>
-<div id="outline-container-org3a6b6e0" class="outline-2">
-<h2 id="org3a6b6e0">Targets</h2>
-<div class="outline-text-2" id="text-org3a6b6e0">
+<div id="outline-container-org994c2b1" class="outline-2">
+<h2 id="org994c2b1">Targets</h2>
+<div class="outline-text-2" id="text-org994c2b1">
 <p>
 We want to create an application that, in rough priority order:
 </p>
@@ -163,9 +159,9 @@ front-end might be a candidate here.</li>
 </ol>
 </div>
 </div>
-<div id="outline-container-org1969659" class="outline-2">
-<h2 id="org1969659">Supporting packages</h2>
-<div class="outline-text-2" id="text-org1969659">
+<div id="outline-container-orga25eaca" class="outline-2">
+<h2 id="orga25eaca">Supporting packages</h2>
+<div class="outline-text-2" id="text-orga25eaca">
 </div>
 <div id="outline-container-jupyter-widgets" class="outline-3">
 <h3 id="jupyter-widgets">Jupyter Widgets</h3>
@@ -252,9 +248,9 @@ like clicks or node selections.
 </p>
 </div>
 </div>
-<div id="outline-container-orgaadecf9" class="outline-3">
-<h3 id="orgaadecf9">ipysigma</h3>
-<div class="outline-text-3" id="text-orgaadecf9">
+<div id="outline-container-orga08847d" class="outline-3">
+<h3 id="orga08847d">ipysigma</h3>
+<div class="outline-text-3" id="text-orga08847d">
 <p>
 ipysigma is a Jupyter widget built on Sigma.js,
 designed to render interactive network visualizations effortlessly.
@@ -282,9 +278,9 @@ rather than graph-driven interactivity which may not be a good fit here.
 </p>
 </div>
 </div>
-<div id="outline-container-org3f0364b" class="outline-3">
-<h3 id="org3f0364b">Pyvis</h3>
-<div class="outline-text-3" id="text-org3f0364b">
+<div id="outline-container-orgd16572d" class="outline-3">
+<h3 id="orgd16572d">Pyvis</h3>
+<div class="outline-text-3" id="text-orgd16572d">
 <ul class="org-ul">
 <li><b>Basis:</b> Wraps the vis.js JavaScript library.</li>
 <li><b>Features:</b> Designed to make creating interactive network graphs easy
@@ -315,9 +311,9 @@ as noted in this response to a request for support in py-shinywidgets:
 </ul>
 </div>
 </div>
-<div id="outline-container-orge29b17d" class="outline-3">
-<h3 id="orge29b17d">D3</h3>
-<div class="outline-text-3" id="text-orge29b17d">
+<div id="outline-container-org95bff88" class="outline-3">
+<h3 id="org95bff88">D3</h3>
+<div class="outline-text-3" id="text-org95bff88">
 <ul class="org-ul">
 <li><b>Basis:</b> Pure JavaScript library</li>
 <li><b>Features:</b> Provides a highly customizable framework for interactive visualizations.
@@ -348,9 +344,9 @@ something like htmx.</li>
 </ul>
 </div>
 </div>
-<div id="outline-container-org6a7d6e3" class="outline-3">
-<h3 id="org6a7d6e3">d3blocks</h3>
-<div class="outline-text-3" id="text-org6a7d6e3">
+<div id="outline-container-org97023c2" class="outline-3">
+<h3 id="org97023c2">d3blocks</h3>
+<div class="outline-text-3" id="text-org97023c2">
 <ul class="org-ul">
 <li><a href="https://github.com/d3blocks/d3blocks">https://github.com/d3blocks/d3blocks</a></li>
 <li><b>*Basis:</b> Python library for generating Javascript</li>
@@ -360,9 +356,9 @@ Supports a range of widely-used chart types.</li>
 </ul>
 </div>
 </div>
-<div id="outline-container-orgadad254" class="outline-3">
-<h3 id="orgadad254">d3graph</h3>
-<div class="outline-text-3" id="text-orgadad254">
+<div id="outline-container-org4af2e2e" class="outline-3">
+<h3 id="org4af2e2e">d3graph</h3>
+<div class="outline-text-3" id="text-org4af2e2e">
 <ul class="org-ul">
 <li><a href="https://github.com/erdogant/d3graph">https://github.com/erdogant/d3graph</a></li>
 <li><b>*Basis:</b> Python package</li>
@@ -371,18 +367,18 @@ Supports a range of widely-used chart types.</li>
 </ul>
 </div>
 </div>
-<div id="outline-container-orgaffb89a" class="outline-3">
-<h3 id="orgaffb89a">ipydagred3</h3>
-<div class="outline-text-3" id="text-orgaffb89a">
+<div id="outline-container-org91f2698" class="outline-3">
+<h3 id="org91f2698">ipydagred3</h3>
+<div class="outline-text-3" id="text-org91f2698">
 <ul class="org-ul">
 <li><b>Basis:</b> Uses dagre-d3 library.</li>
 <li><b>Features:</b> Specifically designed for drawing Directed Acyclic Graphs (DAGs) within JupyterLab.</li>
 </ul>
 </div>
 </div>
-<div id="outline-container-org795a6f1" class="outline-3">
-<h3 id="org795a6f1">ipyelk</h3>
-<div class="outline-text-3" id="text-org795a6f1">
+<div id="outline-container-org90cb478" class="outline-3">
+<h3 id="org90cb478">ipyelk</h3>
+<div class="outline-text-3" id="text-org90cb478">
 <ul class="org-ul">
 <li><b>Basis:</b> Uses the Eclipse Layout Kernel (ELK) via elkjs.</li>
 <li><b>Features:</b> Provides sophisticated layout algorithms, potentially useful for complex diagrams.
@@ -390,9 +386,9 @@ Mentioned as having potential for features like collapsing/expanding subgraphs.<
 </ul>
 </div>
 </div>
-<div id="outline-container-org46d8fd4" class="outline-3">
-<h3 id="org46d8fd4">Dash</h3>
-<div class="outline-text-3" id="text-org46d8fd4">
+<div id="outline-container-orgd6f1729" class="outline-3">
+<h3 id="orgd6f1729">Dash</h3>
+<div class="outline-text-3" id="text-orgd6f1729">
 <ul class="org-ul">
 <li><b>Basis:</b> Built on Plotly.js.</li>
 <li><b>Features:</b> A very versatile library for creating a wide range of interactive plots, including
@@ -414,9 +410,9 @@ unless they have a workaround for Cytoscape's bugs.</li>
 </ul>
 </div>
 </div>
-<div id="outline-container-orgdcc20ce" class="outline-3">
-<h3 id="orgdcc20ce">Bokeh</h3>
-<div class="outline-text-3" id="text-orgdcc20ce">
+<div id="outline-container-org9dd3a85" class="outline-3">
+<h3 id="org9dd3a85">Bokeh</h3>
+<div class="outline-text-3" id="text-org9dd3a85">
 <ul class="org-ul">
 <li><b>Basis:</b> Bokeh's own JS library.</li>
 <li><b>Features:</b> Excellent for creating interactive, web-based visualizations, including network graphs.
@@ -425,9 +421,9 @@ and streaming data capabilities. Integrates well with Jupyter.</li>
 </ul>
 </div>
 </div>
-<div id="outline-container-org04dcba7" class="outline-3">
-<h3 id="org04dcba7">Altair</h3>
-<div class="outline-text-3" id="text-org04dcba7">
+<div id="outline-container-org645ed7e" class="outline-3">
+<h3 id="org645ed7e">Altair</h3>
+<div class="outline-text-3" id="text-org645ed7e">
 <ul class="org-ul">
 <li><b>Basis:</b> Built on Vega-Lite, a declarative grammar.</li>
 <li><b>Features:</b> Focuses on a declarative approach, simplifying the creation
@@ -442,18 +438,18 @@ the <a href="https://altair-viz.github.io/getting_started/resources.html#nx-alta
 <h2 id="methods-for-creating-custom-components-in-shiny-for-python">Using Shiny</h2>
 <div class="outline-text-2" id="text-methods-for-creating-custom-components-in-shiny-for-python">
 </div>
-<div id="outline-container-org9c05258" class="outline-3">
-<h3 id="org9c05258">Ways to extend Shiny</h3>
-<div class="outline-text-3" id="text-org9c05258">
+<div id="outline-container-orgd27e7f8" class="outline-3">
+<h3 id="orgd27e7f8">Ways to extend Shiny</h3>
+<div class="outline-text-3" id="text-orgd27e7f8">
 <p>
 Shiny provides several approaches for extending its built-in component library
 with arbitrary JavaScript functionality,
 allowing one to create richer and more interactive user interfaces.
 </p>
 </div>
-<div id="outline-container-org880b7f1" class="outline-4">
-<h4 id="org880b7f1">Including JavaScript directly</h4>
-<div class="outline-text-4" id="text-org880b7f1">
+<div id="outline-container-org14408af" class="outline-4">
+<h4 id="org14408af">Including JavaScript directly</h4>
+<div class="outline-text-4" id="text-org14408af">
 <p>
 Shiny allows including JavaScript files
 directly within an application's static assets directory (typically named www)
@@ -470,9 +466,9 @@ either one-off custom components or custom component packages.
 </p>
 </div>
 </div>
-<div id="outline-container-orgd3d0491" class="outline-4">
-<h4 id="orgd3d0491">One-off custom components</h4>
-<div class="outline-text-4" id="text-orgd3d0491">
+<div id="outline-container-orga25bc46" class="outline-4">
+<h4 id="orga25bc46">One-off custom components</h4>
+<div class="outline-text-4" id="text-orga25bc46">
 <p>
 One-off custom JavaScript components<sup><a id="fnr.shiny-custom-js" class="footref" href="#fn.shiny-custom-js" role="doc-backlink">4</a></sup> are developed for specific applications.
 </p>
@@ -510,9 +506,9 @@ see the "Custom components package" page in the Shiny documentation<sup><a id="f
 which describes how to create a custom component for Shiny inputs.
 </p>
 </div>
-<div id="outline-container-orgecfb20a" class="outline-5">
-<h5 id="orgecfb20a">JavaScript output binding</h5>
-<div class="outline-text-5" id="text-orgecfb20a">
+<div id="outline-container-orgab2e47d" class="outline-5">
+<h5 id="orgab2e47d">JavaScript output binding</h5>
+<div class="outline-text-5" id="text-orgab2e47d">
 <p>
 The output binding typically includes two key methods:
 <code>find()</code> and <code>renderValue()</code>.
@@ -553,13 +549,13 @@ and uses it to configure the component's elements, style, and layout.
 </p>
 </div>
 </div>
-<div id="outline-container-orgb160b44" class="outline-5">
-<h5 id="orgb160b44">Python server-side code</h5>
-<div class="outline-text-5" id="text-orgb160b44">
+<div id="outline-container-org90110c9" class="outline-5">
+<h5 id="org90110c9">Python server-side code</h5>
+<div class="outline-text-5" id="text-org90110c9">
 </div>
 <ul class="org-ul">
-<li><a id="org02768b3"></a>Output function<br />
-<div class="outline-text-6" id="text-org02768b3">
+<li><a id="org29ccb2d"></a>Output function<br />
+<div class="outline-text-6" id="text-org29ccb2d">
 <p>
 On the Python side, an output function needs to be defined
 to place the designated HTML element in the Shiny application's user interface.
@@ -598,8 +594,8 @@ are included in the Shiny application.
 </p>
 </div>
 </li>
-<li><a id="org6918466"></a>Render decorator<br />
-<div class="outline-text-6" id="text-org6918466">
+<li><a id="orgfe3355c"></a>Render decorator<br />
+<div class="outline-text-6" id="text-orgfe3355c">
 <p>
 Additionally, a render decorator is needed to
 transform values returned from the functions it decorates into
@@ -656,9 +652,9 @@ requires at least 3 things:
 </ul>
 </div>
 </div>
-<div id="outline-container-org72cb4e6" class="outline-4">
-<h4 id="org72cb4e6">Custom component packages</h4>
-<div class="outline-text-4" id="text-org72cb4e6">
+<div id="outline-container-orgd9d3b4b" class="outline-4">
+<h4 id="orgd9d3b4b">Custom component packages</h4>
+<div class="outline-text-4" id="text-orgd9d3b4b">
 <p>
 A custom component package
 allows reusing integrations across multiple applications.
@@ -677,13 +673,9 @@ For details see the "Custom components package" page in the Shiny documentation<
 </div>
 </div>
 </div>
-<div id="outline-container-org357dd80" class="outline-3">
-<h3 id="org357dd80">D3</h3>
-<div class="outline-text-3" id="text-org357dd80">
-</div>
-<div id="outline-container-org065b38f" class="outline-4">
-<h4 id="org065b38f">D3 navigator</h4>
-<div class="outline-text-4" id="text-org065b38f">
+<div id="outline-container-orgf301996" class="outline-3">
+<h3 id="orgf301996">Using D3</h3>
+<div class="outline-text-3" id="text-orgf301996">
 <p>
 This is a Shiny Core/D3 App that displays a graph using D3 showing information about
 the characters in Shakespeare's plays and the relations between them based on
@@ -691,7 +683,7 @@ the scenes they speak in.
 </p>
 
 <p>
-It was originally based on the Tabulator sample for <a href="#orgd3d0491">Shiny one-off custom components</a>.
+It was originally based on the Tabulator sample for <a href="#orga25bc46">Shiny one-off custom components</a>.
 </p>
 
 <p>
@@ -722,8 +714,27 @@ It can be run with
 </pre>
 </div>
 
+<p>
+The mechanism for focusing on characters, rather than using Shiny to handle state,
+uses some client-side state in the filtered nodes and links that are passed to
+displayGraph.  It is probably possible to manage that through Shiny as well, and pass
+filtered node and link data to the front-end, where D3 can merge it via the join
+handlers.  This might be a cleaner overall split of state between back-end and
+front-end.  Note that the front-end is going to manage some state anyhow, e.g. for pan
+and zoom.  Roughly, there's extra complexity in making any given update pass through
+the back-end if it could be handled front-end only, but there's also a cost to having
+closely-related state spread across front and back ends, as the reactive updates
+require much more awkward coordination than if they happen solely through SHiny or D3.
+</p>
+
+<p>
+Another plus of handling complex logic server side is that we can use the full range
+of Python packages, testing, etc., whereas our JavaScript development setup is much
+more basic.
+</p>
+
 <div class="org-src-container">
-<pre class="src src-python" id="org159a9e2"><span class="org-keyword">from</span> pathlib <span class="org-keyword">import</span> Path
+<pre class="src src-python" id="org0e540f2"><span class="org-keyword">from</span> pathlib <span class="org-keyword">import</span> Path
 <span class="org-keyword">import</span> networkx <span class="org-keyword">as</span> nx
 <span class="org-keyword">import</span> pandas <span class="org-keyword">as</span> pd
 
@@ -885,217 +896,217 @@ It can be run with
 </div>
 
 <div class="org-src-container">
-<pre class="src src-js2" id="org73a0a13">import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm"; // Using d3 v7 ESM
+<pre class="src src-js" id="orgf67b67f"><span class="org-keyword">import</span> * as d3 from <span class="org-string">"https://cdn.jsdelivr.net/npm/d3@7/+esm"</span>; <span class="org-comment-delimiter">// </span><span class="org-comment">Using d3 v7 ESM</span>
 
-function ensureG(parent, _class) {
-    return parent
-          .data([null])
-          .join("g")
-          .attr("class", _class);
+<span class="org-keyword">function</span> <span class="org-function-name">ensureG</span>(<span class="org-variable-name">parent</span>, <span class="org-variable-name">_class</span>) {
+    <span class="org-keyword">return</span> parent
+          .data([<span class="org-constant">null</span>])
+          .join(<span class="org-string">"g"</span>)
+          .attr(<span class="org-string">"class"</span>, _class);
 }
 
-function getRadiusScale(nodeData, {radiusAttr, minRadius, maxRadius}) {
-    const minRadiusAttr = d3.min(nodeData, d =&gt; d[radiusAttr]);
-    const maxRadiusAttr = d3.max(nodeData, d =&gt; d[radiusAttr]);
-    return d3.scaleSqrt()
+<span class="org-keyword">function</span> <span class="org-function-name">getRadiusScale</span>(<span class="org-variable-name">nodeData</span>, {<span class="org-variable-name">radiusAttr</span>, <span class="org-variable-name">minRadius</span>, <span class="org-variable-name">maxRadius</span>}) {
+    <span class="org-keyword">const</span> <span class="org-variable-name">minRadiusAttr</span> = d3.min(nodeData, d =&gt; d[radiusAttr]);
+    <span class="org-keyword">const</span> <span class="org-variable-name">maxRadiusAttr</span> = d3.max(nodeData, d =&gt; d[radiusAttr]);
+    <span class="org-keyword">return</span> d3.scaleSqrt()
         .domain([minRadiusAttr, maxRadiusAttr])
         .range([minRadius, maxRadius]);
 }
 
-function createZoomBehavior(zoomGroup){
-    return d3.zoom()
+<span class="org-keyword">function</span> <span class="org-function-name">createZoomBehavior</span>(<span class="org-variable-name">zoomGroup</span>){
+    <span class="org-keyword">return</span> d3.zoom()
         .scaleExtent([0.1, 10])
-        .on("zoom", (event) =&gt; {
-            console.info("zoom detected", event);
-            zoomGroup.attr("transform", event.transform);
+        .on(<span class="org-string">"zoom"</span>, (event) =&gt; {
+            console.info(<span class="org-string">"zoom detected"</span>, event);
+            zoomGroup.attr(<span class="org-string">"transform"</span>, event.transform);
         });
 }
 
-function enterNode({width, height}, {radiusScale, radiusAttr}) {
-    return function(enter) {
-        const nodeEnter = enter.append("g")
-              .attr("class", "node")
-              .attr("transform", d =&gt; {
-                  // Position new nodes randomly within the SVG
-                  const x = Math.random() * width;
-                  const y = Math.random() * height;
-                  return `translate(${x}, ${y})`;
+<span class="org-keyword">function</span> <span class="org-function-name">enterNode</span>({width, height}, {radiusScale, radiusAttr}) {
+    <span class="org-keyword">return</span> <span class="org-keyword">function</span>(<span class="org-variable-name">enter</span>) {
+        <span class="org-keyword">const</span> <span class="org-variable-name">nodeEnter</span> = enter.append(<span class="org-string">"g"</span>)
+              .attr(<span class="org-string">"class"</span>, <span class="org-string">"node"</span>)
+              .attr(<span class="org-string">"transform"</span>, d =&gt; {
+                  <span class="org-comment-delimiter">// </span><span class="org-comment">Position new nodes randomly within the SVG</span>
+                  <span class="org-keyword">const</span> <span class="org-variable-name">x</span> = Math.random() * width;
+                  <span class="org-keyword">const</span> <span class="org-variable-name">y</span> = Math.random() * height;
+                  <span class="org-keyword">return</span> <span class="org-string">`translate(${x}, ${y})`</span>;
               });
-        nodeEnter.append("circle")
-            .attr("r", d =&gt; radiusScale(d[radiusAttr]));
-        nodeEnter.append("text")
-            .attr("dy", "0.75em")
-            .attr("y", d =&gt; radiusScale(d[radiusAttr]) + 5) // Position text below the circle
+        nodeEnter.append(<span class="org-string">"circle"</span>)
+            .attr(<span class="org-string">"r"</span>, d =&gt; radiusScale(d[radiusAttr]));
+        nodeEnter.append(<span class="org-string">"text"</span>)
+            .attr(<span class="org-string">"dy"</span>, <span class="org-string">"0.75em"</span>)
+            .attr(<span class="org-string">"y"</span>, d =&gt; radiusScale(d[radiusAttr]) + 5) <span class="org-comment-delimiter">// </span><span class="org-comment">Position text below the circle</span>
             .text(d =&gt; d.name)
-            .style("pointer-events", "none") // Make text not interfere with node click
+            .style(<span class="org-string">"pointer-events"</span>, <span class="org-string">"none"</span>) <span class="org-comment-delimiter">// </span><span class="org-comment">Make text not interfere with node click</span>
         ;
-        return nodeEnter;
+        <span class="org-keyword">return</span> nodeEnter;
     };
 }
 
-function linkStringId(d, i) {
-    // an identifying hash for a link, as a string
-    return `${d.source.id}--${d.target.id}`;
+<span class="org-keyword">function</span> <span class="org-function-name">linkStringId</span>(<span class="org-variable-name">d</span>, <span class="org-variable-name">i</span>) {
+    <span class="org-comment-delimiter">// </span><span class="org-comment">an identifying hash for a link, as a string</span>
+    <span class="org-keyword">return</span> <span class="org-string">`${d.source.id}--${d.target.id}`</span>;
 }
 
-function getLinkWidthScale(linkData) {
-    const linkStrengthExtent = d3.extent(linkData, d =&gt; d.interaction_strength);
-    return d3.scaleSqrt()
+<span class="org-keyword">function</span> <span class="org-function-name">getLinkWidthScale</span>(<span class="org-variable-name">linkData</span>) {
+    <span class="org-keyword">const</span> <span class="org-variable-name">linkStrengthExtent</span> = d3.extent(linkData, d =&gt; d.interaction_strength);
+    <span class="org-keyword">return</span> d3.scaleSqrt()
         .domain(linkStrengthExtent)
         .range([0, 10]);
 }
 
-function getLinkColorScale(linkData) {
-    const linkStrengthExtent = d3.extent(linkData, d =&gt; d.interaction_strength);
-    return d3.scaleSqrt()
+<span class="org-keyword">function</span> <span class="org-function-name">getLinkColorScale</span>(<span class="org-variable-name">linkData</span>) {
+    <span class="org-keyword">const</span> <span class="org-variable-name">linkStrengthExtent</span> = d3.extent(linkData, d =&gt; d.interaction_strength);
+    <span class="org-keyword">return</span> d3.scaleSqrt()
         .domain(linkStrengthExtent)
-        .range(["#fff", "#f00"]);
+        .range([<span class="org-string">"#fff"</span>, <span class="org-string">"#f00"</span>]);
 }
 
-function createLink(linkGroup, linkData) {
-    const linkWidthScale = getLinkWidthScale(linkData);
-    const linkColorScale = getLinkColorScale(linkData);
-    return linkGroup.selectAll("line")
+<span class="org-keyword">function</span> <span class="org-function-name">createLink</span>(<span class="org-variable-name">linkGroup</span>, <span class="org-variable-name">linkData</span>) {
+    <span class="org-keyword">const</span> <span class="org-variable-name">linkWidthScale</span> = getLinkWidthScale(linkData);
+    <span class="org-keyword">const</span> <span class="org-variable-name">linkColorScale</span> = getLinkColorScale(linkData);
+    <span class="org-keyword">return</span> linkGroup.selectAll(<span class="org-string">"line"</span>)
         .data(linkData, linkStringId)
-        .join("line")
-        .attr("class", "link")
-        .attr("stroke-width", d =&gt; linkWidthScale(d.interaction_strength))
-        .attr("stroke", d =&gt; linkColorScale(d.interaction_strength))
+        .join(<span class="org-string">"line"</span>)
+        .attr(<span class="org-string">"class"</span>, <span class="org-string">"link"</span>)
+        .attr(<span class="org-string">"stroke-width"</span>, d =&gt; linkWidthScale(d.interaction_strength))
+        .attr(<span class="org-string">"stroke"</span>, d =&gt; linkColorScale(d.interaction_strength))
     ;
 }
 
-function createSimulation({width, height}, nodeData, {radiusAttr, radiusScale}, linkData) {
-    // warning: forceLink modifies linkData. See https://d3js.org/d3-force/link
-    return d3.forceSimulation(nodeData)
-        .force("link", d3.forceLink(linkData).id(node =&gt; node.id).distance(100))
-        .force("charge", d3.forceManyBody().strength(-50))
-        .force("center", d3.forceCenter(width / 2, height / 2))
-        .force("collide", d3.forceCollide().radius(d =&gt; radiusScale(d[radiusAttr]) + 2));   
+<span class="org-keyword">function</span> <span class="org-function-name">createSimulation</span>({width, height}, nodeData, {radiusAttr, radiusScale}, linkData) {
+    <span class="org-comment-delimiter">// </span><span class="org-comment">warning: forceLink modifies linkData. See https://d3js.org/d3-force/link</span>
+    <span class="org-keyword">return</span> d3.forceSimulation(nodeData)
+        .force(<span class="org-string">"link"</span>, d3.forceLink(linkData).id(node =&gt; node.id).distance(100))
+        .force(<span class="org-string">"charge"</span>, d3.forceManyBody().strength(-50))
+        .force(<span class="org-string">"center"</span>, d3.forceCenter(width / 2, height / 2))
+        .force(<span class="org-string">"collide"</span>, d3.forceCollide().radius(d =&gt; radiusScale(d[radiusAttr]) + 2));   
 }
 
-function updatePositions(link, node, {width, height}) {
-    node.attr("transform", d =&gt; {
-        const x = d.x = Math.max(10, Math.min(width - 10, d.x));
-        const y = d.y = Math.max(10, Math.min(height - 10, d.y));
-        return `translate(${x},${y})`;
+<span class="org-keyword">function</span> <span class="org-function-name">updatePositions</span>(<span class="org-variable-name">link</span>, <span class="org-variable-name">node</span>, {<span class="org-variable-name">width</span>, <span class="org-variable-name">height</span>}) {
+    node.attr(<span class="org-string">"transform"</span>, d =&gt; {
+        <span class="org-keyword">const</span> <span class="org-variable-name">x</span> = d.x = Math.max(10, Math.min(width - 10, d.x));
+        <span class="org-keyword">const</span> <span class="org-variable-name">y</span> = d.y = Math.max(10, Math.min(height - 10, d.y));
+        <span class="org-keyword">return</span> <span class="org-string">`translate(${x},${y})`</span>;
     });
 
-    link.attr("x1", d =&gt; d.source.x)
-        .attr("y1", d =&gt; d.source.y)
-        .attr("x2", d =&gt; d.target.x)
-        .attr("y2", d =&gt; d.target.y);
+    link.attr(<span class="org-string">"x1"</span>, d =&gt; d.source.x)
+        .attr(<span class="org-string">"y1"</span>, d =&gt; d.source.y)
+        .attr(<span class="org-string">"x2"</span>, d =&gt; d.target.x)
+        .attr(<span class="org-string">"y2"</span>, d =&gt; d.target.y);
 }
 
-function isEventTargetSelected(event) {
-    return d3.select(event.currentTarget).classed('selected');
+<span class="org-keyword">function</span> <span class="org-function-name">isEventTargetSelected</span>(<span class="org-variable-name">event</span>) {
+    <span class="org-keyword">return</span> d3.select(event.currentTarget).classed(<span class="org-string">'selected'</span>);
 }
 
-function nodeMouseOver(link) {
-    return function(event, d) {
-        Shiny.setInputValue("focus_character", {"play": d.play,
-                                                "name": d.name});
+<span class="org-keyword">function</span> <span class="org-function-name">nodeMouseOver</span>(<span class="org-variable-name">link</span>) {
+    <span class="org-keyword">return</span> <span class="org-keyword">function</span>(<span class="org-variable-name">event</span>, <span class="org-variable-name">d</span>) {
+        Shiny.setInputValue(<span class="org-string">"focus_character"</span>, {<span class="org-string">"play"</span>: d.play,
+                                                <span class="org-string">"name"</span>: d.name});
 
-        d3.selectAll(".node").classed("selected", false);
+        d3.selectAll(<span class="org-string">".node"</span>).classed(<span class="org-string">"selected"</span>, <span class="org-constant">false</span>);
 
-        // Add highlight to the clicked node
-        // 'this' refers to the node element that the event listener is attached to
-        if (isEventTargetSelected(event)) {
-            d3.select(this).classed("selected", false);
-        } else {
-            d3.select(this).classed("selected", true);
+        <span class="org-comment-delimiter">// </span><span class="org-comment">Add highlight to the clicked node</span>
+        <span class="org-comment-delimiter">// </span><span class="org-comment">'this' refers to the node element that the event listener is attached to</span>
+        <span class="org-keyword">if</span> (isEventTargetSelected(event)) {
+            d3.select(<span class="org-constant">this</span>).classed(<span class="org-string">"selected"</span>, <span class="org-constant">false</span>);
+        } <span class="org-keyword">else</span> {
+            d3.select(<span class="org-constant">this</span>).classed(<span class="org-string">"selected"</span>, <span class="org-constant">true</span>);
         }
 
-        // Highlight links connected to the node
-        link.classed("hidden", true);
+        <span class="org-comment-delimiter">// </span><span class="org-comment">Highlight links connected to the node</span>
+        link.classed(<span class="org-string">"hidden"</span>, <span class="org-constant">true</span>);
         link.filter(l =&gt; (l.source === d) || (l.target === d))
-            .classed("hidden", false)
-            .classed("highlighted-link", true);
+            .classed(<span class="org-string">"hidden"</span>, <span class="org-constant">false</span>)
+            .classed(<span class="org-string">"highlighted-link"</span>, <span class="org-constant">true</span>);
     };
 }
 
-function nodeMouseOut(link) {
-    return function(event, d) {
-        d3.select(this).classed("selected", false);
-        link.classed("highlighted-link", false)
-            .classed("hidden", false);
+<span class="org-keyword">function</span> <span class="org-function-name">nodeMouseOut</span>(<span class="org-variable-name">link</span>) {
+    <span class="org-keyword">return</span> <span class="org-keyword">function</span>(<span class="org-variable-name">event</span>, <span class="org-variable-name">d</span>) {
+        d3.select(<span class="org-constant">this</span>).classed(<span class="org-string">"selected"</span>, <span class="org-constant">false</span>);
+        link.classed(<span class="org-string">"highlighted-link"</span>, <span class="org-constant">false</span>)
+            .classed(<span class="org-string">"hidden"</span>, <span class="org-constant">false</span>);
     };
 }
 
-function filterGraphData(selectedNode, fullNodeData, fullLinkData) {
-    const nodesToInclude = new Set([selectedNode]);
+<span class="org-keyword">function</span> <span class="org-function-name">filterGraphData</span>(<span class="org-variable-name">selectedNode</span>, <span class="org-variable-name">fullNodeData</span>, <span class="org-variable-name">fullLinkData</span>) {
+    <span class="org-keyword">const</span> <span class="org-variable-name">nodesToInclude</span> = <span class="org-keyword">new</span> <span class="org-type">Set</span>([selectedNode]);
     fullLinkData.forEach(link =&gt; {
-        if (link.source.id === selectedNode.id) {
+        <span class="org-keyword">if</span> (link.source.id === selectedNode.id) {
             nodesToInclude.add(link.target);
-        } else if (link.target.id === selectedNode.id) {
+        } <span class="org-keyword">else</span> <span class="org-keyword">if</span> (link.target.id === selectedNode.id) {
             nodesToInclude.add(link.source);
         }
     });
-    return {
+    <span class="org-keyword">return</span> {
         filteredNodeData: [...nodesToInclude],
         filteredLinkData: fullLinkData.filter(link =&gt; {
-            return link.source.id == selectedNode.id || link.target.id == selectedNode.id;
+            <span class="org-keyword">return</span> link.source.id == selectedNode.id || link.target.id == selectedNode.id;
         })
     };
 }
 
-function linkMouseOver() {
-    return function(event, d) {
-        Shiny.setInputValue("focus_interaction",
-                            {"source": {"play": d.source.play,
-                                        "name": d.source.name},
-                             "target": {"play": d.target.play,
-                                        "name": d.target.name}});
+<span class="org-keyword">function</span> <span class="org-function-name">linkMouseOver</span>() {
+    <span class="org-keyword">return</span> <span class="org-keyword">function</span>(<span class="org-variable-name">event</span>, <span class="org-variable-name">d</span>) {
+        Shiny.setInputValue(<span class="org-string">"focus_interaction"</span>,
+                            {<span class="org-string">"source"</span>: {<span class="org-string">"play"</span>: d.source.play,
+                                        <span class="org-string">"name"</span>: d.source.name},
+                             <span class="org-string">"target"</span>: {<span class="org-string">"play"</span>: d.target.play,
+                                        <span class="org-string">"name"</span>: d.target.name}});
     };
 }
 
-function displayGraph({svgGeom, nodeData, nodeGeom, nodeGroup, linkData, linkGroup}) {
-    let forceSimulation;
-    function displayGraphInner(filteredNodeData, filteredLinkData) {
-        const node = nodeGroup.selectAll("g")
+<span class="org-keyword">function</span> <span class="org-function-name">displayGraph</span>({svgGeom, nodeData, nodeGeom, nodeGroup, linkData, linkGroup}) {
+    <span class="org-keyword">let</span> <span class="org-variable-name">forceSimulation</span>;
+    <span class="org-keyword">function</span> <span class="org-function-name">displayGraphInner</span>(<span class="org-variable-name">filteredNodeData</span>, <span class="org-variable-name">filteredLinkData</span>) {
+        <span class="org-keyword">const</span> <span class="org-variable-name">node</span> = nodeGroup.selectAll(<span class="org-string">"g"</span>)
               .data(filteredNodeData, d =&gt; d.id)
               .join(enterNode(svgGeom, nodeGeom),
                     update =&gt; update,
                     exit =&gt; exit.remove());
-        const link = createLink(linkGroup, filteredLinkData);
-        node.on("mouseover", nodeMouseOver(link))
-            .on("mouseout", nodeMouseOut(link))
-            .on("click", (event, d) =&gt; {
-                const {filteredNodeData, filteredLinkData} = filterGraphData(d, nodeData, linkData);
+        <span class="org-keyword">const</span> <span class="org-variable-name">link</span> = createLink(linkGroup, filteredLinkData);
+        node.on(<span class="org-string">"mouseover"</span>, nodeMouseOver(link))
+            .on(<span class="org-string">"mouseout"</span>, nodeMouseOut(link))
+            .on(<span class="org-string">"click"</span>, (event, d) =&gt; {
+                <span class="org-keyword">const</span> {filteredNodeData, filteredLinkData} = filterGraphData(d, nodeData, linkData);
                 displayGraphInner(filteredNodeData, filteredLinkData);
             });
-        link.on("mouseover", linkMouseOver());
-        if (forceSimulation) {
+        link.on(<span class="org-string">"mouseover"</span>, linkMouseOver());
+        <span class="org-keyword">if</span> (forceSimulation) {
             forceSimulation.stop();
         }
         forceSimulation = createSimulation(svgGeom, filteredNodeData, nodeGeom, filteredLinkData);
-        forceSimulation.on("tick", () =&gt; updatePositions(link, node, svgGeom));
+        forceSimulation.on(<span class="org-string">"tick"</span>, () =&gt; updatePositions(link, node, svgGeom));
     }
     displayGraphInner(nodeData, linkData);
 }
 
-if (Shiny) {
-    class NavigatorGraphOutputBinding extends Shiny.OutputBinding {
+<span class="org-keyword">if</span> (Shiny) {
+    <span class="org-keyword">class</span> NavigatorGraphOutputBinding <span class="org-keyword">extends</span> Shiny.OutputBinding {
         find(scope) {
-            return scope.find(".shiny-d3-graph-output");
+            <span class="org-keyword">return</span> scope.find(<span class="org-string">".shiny-d3-graph-output"</span>);
         }
         renderValue(el, payload) {
-            const nodeData = payload.nodes;
-            const linkData = payload.links;
-            const svg = d3.select("#d3-graph");
-            const width = svg.node().getBoundingClientRect().width;
-            const height = svg.node().getBoundingClientRect().height;
-            const zoomGroup = ensureG(svg.selectAll(".zoom-container"), "zoom-container");
-            const linkGroup = ensureG(zoomGroup.selectAll(".links"), "links");
-            const nodeGroup = ensureG(zoomGroup.selectAll(".nodes"), "nodes");
-            const radiusAttr = "sentences";
-            const radiusScale = getRadiusScale(nodeData, {radiusAttr: radiusAttr, minRadius: 5, maxRadius: 25});
+            <span class="org-keyword">const</span> <span class="org-variable-name">nodeData</span> = payload.nodes;
+            <span class="org-keyword">const</span> <span class="org-variable-name">linkData</span> = payload.links;
+            <span class="org-keyword">const</span> <span class="org-variable-name">svg</span> = d3.select(<span class="org-string">"#d3-graph"</span>);
+            <span class="org-keyword">const</span> <span class="org-variable-name">width</span> = svg.node().getBoundingClientRect().width;
+            <span class="org-keyword">const</span> <span class="org-variable-name">height</span> = svg.node().getBoundingClientRect().height;
+            <span class="org-keyword">const</span> <span class="org-variable-name">zoomGroup</span> = ensureG(svg.selectAll(<span class="org-string">".zoom-container"</span>), <span class="org-string">"zoom-container"</span>);
+            <span class="org-keyword">const</span> <span class="org-variable-name">linkGroup</span> = ensureG(zoomGroup.selectAll(<span class="org-string">".links"</span>), <span class="org-string">"links"</span>);
+            <span class="org-keyword">const</span> <span class="org-variable-name">nodeGroup</span> = ensureG(zoomGroup.selectAll(<span class="org-string">".nodes"</span>), <span class="org-string">"nodes"</span>);
+            <span class="org-keyword">const</span> <span class="org-variable-name">radiusAttr</span> = <span class="org-string">"sentences"</span>;
+            <span class="org-keyword">const</span> <span class="org-variable-name">radiusScale</span> = getRadiusScale(nodeData, {radiusAttr: radiusAttr, minRadius: 5, maxRadius: 25});
             svg.call(createZoomBehavior(zoomGroup));
 
-            const svgGeom = {
+            <span class="org-keyword">const</span> <span class="org-variable-name">svgGeom</span> = {
                 width: width,
                 height: height,
             };
-            const nodeGeom = {
+            <span class="org-keyword">const</span> <span class="org-variable-name">nodeGeom</span> = {
                 radiusScale: radiusScale,
                 radiusAttr: radiusAttr
             };
@@ -1105,13 +1116,13 @@ if (Shiny) {
             });
         }
     }
-    Shiny.outputBindings.register(new NavigatorGraphOutputBinding(), "shiny-d3-graph-output");
+    Shiny.outputBindings.register(<span class="org-keyword">new</span> <span class="org-type">NavigatorGraphOutputBinding</span>(), <span class="org-string">"shiny-d3-graph-output"</span>);
 }
 </pre>
 </div>
 
 <div class="org-src-container">
-<pre class="src src-css" id="org7e93bab"><span class="org-css-selector">body</span> { <span class="org-css-property">font-family</span>: <span class="org-string">'Inter'</span>, sans-serif; }
+<pre class="src src-css" id="org2fb00f6"><span class="org-css-selector">body</span> { <span class="org-css-property">font-family</span>: <span class="org-string">'Inter'</span>, sans-serif; }
 
 <span class="org-css-selector">.hidden</span> {
   <span class="org-css-property">display</span>: none;
@@ -1186,7 +1197,6 @@ if (Shiny) {
 </div>
 </div>
 </div>
-</div>
 <div id="outline-container-techniques-for-wrapping-cytoscapejs-for-shiny-for-python" class="outline-3">
 <h3 id="techniques-for-wrapping-cytoscapejs-for-shiny-for-python">Using Cytoscape.js</h3>
 <div class="outline-text-3" id="text-techniques-for-wrapping-cytoscapejs-for-shiny-for-python">
@@ -1201,13 +1211,13 @@ This should allow using Cytoscape.js in Shiny
 without creating a custom JavaScript component, or integrating Cytoscape.js ad hoc.
 </p>
 </div>
-<div id="outline-container-org48f284c" class="outline-4">
-<h4 id="org48f284c">Code</h4>
-<div class="outline-text-4" id="text-org48f284c">
+<div id="outline-container-org15f1573" class="outline-4">
+<h4 id="org15f1573">Code</h4>
+<div class="outline-text-4" id="text-org15f1573">
 </div>
-<div id="outline-container-orgd1bada0" class="outline-5">
-<h5 id="orgd1bada0">Ipyleaflet Shiny Express app</h5>
-<div class="outline-text-5" id="text-orgd1bada0">
+<div id="outline-container-org5b41e12" class="outline-5">
+<h5 id="org5b41e12">Ipyleaflet Shiny Express app</h5>
+<div class="outline-text-5" id="text-org5b41e12">
 <p>
 This demonstrates that we can use reactive.effect to update ipywidgets in Shiny.  It's
 taken from <a href="https://shiny.posit.co/py/docs/jupyter-widgets.html#efficient-updates">https://shiny.posit.co/py/docs/jupyter-widgets.html#efficient-updates</a>
@@ -1257,9 +1267,9 @@ shiny.express.ui.input_select(<span class="org-string">"center"</span>, <span cl
 </div>
 </div>
 </div>
-<div id="outline-container-orge7475c6" class="outline-5">
-<h5 id="orge7475c6">Cytoscape utils</h5>
-<div class="outline-text-5" id="text-orge7475c6">
+<div id="outline-container-org260e0d6" class="outline-5">
+<h5 id="org260e0d6">Cytoscape utils</h5>
+<div class="outline-text-5" id="text-org260e0d6">
 <p>
 Some utilities for making graphs using ipycytoscape.
 </p>
@@ -1312,9 +1322,9 @@ Some utilities for making graphs using ipycytoscape.
 </div>
 </div>
 </div>
-<div id="outline-container-orgfe9b9b4" class="outline-5">
-<h5 id="orgfe9b9b4">Cytoscape Shiny Express app with full redraw</h5>
-<div class="outline-text-5" id="text-orgfe9b9b4">
+<div id="outline-container-orgb817072" class="outline-5">
+<h5 id="orgb817072">Cytoscape Shiny Express app with full redraw</h5>
+<div class="outline-text-5" id="text-orgb817072">
 <p>
 This is a Shiny Express App that displays an ipycytoscape Graph, with number of nodes
 driven by a reactive input.
@@ -1504,9 +1514,9 @@ shiny run --reload --log-level debug src/navigator/cyto_core_full2.py
 </div>
 </div>
 </div>
-<div id="outline-container-org0952b58" class="outline-5">
-<h5 id="org0952b58">Ipyleaflet Shiny Core app with incremental redraw</h5>
-<div class="outline-text-5" id="text-org0952b58">
+<div id="outline-container-orgecbfb2f" class="outline-5">
+<h5 id="orgecbfb2f">Ipyleaflet Shiny Core app with incremental redraw</h5>
+<div class="outline-text-5" id="text-orgecbfb2f">
 <p>
 The approach here is based on
 the Brownian motion example in the Shiny for Python repo
@@ -1554,9 +1564,9 @@ shiny run --reload --log-level debug src/navigator/leaflet_core.py
 </div>
 </div>
 </div>
-<div id="outline-container-org5a126c9" class="outline-5">
-<h5 id="org5a126c9">Cytoscape Shiny Core app with incremental redraw</h5>
-<div class="outline-text-5" id="text-org5a126c9">
+<div id="outline-container-org2e26793" class="outline-5">
+<h5 id="org2e26793">Cytoscape Shiny Core app with incremental redraw</h5>
+<div class="outline-text-5" id="text-org2e26793">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">import</span> os
 
@@ -1620,9 +1630,9 @@ shiny run --reload --log-level debug src/navigator/leaflet_core.py
 </div>
 </div>
 </div>
-<div id="outline-container-orgadfcd78" class="outline-4">
-<h4 id="orgadfcd78">Conclusion</h4>
-<div class="outline-text-4" id="text-orgadfcd78">
+<div id="outline-container-org1cbc9b3" class="outline-4">
+<h4 id="org1cbc9b3">Conclusion</h4>
+<div class="outline-text-4" id="text-org1cbc9b3">
 <p>
 ipyctoscape is not a viable candidate to work from.
 </p>
@@ -1647,17 +1657,17 @@ has clearly never been tested on even basic uses cases like the one in issue 322
 </div>
 </div>
 </div>
-<div id="outline-container-org7ca704c" class="outline-3">
-<h3 id="org7ca704c">Using ipysigma</h3>
-<div class="outline-text-3" id="text-org7ca704c">
+<div id="outline-container-org03e7c2c" class="outline-3">
+<h3 id="org03e7c2c">Using ipysigma</h3>
+<div class="outline-text-3" id="text-org03e7c2c">
 </div>
-<div id="outline-container-orgbf51b6c" class="outline-4">
-<h4 id="orgbf51b6c">Code</h4>
-<div class="outline-text-4" id="text-orgbf51b6c">
+<div id="outline-container-orgc1ae7df" class="outline-4">
+<h4 id="orgc1ae7df">Code</h4>
+<div class="outline-text-4" id="text-orgc1ae7df">
 </div>
-<div id="outline-container-orge5f95a9" class="outline-5">
-<h5 id="orge5f95a9">ipysigma Shiny Core app with full redraw</h5>
-<div class="outline-text-5" id="text-orge5f95a9">
+<div id="outline-container-org1c9c0b1" class="outline-5">
+<h5 id="org1c9c0b1">ipysigma Shiny Core app with full redraw</h5>
+<div class="outline-text-5" id="text-org1c9c0b1">
 <p>
 This is a Shiny Core App that displays an ipysigma Graph, with number of nodes
 driven by a reactive input.
@@ -1705,9 +1715,9 @@ It can be run with
 </div>
 </div>
 </div>
-<div id="outline-container-orgb5b3ca4" class="outline-5">
-<h5 id="orgb5b3ca4">ipysigma Shiny Core node navigator</h5>
-<div class="outline-text-5" id="text-orgb5b3ca4">
+<div id="outline-container-orga521fc6" class="outline-5">
+<h5 id="orga521fc6">ipysigma Shiny Core node navigator</h5>
+<div class="outline-text-5" id="text-orga521fc6">
 <p>
 This is a Shiny Core App that displays an ipysigma Graph,
 with the choice of nodes displayed driven by
@@ -1730,7 +1740,7 @@ It can be run with
 </div>
 
 <div class="org-src-container">
-<pre class="src src-python" id="org653f886"><span class="org-keyword">import</span> os
+<pre class="src src-python" id="org89ac4a7"><span class="org-keyword">import</span> os
 <span class="org-keyword">from</span> typing <span class="org-keyword">import</span> cast
 
 <span class="org-keyword">import</span> ipywidgets
@@ -1833,9 +1843,9 @@ It can be run with
 </div>
 </div>
 </div>
-<div id="outline-container-org32cf88e" class="outline-4">
-<h4 id="org32cf88e">Conclusion</h4>
-<div class="outline-text-4" id="text-org32cf88e">
+<div id="outline-container-org55141c4" class="outline-4">
+<h4 id="org55141c4">Conclusion</h4>
+<div class="outline-text-4" id="text-org55141c4">
 <p>
 The combination of ipysigma with Shiny for Python is a viable candidate to build on.
 </p>
@@ -1864,13 +1874,13 @@ polished than the containers available through Bokeh, Plotly, etc.
 </div>
 </div>
 </div>
-<div id="outline-container-org9a8d27e" class="outline-3">
-<h3 id="org9a8d27e">Using pyvis</h3>
-<div class="outline-text-3" id="text-org9a8d27e">
+<div id="outline-container-org5b55775" class="outline-3">
+<h3 id="org5b55775">Using pyvis</h3>
+<div class="outline-text-3" id="text-org5b55775">
 </div>
-<div id="outline-container-orgb3b511b" class="outline-4">
-<h4 id="orgb3b511b">pyvis Shiny Core node navigator</h4>
-<div class="outline-text-4" id="text-orgb3b511b">
+<div id="outline-container-orgf245b92" class="outline-4">
+<h4 id="orgf245b92">pyvis Shiny Core node navigator</h4>
+<div class="outline-text-4" id="text-orgf245b92">
 <p>
 This is a Shiny Core App that displays a graph using pyvis.
 </p>
@@ -1895,7 +1905,7 @@ indicates that any other mode is supported.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-python" id="orgb9e5928"><span class="org-keyword">import</span> os
+<pre class="src src-python" id="org924b4f3"><span class="org-keyword">import</span> os
 <span class="org-keyword">from</span> pathlib <span class="org-keyword">import</span> Path
 
 <span class="org-keyword">import</span> shiny
@@ -1951,9 +1961,9 @@ indicates that any other mode is supported.
 </div>
 </div>
 </div>
-<div id="outline-container-org6028384" class="outline-4">
-<h4 id="org6028384">Conclusion</h4>
-<div class="outline-text-4" id="text-org6028384">
+<div id="outline-container-org7ddb277" class="outline-4">
+<h4 id="org7ddb277">Conclusion</h4>
+<div class="outline-text-4" id="text-org7ddb277">
 <p>
 pyvis is not a useful option given how it operates using external HTML files,
 although the underlying VisJS library might be useful.
@@ -1961,13 +1971,13 @@ although the underlying VisJS library might be useful.
 </div>
 </div>
 </div>
-<div id="outline-container-org2c2de0f" class="outline-3">
-<h3 id="org2c2de0f">Debugging Shiny</h3>
-<div class="outline-text-3" id="text-org2c2de0f">
+<div id="outline-container-org0c6b57c" class="outline-3">
+<h3 id="org0c6b57c">Debugging Shiny</h3>
+<div class="outline-text-3" id="text-org0c6b57c">
 </div>
-<div id="outline-container-org8d0ec2e" class="outline-4">
-<h4 id="org8d0ec2e">Websockets logging</h4>
-<div class="outline-text-4" id="text-org8d0ec2e">
+<div id="outline-container-org705709a" class="outline-4">
+<h4 id="org705709a">Websockets logging</h4>
+<div class="outline-text-4" id="text-org705709a">
 <ul class="org-ul">
 <li><a href="https://websockets.readthedocs.io/en/stable/topics/logging.html">https://websockets.readthedocs.io/en/stable/topics/logging.html</a></li>
 <li><a href="https://websockets.readthedocs.io/en/stable/reference/variables.html">https://websockets.readthedocs.io/en/stable/reference/variables.html</a></li>
@@ -1985,13 +1995,13 @@ To increase log verbosity and avoid truncating messages we can run
 </div>
 </div>
 </div>
-<div id="outline-container-org296fa88" class="outline-2">
-<h2 id="org296fa88">Utilities</h2>
-<div class="outline-text-2" id="text-org296fa88">
+<div id="outline-container-org8d1a60c" class="outline-2">
+<h2 id="org8d1a60c">Utilities</h2>
+<div class="outline-text-2" id="text-org8d1a60c">
 </div>
-<div id="outline-container-org25117ab" class="outline-3">
-<h3 id="org25117ab">Generic utilities</h3>
-<div class="outline-text-3" id="text-org25117ab">
+<div id="outline-container-org029bdf5" class="outline-3">
+<h3 id="org029bdf5">Generic utilities</h3>
+<div class="outline-text-3" id="text-org029bdf5">
 <p>
 We will need some utilities for debugging.
 </p>
@@ -2061,9 +2071,9 @@ We will need some utilities for debugging.
 </div>
 </div>
 </div>
-<div id="outline-container-org1080472" class="outline-3">
-<h3 id="org1080472">Graph utilities</h3>
-<div class="outline-text-3" id="text-org1080472">
+<div id="outline-container-orgb6bea6c" class="outline-3">
+<h3 id="orgb6bea6c">Graph utilities</h3>
+<div class="outline-text-3" id="text-orgb6bea6c">
 <p>
 We'll need some generic graph utilities; we'll build these on networkx for now.
 </p>
@@ -2112,15 +2122,15 @@ We'll need some generic graph utilities; we'll build these on networkx for now.
 </div>
 </div>
 </div>
-<div id="outline-container-org3f53aea" class="outline-3">
-<h3 id="org3f53aea">Data providers</h3>
-<div class="outline-text-3" id="text-org3f53aea">
+<div id="outline-container-org9639887" class="outline-3">
+<h3 id="org9639887">Data providers</h3>
+<div class="outline-text-3" id="text-org9639887">
 </div>
-<div id="outline-container-org9ec2f10" class="outline-4">
-<h4 id="org9ec2f10">Shakespeare data</h4>
-<div class="outline-text-4" id="text-org9ec2f10">
+<div id="outline-container-orga060856" class="outline-4">
+<h4 id="orga060856">Shakespeare data</h4>
+<div class="outline-text-4" id="text-orga060856">
 <div class="org-src-container">
-<pre class="src src-python" id="orgb5300f4"><span class="org-keyword">import</span> re
+<pre class="src src-python" id="org158ac5b"><span class="org-keyword">import</span> re
 <span class="org-keyword">import</span> warnings
 <span class="org-keyword">from</span> itertools <span class="org-keyword">import</span> combinations
 <span class="org-keyword">from</span> typing <span class="org-keyword">import</span> Any, Iterable
@@ -2506,7 +2516,7 @@ Custom components package &#x2013; Shiny for Python, <a href="https://shiny.posi
 </div></div>
 <div id="postamble" class="status">
 <p class="author">Author: Jonathan Moore</p>
-<p class="date">Created: 2025-08-16 Sat 15:43</p>
+<p class="date">Created: 2025-08-16 Sat 18:31</p>
 </div>
 </body>
 </html>
