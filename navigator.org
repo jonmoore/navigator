@@ -1288,78 +1288,19 @@
       #+begin_src js2 :tangle src/www/gen/d3_navigator.js
         import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm"; // Using d3 v7 ESM
 
-        function update_positions(link, node, width, height) {
-            node.attr("transform", d => {
-                const x = d.x = Math.max(10, Math.min(width - 10, d.x));
-                const y = d.y = Math.max(10, Math.min(height - 10, d.y));
-                return `translate(${x},${y})`;
-            });
-
-            link
-                .attr("x1", d => d.source.x)
-                .attr("y1", d => d.source.y)
-                .attr("x2", d => d.target.x)
-                .attr("y2", d => d.target.y);
+        function ensureG(parent, _class) {
+            return parent
+                  .data([null])
+                  .join("g")
+                  .attr("class", _class);
         }
 
-
-        function link_string_id(d, i) {
-            // return an identifying hash for a link, as a string
-            const string_id = `${d.source.id}--${d.target.id}`;
-            return string_id;
-        }
-
-        function getRadiusScale(node_data, {radiusAttr,
-                                            minRadius,
-                                            maxRadius}) {
-            const minRadiusAttr = d3.min(node_data, d => d[radiusAttr]);
-            const maxRadiusAttr = d3.max(node_data, d => d[radiusAttr]);
+        function getRadiusScale(nodeData, {radiusAttr, minRadius, maxRadius}) {
+            const minRadiusAttr = d3.min(nodeData, d => d[radiusAttr]);
+            const maxRadiusAttr = d3.max(nodeData, d => d[radiusAttr]);
             return d3.scaleSqrt()
                 .domain([minRadiusAttr, maxRadiusAttr])
                 .range([minRadius, maxRadius]);
-        }
-
-        function getLinkWidthScale(link_data) {
-            const linkStrengthExtent = d3.extent(link_data, d => d.interaction_strength);
-            return d3.scaleSqrt()
-                .domain(linkStrengthExtent)
-                .range([0, 10]);
-        }
-
-        function getLinkColorScale(link_data) {
-            const linkStrengthExtent = d3.extent(link_data, d => d.interaction_strength);
-            return d3.scaleSqrt()
-                .domain(linkStrengthExtent)
-                .range(["#fff", "#f00"]);
-        }
-
-        function createLink(linkGroup, link_data) {
-            const linkWidthScale = getLinkWidthScale(link_data);
-            const linkColorScale = getLinkColorScale(link_data);
-            return linkGroup.selectAll("line")
-                .data(link_data, link_string_id)
-                .join("line")
-                .attr("class", "link")
-        //        .attr("marker-end", "url(#arrowhead)")
-                .attr("stroke-width", d => linkWidthScale(d.interaction_strength))
-                .attr("stroke", d => linkColorScale(d.interaction_strength))
-            ;
-        }
-
-        function createSimulation({
-            node_data,
-            link_data,
-            width,
-            height,
-            radiusAttr,
-            radiusScale
-        }) {
-            // warning: forceLink modifies link_data. See https://d3js.org/d3-force/link
-            return d3.forceSimulation(node_data)
-                  .force("link", d3.forceLink(link_data).id(node => node.id).distance(100))
-                  .force("charge", d3.forceManyBody().strength(-50))
-                  .force("center", d3.forceCenter(width / 2, height / 2))
-                  .force("collide", d3.forceCollide().radius(d => radiusScale(d[radiusAttr]) + 2));
         }
 
         function createZoomBehavior(zoomGroup){
@@ -1371,14 +1312,7 @@
                 });
         }
 
-        function ensureG(parent, _class) {
-            return parent
-                  .data([null])
-                  .join("g")
-                  .attr("class", _class);
-        }
-
-        function enterNode({width, height, radiusScale, radiusAttr}) {
+        function enterNode({width, height}, {radiusScale, radiusAttr}) {
             return function(enter) {
                 const nodeEnter = enter.append("g")
                       .attr("class", "node")
@@ -1400,118 +1334,189 @@
             };
         }
 
+        function linkStringId(d, i) {
+            // an identifying hash for a link, as a string
+            return `${d.source.id}--${d.target.id}`;
+        }
+
+        function getLinkWidthScale(linkData) {
+            const linkStrengthExtent = d3.extent(linkData, d => d.interaction_strength);
+            return d3.scaleSqrt()
+                .domain(linkStrengthExtent)
+                .range([0, 10]);
+        }
+
+        function getLinkColorScale(linkData) {
+            const linkStrengthExtent = d3.extent(linkData, d => d.interaction_strength);
+            return d3.scaleSqrt()
+                .domain(linkStrengthExtent)
+                .range(["#fff", "#f00"]);
+        }
+
+        function createLink(linkGroup, linkData) {
+            const linkWidthScale = getLinkWidthScale(linkData);
+            const linkColorScale = getLinkColorScale(linkData);
+            return linkGroup.selectAll("line")
+                .data(linkData, linkStringId)
+                .join("line")
+                .attr("class", "link")
+                .attr("stroke-width", d => linkWidthScale(d.interaction_strength))
+                .attr("stroke", d => linkColorScale(d.interaction_strength))
+            ;
+        }
+
+        function createSimulation({width, height}, nodeData, {radiusAttr, radiusScale}, linkData) {
+            // warning: forceLink modifies linkData. See https://d3js.org/d3-force/link
+            return d3.forceSimulation(nodeData)
+                .force("link", d3.forceLink(linkData).id(node => node.id).distance(100))
+                .force("charge", d3.forceManyBody().strength(-50))
+                .force("center", d3.forceCenter(width / 2, height / 2))
+                .force("collide", d3.forceCollide().radius(d => radiusScale(d[radiusAttr]) + 2));   
+        }
+
+        function updatePositions(link, node, {width, height}) {
+            node.attr("transform", d => {
+                const x = d.x = Math.max(10, Math.min(width - 10, d.x));
+                const y = d.y = Math.max(10, Math.min(height - 10, d.y));
+                return `translate(${x},${y})`;
+            });
+
+            link.attr("x1", d => d.source.x)
+                .attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x)
+                .attr("y2", d => d.target.y);
+        }
+
+        function isEventTargetSelected(event) {
+            return d3.select(event.currentTarget).classed('selected');
+        }
+
+        function nodeMouseOver(link) {
+            return function(event, d) {
+                Shiny.setInputValue("focus_character", {"play": d.play,
+                                                        "name": d.name});
+
+                d3.selectAll(".node").classed("selected", false);
+
+                // Add highlight to the clicked node
+                // 'this' refers to the node element that the event listener is attached to
+                if (isEventTargetSelected(event)) {
+                    d3.select(this).classed("selected", false);
+                } else {
+                    d3.select(this).classed("selected", true);
+                }
+
+                // Highlight links connected to the node
+                link.classed("hidden", true);
+                link.filter(l => (l.source === d) || (l.target === d))
+                    .classed("hidden", false)
+                    .classed("highlighted-link", true);
+            };
+        }
+
+        function nodeMouseOut(link) {
+            return function(event, d) {
+                d3.select(this).classed("selected", false);
+                link.classed("highlighted-link", false)
+                    .classed("hidden", false);
+            };
+        }
+
+        function filterGraphData(selectedNode, fullNodeData, fullLinkData) {
+            const nodesToInclude = new Set([selectedNode]);
+            fullLinkData.forEach(link => {
+                if (link.source.id === selectedNode.id) {
+                    nodesToInclude.add(link.target);
+                } else if (link.target.id === selectedNode.id) {
+                    nodesToInclude.add(link.source);
+                }
+            });
+            return {
+                filteredNodeData: [...nodesToInclude],
+                filteredLinkData: fullLinkData.filter(link => {
+                    return link.source.id == selectedNode.id || link.target.id == selectedNode.id;
+                })
+            };
+        }
+
+        function linkMouseOver() {
+            return function(event, d) {
+                Shiny.setInputValue("focus_interaction",
+                                    {"source": {"play": d.source.play,
+                                                "name": d.source.name},
+                                     "target": {"play": d.target.play,
+                                                "name": d.target.name}});
+            };
+        }
+
+        function displayGraph({svgGeom, nodeData, nodeGeom, nodeGroup, linkData, linkGroup}) {
+            let forceSimulation;
+            function displayGraphInner(filteredNodeData, filteredLinkData) {
+                const node = nodeGroup.selectAll("g")
+                      .data(filteredNodeData, d => d.id)
+                      .join(enterNode(svgGeom, nodeGeom),
+                            update => update,
+                            exit => exit.remove());
+                const link = createLink(linkGroup, filteredLinkData);
+                node.on("mouseover", nodeMouseOver(link))
+                    .on("mouseout", nodeMouseOut(link))
+                    .on("click", (event, d) => {
+                        const {filteredNodeData, filteredLinkData} = filterGraphData(d, nodeData, linkData);
+                        displayGraphInner(filteredNodeData, filteredLinkData);
+                    });
+                link.on("mouseover", linkMouseOver());
+                if (forceSimulation) {
+                    forceSimulation.stop();
+                }
+                forceSimulation = createSimulation(svgGeom, filteredNodeData, nodeGeom, filteredLinkData);
+                forceSimulation.on("tick", () => updatePositions(link, node, svgGeom));
+            }
+            displayGraphInner(nodeData, linkData);
+        }
+
         if (Shiny) {
             class NavigatorGraphOutputBinding extends Shiny.OutputBinding {
                 find(scope) {
                     return scope.find(".shiny-d3-graph-output");
                 }
-
                 renderValue(el, payload) {
-                    const node_data = payload.nodes;
-                    const link_data = payload.links;
-
+                    const nodeData = payload.nodes;
+                    const linkData = payload.links;
                     const svg = d3.select("#d3-graph");
-
-                    const tooltip = d3.select("#tooltip");
                     const width = svg.node().getBoundingClientRect().width;
                     const height = svg.node().getBoundingClientRect().height;
-
                     const zoomGroup = ensureG(svg.selectAll(".zoom-container"), "zoom-container");
                     const linkGroup = ensureG(zoomGroup.selectAll(".links"), "links");
                     const nodeGroup = ensureG(zoomGroup.selectAll(".nodes"), "nodes");
-
                     const radiusAttr = "sentences";
-                    const radiusScale = getRadiusScale(node_data,
-                                                       {radiusAttr: radiusAttr,
-                                                        minRadius: 5,
-                                                        maxRadius: 25});
-
+                    const radiusScale = getRadiusScale(nodeData, {radiusAttr: radiusAttr, minRadius: 5, maxRadius: 25});
                     svg.call(createZoomBehavior(zoomGroup));
 
-                    // Use a key function (d.id) to ensure D3 correctly matches data to elements
-                    const node = nodeGroup.selectAll("g")
-                          .data(node_data, d => d.id)
-                          .join(
-                              enterNode({
-                                  width: width,
-                                  height: height,
-                                  radiusScale: radiusScale,
-                                  radiusAttr: radiusAttr,
-                              }),
-                              update => update,
-                              exit => exit.remove()
-                          );
-                    // warning: createSimulation modifies link_data
-                    const simulation = createSimulation({
-                        node_data: node_data,
-                        link_data: link_data,
+                    const svgGeom = {
                         width: width,
                         height: height,
-                        radiusAttr: radiusAttr,
-                        radiusScale: radiusScale
+                    };
+                    const nodeGeom = {
+                        radiusScale: radiusScale,
+                        radiusAttr: radiusAttr
+                    };
+
+                    displayGraph({svgGeom: svgGeom, nodeGroup: nodeGroup, nodeData: nodeData, nodeGeom: nodeGeom, 
+                                  linkGroup: linkGroup, linkData: linkData,
                     });
-                    const link = createLink(linkGroup, link_data);
-                    simulation.on("tick", () => update_positions(link, node, width, height));
-
-                    node.on("mouseover", function(event, d) {
-                        // 'this' refers to the node element that the event listener is attached to
-
-                        // Let the server know which character has focus
-                        Shiny.setInputValue("focus_character", {"play": d.play,
-                                                                "name": d.name});
-
-                        // Remove highlight from all nodes
-                        d3.selectAll(".node").classed("highlighted", false);
-                        d3.selectAll(".node text").classed("highlighted-text", false);
-
-                        // Add highlight to the clicked node
-                        d3.select(this).classed("highlighted", true);
-                        d3.select(this).select("text").classed("highlighted-text", true);
-
-                        // Highlight links related to the node in red
-                        link.filter(l => (l.source === d) || (l.target === d))
-                            .classed("highlighted-link", true);
-
-                        tooltip.transition()
-                            .duration(200)
-                            .style("opacity", .9);
-                        tooltip.html("Node: " + d.name + "<br/>ID: " + d.id)
-                            .style("left", (event.pageX + 10) + "px")
-                            .style("top", (event.pageY - 28) + "px");
-                    })
-                        .on("mouseout", function(event, d) {
-                            console.debug("node mouseout, d: ", d);
-                            link.classed("highlighted-link", false);
-                            tooltip.transition()
-                                .duration(500)
-                                .style("opacity", 0);
-                        });
-
-                    link
-                        .on("mouseover", (event, d) => {
-                            Shiny.setInputValue("focus_interaction", {"source": {"play": d.source.play,
-                                                                                 "name": d.source.name},
-                                                                      "target": {"play": d.target.play,
-                                                                                 "name": d.target.name}});
-
-                        })
-                        .on("mouseout", (event, d) => {
-                            console.debug(`Mouse out link from ${d.source.id} to ${d.target.id} with strength ${d.interaction_strength}`);
-                        })
-                    ;
                 }
-
             }
-            Shiny.outputBindings.register(
-                new NavigatorGraphOutputBinding(),
-                "shiny-d3-graph-output"
-            );
+            Shiny.outputBindings.register(new NavigatorGraphOutputBinding(), "shiny-d3-graph-output");
         }
       #+end_src
 
       #+NAME: d3_core_css
       #+begin_src css :tangle src/www/gen/d3_navigator.css
         body { font-family: 'Inter', sans-serif; }
+
+        .hidden {
+          display: none;
+        }
 
         .node circle {
             fill: #69b3a2;
@@ -1520,8 +1525,21 @@
             transition: all 0.2s ease-in-out; /* Smooth transition for highlight */
         }
 
-        .node.highlighted circle {
+        .node.selected circle {
             stroke-width: 3px;
+            fill: #ff0000;
+        }
+
+        .node text {
+            font-size: 10px;
+            pointer-events: none; /* Prevent text from interfering with drag */
+            text-anchor: middle;
+            fill: #333;
+            transition: all 0.2s ease-in-out; /* Smooth transition for highlight */
+        }
+
+        .node.selected text {
+            font-weight: bold;
             fill: #ff0000;
         }
 
@@ -1534,19 +1552,6 @@
 
         .highlighted-link {
           stroke: #f00; /* Red color for highlighted links */
-        }
-
-        .node text {
-            font-size: 10px;
-            pointer-events: none; /* Prevent text from interfering with drag */
-            text-anchor: middle;
-            fill: #333;
-            transition: all 0.2s ease-in-out; /* Smooth transition for highlight */
-        }
-
-        .node text.highlighted-text {
-            font-weight: bold;
-            fill: #ff0000;
         }
 
         .tooltip {
