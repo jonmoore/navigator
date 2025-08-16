@@ -1362,38 +1362,63 @@
                   .force("collide", d3.forceCollide().radius(d => radiusScale(d[radiusAttr]) + 2));
         }
 
+        function createZoomBehavior(zoomGroup){
+            return d3.zoom()
+                .scaleExtent([0.1, 10])
+                .on("zoom", (event) => {
+                    console.info("zoom detected", event);
+                    zoomGroup.attr("transform", event.transform);
+                });
+        }
+
+        function ensureG(parent, _class) {
+            return parent
+                  .data([null])
+                  .join("g")
+                  .attr("class", _class);
+        }
+
+        function enterNode({width, height, radiusScale, radiusAttr}) {
+            return function(enter) {
+                const nodeEnter = enter.append("g")
+                      .attr("class", "node")
+                      .attr("transform", d => {
+                          // Position new nodes randomly within the SVG
+                          const x = Math.random() * width;
+                          const y = Math.random() * height;
+                          return `translate(${x}, ${y})`;
+                      });
+                nodeEnter.append("circle")
+                    .attr("r", d => radiusScale(d[radiusAttr]));
+                nodeEnter.append("text")
+                    .attr("dy", "0.75em")
+                    .attr("y", d => radiusScale(d[radiusAttr]) + 5) // Position text below the circle
+                    .text(d => d.name)
+                    .style("pointer-events", "none") // Make text not interfere with node click
+                ;
+                return nodeEnter;
+            };
+        }
+
         if (Shiny) {
             class NavigatorGraphOutputBinding extends Shiny.OutputBinding {
                 find(scope) {
-                    const found = scope.find(".shiny-d3-graph-output");
-                    return found;
+                    return scope.find(".shiny-d3-graph-output");
                 }
 
                 renderValue(el, payload) {
                     const node_data = payload.nodes;
                     const link_data = payload.links;
 
-                    const svg = d3.select("#d3-graph").call(d3.zoom().on("zoom", (event) => {
-                        console.info("zoom detected");
-                        console.info("event", event);
-                        svg.attr("transform", event.transform);
-                    }));
+                    const svg = d3.select("#d3-graph");
 
                     const tooltip = d3.select("#tooltip");
                     const width = svg.node().getBoundingClientRect().width;
                     const height = svg.node().getBoundingClientRect().height;
 
-                    const linkGroup = svg.selectAll(".links")
-                          .data([null])
-                          .join("g")
-                          .attr("class", "links");
-                    const nodeGroup = svg.selectAll(".nodes")
-                          .data([null])
-                          .join("g")
-                          .attr("class", "nodes");
-                    const defs = svg.selectAll("defs")
-                          .data([null])
-                          .join("defs");
+                    const zoomGroup = ensureG(svg.selectAll(".zoom-container"), "zoom-container");
+                    const linkGroup = ensureG(zoomGroup.selectAll(".links"), "links");
+                    const nodeGroup = ensureG(zoomGroup.selectAll(".nodes"), "nodes");
 
                     const radiusAttr = "sentences";
                     const radiusScale = getRadiusScale(node_data,
@@ -1401,29 +1426,18 @@
                                                         minRadius: 5,
                                                         maxRadius: 25});
 
+                    svg.call(createZoomBehavior(zoomGroup));
+
                     // Use a key function (d.id) to ensure D3 correctly matches data to elements
                     const node = nodeGroup.selectAll("g")
                           .data(node_data, d => d.id)
                           .join(
-                              enter => {
-                                  const nodeEnter = enter.append("g")
-                                        .attr("class", "node")
-                                        .attr("transform", d => {
-                                            // Position new nodes randomly within the SVG
-                                            const x = Math.random() * width;
-                                            const y = Math.random() * height;
-                                            return `translate(${x}, ${y})`;
-                                        });
-                                  nodeEnter.append("circle")
-                                      .attr("r", d => radiusScale(d[radiusAttr]));
-                                  nodeEnter.append("text")
-                                      .attr("dy", "0.75em")
-                                      .attr("y", d => radiusScale(d[radiusAttr]) + 5) // Position text below the circle
-                                      .text(d => d.name)
-                                      .style("pointer-events", "none") // Make text not interfere with node click
-                                  ;
-                                  return nodeEnter;
-                              },
+                              enterNode({
+                                  width: width,
+                                  height: height,
+                                  radiusScale: radiusScale,
+                                  radiusAttr: radiusAttr,
+                              }),
                               update => update,
                               exit => exit.remove()
                           );
