@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2025-08-06 Wed 00:31 -->
+<!-- 2025-08-16 Sat 15:43 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Building a Graph Navigator in Python</title>
@@ -27,91 +27,91 @@
 <div id="text-table-of-contents" role="doc-toc">
 <ul>
 <li><a href="#introduction">Introduction</a></li>
-<li><a href="#org41a6df8">Targets</a></li>
-<li><a href="#org5f18465">Supporting packages</a>
+<li><a href="#org3a6b6e0">Targets</a></li>
+<li><a href="#org1969659">Supporting packages</a>
 <ul>
 <li><a href="#jupyter-widgets">Jupyter Widgets</a></li>
 <li><a href="#cytoscape-js">Cytoscape.js</a></li>
 <li><a href="#shinywidgets">shinywidgets</a></li>
 <li><a href="#ipycytoscape">ipycytoscape</a></li>
-<li><a href="#org7e027fa">ipysigma</a></li>
-<li><a href="#org9eeb36e">Pyvis</a></li>
-<li><a href="#orge697c5e">D3</a></li>
-<li><a href="#org222433b">d3blocks</a></li>
-<li><a href="#org9bdbafd">d3graph</a></li>
-<li><a href="#orgcfb3aad">ipydagred3</a></li>
-<li><a href="#orge5bd654">ipyelk</a></li>
-<li><a href="#org93b88f0">Dash</a></li>
-<li><a href="#orgaedf332">Bokeh</a></li>
-<li><a href="#org708aade">Altair</a></li>
+<li><a href="#orgaadecf9">ipysigma</a></li>
+<li><a href="#org3f0364b">Pyvis</a></li>
+<li><a href="#orge29b17d">D3</a></li>
+<li><a href="#org6a7d6e3">d3blocks</a></li>
+<li><a href="#orgadad254">d3graph</a></li>
+<li><a href="#orgaffb89a">ipydagred3</a></li>
+<li><a href="#org795a6f1">ipyelk</a></li>
+<li><a href="#org46d8fd4">Dash</a></li>
+<li><a href="#orgdcc20ce">Bokeh</a></li>
+<li><a href="#org04dcba7">Altair</a></li>
 </ul>
 </li>
 <li><a href="#methods-for-creating-custom-components-in-shiny-for-python">Using Shiny</a>
 <ul>
-<li><a href="#org2a5ea21">Ways to extend Shiny</a>
+<li><a href="#org9c05258">Ways to extend Shiny</a>
 <ul>
-<li><a href="#org5101769">Including JavaScript directly</a></li>
-<li><a href="#orgc640219">One-off custom components</a>
+<li><a href="#org880b7f1">Including JavaScript directly</a></li>
+<li><a href="#orgd3d0491">One-off custom components</a>
 <ul>
-<li><a href="#org5f19267">JavaScript output binding</a></li>
-<li><a href="#orgeffbfc4">Python server-side code</a></li>
+<li><a href="#orgecfb20a">JavaScript output binding</a></li>
+<li><a href="#orgb160b44">Python server-side code</a></li>
 </ul>
 </li>
-<li><a href="#org41716a1">Custom component packages</a></li>
+<li><a href="#org72cb4e6">Custom component packages</a></li>
+</ul>
+</li>
+<li><a href="#org357dd80">D3</a>
+<ul>
+<li><a href="#org065b38f">D3 navigator</a></li>
 </ul>
 </li>
 <li><a href="#techniques-for-wrapping-cytoscapejs-for-shiny-for-python">Using Cytoscape.js</a>
 <ul>
-<li><a href="#org9686f13">Code</a>
+<li><a href="#org48f284c">Code</a>
 <ul>
-<li><a href="#orgcdbc5e8">Ipyleaflet Shiny Express app</a></li>
-<li><a href="#org0316e03">Cytoscape utils</a></li>
-<li><a href="#org4bf71ef">Cytoscape Shiny Express app with full redraw</a></li>
+<li><a href="#orgd1bada0">Ipyleaflet Shiny Express app</a></li>
+<li><a href="#orge7475c6">Cytoscape utils</a></li>
+<li><a href="#orgfe9b9b4">Cytoscape Shiny Express app with full redraw</a></li>
 <li><a href="#app-core-ipycyto-nx-full">Cytoscape Shiny Core app with full redraw</a></li>
 <li><a href="#app-core-ipycyto-cyto-full">Cytoscape Shiny Core app with full redraw, no networkx</a></li>
-<li><a href="#org42ac3ac">Ipyleaflet Shiny Core app with incremental redraw</a></li>
-<li><a href="#org8ddd3da">Cytoscape Shiny Core app with incremental redraw</a></li>
+<li><a href="#org0952b58">Ipyleaflet Shiny Core app with incremental redraw</a></li>
+<li><a href="#org5a126c9">Cytoscape Shiny Core app with incremental redraw</a></li>
 </ul>
 </li>
-<li><a href="#org4d609a0">Conclusion</a></li>
+<li><a href="#orgadfcd78">Conclusion</a></li>
 </ul>
 </li>
-<li><a href="#orgd837a33">Using ipysigma</a>
+<li><a href="#org7ca704c">Using ipysigma</a>
 <ul>
-<li><a href="#org97a055a">Code</a>
+<li><a href="#orgbf51b6c">Code</a>
 <ul>
-<li><a href="#org1cfddf4">ipysigma Shiny Core app with full redraw</a></li>
-<li><a href="#orga564766">ipysigma Shiny Core node navigator</a></li>
+<li><a href="#orge5f95a9">ipysigma Shiny Core app with full redraw</a></li>
+<li><a href="#orgb5b3ca4">ipysigma Shiny Core node navigator</a></li>
 </ul>
 </li>
-<li><a href="#org31186a9">Conclusion</a></li>
+<li><a href="#org32cf88e">Conclusion</a></li>
 </ul>
 </li>
-<li><a href="#org27e7009">Using pyvis</a>
+<li><a href="#org9a8d27e">Using pyvis</a>
 <ul>
-<li><a href="#org1bd80bf">pyvis Shiny Core node navigator</a></li>
-<li><a href="#org9ecb917">Conclusion</a></li>
+<li><a href="#orgb3b511b">pyvis Shiny Core node navigator</a></li>
+<li><a href="#org6028384">Conclusion</a></li>
 </ul>
 </li>
-<li><a href="#org2faada5">D3</a>
+<li><a href="#org2c2de0f">Debugging Shiny</a>
 <ul>
-<li><a href="#org7a062c2">D3 navigator</a></li>
-</ul>
-</li>
-<li><a href="#orgfd941b3">Debugging Shiny</a>
-<ul>
-<li><a href="#org971cc7d">Websockets logging</a></li>
+<li><a href="#org8d0ec2e">Websockets logging</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#org0336711">Utilities</a>
+<li><a href="#org296fa88">Utilities</a>
 <ul>
-<li><a href="#org3aead1c">Generic utilities</a></li>
-<li><a href="#orgb695e04">Graph utilities</a></li>
-<li><a href="#org0bcf899">Data providers</a>
+<li><a href="#org25117ab">Generic utilities</a></li>
+<li><a href="#org1080472">Graph utilities</a></li>
+<li><a href="#org3f53aea">Data providers</a>
 <ul>
-<li><a href="#orga5dc3f8">Shakespeare data</a></li>
+<li><a href="#org9ec2f10">Shakespeare data</a></li>
 </ul>
 </li>
 </ul>
@@ -136,9 +136,9 @@ to achieve our goals.
 </p>
 </div>
 </div>
-<div id="outline-container-org41a6df8" class="outline-2">
-<h2 id="org41a6df8">Targets</h2>
-<div class="outline-text-2" id="text-org41a6df8">
+<div id="outline-container-org3a6b6e0" class="outline-2">
+<h2 id="org3a6b6e0">Targets</h2>
+<div class="outline-text-2" id="text-org3a6b6e0">
 <p>
 We want to create an application that, in rough priority order:
 </p>
@@ -163,9 +163,9 @@ front-end might be a candidate here.</li>
 </ol>
 </div>
 </div>
-<div id="outline-container-org5f18465" class="outline-2">
-<h2 id="org5f18465">Supporting packages</h2>
-<div class="outline-text-2" id="text-org5f18465">
+<div id="outline-container-org1969659" class="outline-2">
+<h2 id="org1969659">Supporting packages</h2>
+<div class="outline-text-2" id="text-org1969659">
 </div>
 <div id="outline-container-jupyter-widgets" class="outline-3">
 <h3 id="jupyter-widgets">Jupyter Widgets</h3>
@@ -252,9 +252,9 @@ like clicks or node selections.
 </p>
 </div>
 </div>
-<div id="outline-container-org7e027fa" class="outline-3">
-<h3 id="org7e027fa">ipysigma</h3>
-<div class="outline-text-3" id="text-org7e027fa">
+<div id="outline-container-orgaadecf9" class="outline-3">
+<h3 id="orgaadecf9">ipysigma</h3>
+<div class="outline-text-3" id="text-orgaadecf9">
 <p>
 ipysigma is a Jupyter widget built on Sigma.js,
 designed to render interactive network visualizations effortlessly.
@@ -282,9 +282,9 @@ rather than graph-driven interactivity which may not be a good fit here.
 </p>
 </div>
 </div>
-<div id="outline-container-org9eeb36e" class="outline-3">
-<h3 id="org9eeb36e">Pyvis</h3>
-<div class="outline-text-3" id="text-org9eeb36e">
+<div id="outline-container-org3f0364b" class="outline-3">
+<h3 id="org3f0364b">Pyvis</h3>
+<div class="outline-text-3" id="text-org3f0364b">
 <ul class="org-ul">
 <li><b>Basis:</b> Wraps the vis.js JavaScript library.</li>
 <li><b>Features:</b> Designed to make creating interactive network graphs easy
@@ -315,9 +315,9 @@ as noted in this response to a request for support in py-shinywidgets:
 </ul>
 </div>
 </div>
-<div id="outline-container-orge697c5e" class="outline-3">
-<h3 id="orge697c5e">D3</h3>
-<div class="outline-text-3" id="text-orge697c5e">
+<div id="outline-container-orge29b17d" class="outline-3">
+<h3 id="orge29b17d">D3</h3>
+<div class="outline-text-3" id="text-orge29b17d">
 <ul class="org-ul">
 <li><b>Basis:</b> Pure JavaScript library</li>
 <li><b>Features:</b> Provides a highly customizable framework for interactive visualizations.
@@ -348,9 +348,9 @@ something like htmx.</li>
 </ul>
 </div>
 </div>
-<div id="outline-container-org222433b" class="outline-3">
-<h3 id="org222433b">d3blocks</h3>
-<div class="outline-text-3" id="text-org222433b">
+<div id="outline-container-org6a7d6e3" class="outline-3">
+<h3 id="org6a7d6e3">d3blocks</h3>
+<div class="outline-text-3" id="text-org6a7d6e3">
 <ul class="org-ul">
 <li><a href="https://github.com/d3blocks/d3blocks">https://github.com/d3blocks/d3blocks</a></li>
 <li><b>*Basis:</b> Python library for generating Javascript</li>
@@ -360,9 +360,9 @@ Supports a range of widely-used chart types.</li>
 </ul>
 </div>
 </div>
-<div id="outline-container-org9bdbafd" class="outline-3">
-<h3 id="org9bdbafd">d3graph</h3>
-<div class="outline-text-3" id="text-org9bdbafd">
+<div id="outline-container-orgadad254" class="outline-3">
+<h3 id="orgadad254">d3graph</h3>
+<div class="outline-text-3" id="text-orgadad254">
 <ul class="org-ul">
 <li><a href="https://github.com/erdogant/d3graph">https://github.com/erdogant/d3graph</a></li>
 <li><b>*Basis:</b> Python package</li>
@@ -371,18 +371,18 @@ Supports a range of widely-used chart types.</li>
 </ul>
 </div>
 </div>
-<div id="outline-container-orgcfb3aad" class="outline-3">
-<h3 id="orgcfb3aad">ipydagred3</h3>
-<div class="outline-text-3" id="text-orgcfb3aad">
+<div id="outline-container-orgaffb89a" class="outline-3">
+<h3 id="orgaffb89a">ipydagred3</h3>
+<div class="outline-text-3" id="text-orgaffb89a">
 <ul class="org-ul">
 <li><b>Basis:</b> Uses dagre-d3 library.</li>
 <li><b>Features:</b> Specifically designed for drawing Directed Acyclic Graphs (DAGs) within JupyterLab.</li>
 </ul>
 </div>
 </div>
-<div id="outline-container-orge5bd654" class="outline-3">
-<h3 id="orge5bd654">ipyelk</h3>
-<div class="outline-text-3" id="text-orge5bd654">
+<div id="outline-container-org795a6f1" class="outline-3">
+<h3 id="org795a6f1">ipyelk</h3>
+<div class="outline-text-3" id="text-org795a6f1">
 <ul class="org-ul">
 <li><b>Basis:</b> Uses the Eclipse Layout Kernel (ELK) via elkjs.</li>
 <li><b>Features:</b> Provides sophisticated layout algorithms, potentially useful for complex diagrams.
@@ -390,9 +390,9 @@ Mentioned as having potential for features like collapsing/expanding subgraphs.<
 </ul>
 </div>
 </div>
-<div id="outline-container-org93b88f0" class="outline-3">
-<h3 id="org93b88f0">Dash</h3>
-<div class="outline-text-3" id="text-org93b88f0">
+<div id="outline-container-org46d8fd4" class="outline-3">
+<h3 id="org46d8fd4">Dash</h3>
+<div class="outline-text-3" id="text-org46d8fd4">
 <ul class="org-ul">
 <li><b>Basis:</b> Built on Plotly.js.</li>
 <li><b>Features:</b> A very versatile library for creating a wide range of interactive plots, including
@@ -414,9 +414,9 @@ unless they have a workaround for Cytoscape's bugs.</li>
 </ul>
 </div>
 </div>
-<div id="outline-container-orgaedf332" class="outline-3">
-<h3 id="orgaedf332">Bokeh</h3>
-<div class="outline-text-3" id="text-orgaedf332">
+<div id="outline-container-orgdcc20ce" class="outline-3">
+<h3 id="orgdcc20ce">Bokeh</h3>
+<div class="outline-text-3" id="text-orgdcc20ce">
 <ul class="org-ul">
 <li><b>Basis:</b> Bokeh's own JS library.</li>
 <li><b>Features:</b> Excellent for creating interactive, web-based visualizations, including network graphs.
@@ -425,9 +425,9 @@ and streaming data capabilities. Integrates well with Jupyter.</li>
 </ul>
 </div>
 </div>
-<div id="outline-container-org708aade" class="outline-3">
-<h3 id="org708aade">Altair</h3>
-<div class="outline-text-3" id="text-org708aade">
+<div id="outline-container-org04dcba7" class="outline-3">
+<h3 id="org04dcba7">Altair</h3>
+<div class="outline-text-3" id="text-org04dcba7">
 <ul class="org-ul">
 <li><b>Basis:</b> Built on Vega-Lite, a declarative grammar.</li>
 <li><b>Features:</b> Focuses on a declarative approach, simplifying the creation
@@ -442,18 +442,18 @@ the <a href="https://altair-viz.github.io/getting_started/resources.html#nx-alta
 <h2 id="methods-for-creating-custom-components-in-shiny-for-python">Using Shiny</h2>
 <div class="outline-text-2" id="text-methods-for-creating-custom-components-in-shiny-for-python">
 </div>
-<div id="outline-container-org2a5ea21" class="outline-3">
-<h3 id="org2a5ea21">Ways to extend Shiny</h3>
-<div class="outline-text-3" id="text-org2a5ea21">
+<div id="outline-container-org9c05258" class="outline-3">
+<h3 id="org9c05258">Ways to extend Shiny</h3>
+<div class="outline-text-3" id="text-org9c05258">
 <p>
 Shiny provides several approaches for extending its built-in component library
 with arbitrary JavaScript functionality,
 allowing one to create richer and more interactive user interfaces.
 </p>
 </div>
-<div id="outline-container-org5101769" class="outline-4">
-<h4 id="org5101769">Including JavaScript directly</h4>
-<div class="outline-text-4" id="text-org5101769">
+<div id="outline-container-org880b7f1" class="outline-4">
+<h4 id="org880b7f1">Including JavaScript directly</h4>
+<div class="outline-text-4" id="text-org880b7f1">
 <p>
 Shiny allows including JavaScript files
 directly within an application's static assets directory (typically named www)
@@ -470,9 +470,9 @@ either one-off custom components or custom component packages.
 </p>
 </div>
 </div>
-<div id="outline-container-orgc640219" class="outline-4">
-<h4 id="orgc640219">One-off custom components</h4>
-<div class="outline-text-4" id="text-orgc640219">
+<div id="outline-container-orgd3d0491" class="outline-4">
+<h4 id="orgd3d0491">One-off custom components</h4>
+<div class="outline-text-4" id="text-orgd3d0491">
 <p>
 One-off custom JavaScript components<sup><a id="fnr.shiny-custom-js" class="footref" href="#fn.shiny-custom-js" role="doc-backlink">4</a></sup> are developed for specific applications.
 </p>
@@ -510,9 +510,9 @@ see the "Custom components package" page in the Shiny documentation<sup><a id="f
 which describes how to create a custom component for Shiny inputs.
 </p>
 </div>
-<div id="outline-container-org5f19267" class="outline-5">
-<h5 id="org5f19267">JavaScript output binding</h5>
-<div class="outline-text-5" id="text-org5f19267">
+<div id="outline-container-orgecfb20a" class="outline-5">
+<h5 id="orgecfb20a">JavaScript output binding</h5>
+<div class="outline-text-5" id="text-orgecfb20a">
 <p>
 The output binding typically includes two key methods:
 <code>find()</code> and <code>renderValue()</code>.
@@ -553,13 +553,13 @@ and uses it to configure the component's elements, style, and layout.
 </p>
 </div>
 </div>
-<div id="outline-container-orgeffbfc4" class="outline-5">
-<h5 id="orgeffbfc4">Python server-side code</h5>
-<div class="outline-text-5" id="text-orgeffbfc4">
+<div id="outline-container-orgb160b44" class="outline-5">
+<h5 id="orgb160b44">Python server-side code</h5>
+<div class="outline-text-5" id="text-orgb160b44">
 </div>
 <ul class="org-ul">
-<li><a id="org3704147"></a>Output function<br />
-<div class="outline-text-6" id="text-org3704147">
+<li><a id="org02768b3"></a>Output function<br />
+<div class="outline-text-6" id="text-org02768b3">
 <p>
 On the Python side, an output function needs to be defined
 to place the designated HTML element in the Shiny application's user interface.
@@ -598,8 +598,8 @@ are included in the Shiny application.
 </p>
 </div>
 </li>
-<li><a id="orgf9fecb7"></a>Render decorator<br />
-<div class="outline-text-6" id="text-orgf9fecb7">
+<li><a id="org6918466"></a>Render decorator<br />
+<div class="outline-text-6" id="text-org6918466">
 <p>
 Additionally, a render decorator is needed to
 transform values returned from the functions it decorates into
@@ -656,9 +656,9 @@ requires at least 3 things:
 </ul>
 </div>
 </div>
-<div id="outline-container-org41716a1" class="outline-4">
-<h4 id="org41716a1">Custom component packages</h4>
-<div class="outline-text-4" id="text-org41716a1">
+<div id="outline-container-org72cb4e6" class="outline-4">
+<h4 id="org72cb4e6">Custom component packages</h4>
+<div class="outline-text-4" id="text-org72cb4e6">
 <p>
 A custom component package
 allows reusing integrations across multiple applications.
@@ -677,6 +677,516 @@ For details see the "Custom components package" page in the Shiny documentation<
 </div>
 </div>
 </div>
+<div id="outline-container-org357dd80" class="outline-3">
+<h3 id="org357dd80">D3</h3>
+<div class="outline-text-3" id="text-org357dd80">
+</div>
+<div id="outline-container-org065b38f" class="outline-4">
+<h4 id="org065b38f">D3 navigator</h4>
+<div class="outline-text-4" id="text-org065b38f">
+<p>
+This is a Shiny Core/D3 App that displays a graph using D3 showing information about
+the characters in Shakespeare's plays and the relations between them based on
+the scenes they speak in.
+</p>
+
+<p>
+It was originally based on the Tabulator sample for <a href="#orgd3d0491">Shiny one-off custom components</a>.
+</p>
+
+<p>
+Its features include:
+</p>
+<ul class="org-ul">
+<li><b>Interactive Graph Visualization</b>: It uses D3.js to present a directed graph showing
+the characters from Shakespeare's plays and the relationships between them based
+on scene co-occurrences.</li>
+<li><b>Play Selection</b>: Users can select different plays from a dropdown menu to update
+the graph and visualize the character interactions specific to the chosen play.</li>
+<li><b>Display of Character Data</b>: Hovering over a node highlights it and displays
+information about the corresponding character.  The data display is performed
+using Shiny.</li>
+<li><b>Focus on Selected Characters</b>: Clicking on a node/character filters the displayed
+characters to a set relevant to the clicked one.  This filtering is done with D3
+and does not involve Shiny.</li>
+<li><b>Link Representation</b>: Links represent the interactions and are styled based on the
+interactions between characters inferred from shared scenes.</li>
+<li><b>Zoom and Pan</b>: The graph includes zoom and pan functionality.</li>
+</ul>
+
+<p>
+It can be run with
+</p>
+<div class="org-src-container">
+<pre class="src src-bash">shiny run --reload --log-level debug src/navigator/d3_core_navigator.py
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-python" id="org159a9e2"><span class="org-keyword">from</span> pathlib <span class="org-keyword">import</span> Path
+<span class="org-keyword">import</span> networkx <span class="org-keyword">as</span> nx
+<span class="org-keyword">import</span> pandas <span class="org-keyword">as</span> pd
+
+<span class="org-keyword">import</span> htmltools
+<span class="org-keyword">import</span> shiny
+<span class="org-keyword">import</span> shinyswatch
+<span class="org-keyword">from</span> shiny <span class="org-keyword">import</span> App, ui, render
+<span class="org-keyword">from</span> shiny.module <span class="org-keyword">import</span> resolve_id
+<span class="org-keyword">from</span> shiny.render.renderer <span class="org-keyword">import</span> Jsonifiable, Renderer
+
+<span class="org-keyword">import</span> navigator.shakespeare <span class="org-keyword">as</span> shakespeare
+
+<span class="org-variable-name">www_dir</span> <span class="org-operator">=</span> Path(__file__).parent.parent <span class="org-operator">/</span> <span class="org-string">"www"</span>
+<span class="org-variable-name">PLAY_DATA</span> <span class="org-operator">=</span> shakespeare.CharacterNetwork(
+    pd.read_csv(www_dir <span class="org-operator">/</span> <span class="org-string">"data"</span> <span class="org-operator">/</span> <span class="org-string">"shakespeare_plays.csv"</span>, index_col<span class="org-operator">=</span>0)
+)
+
+<span class="org-variable-name">d3_dependency</span> <span class="org-operator">=</span> htmltools.HTMLDependency(
+    <span class="org-string">"d3graph"</span>,
+    <span class="org-string">"0.0.0"</span>,
+    source<span class="org-operator">=</span>{<span class="org-string">"subdir"</span>: <span class="org-builtin">str</span>(www_dir <span class="org-operator">/</span> <span class="org-string">"gen"</span>)},
+    script<span class="org-operator">=</span>{<span class="org-string">"src"</span>: <span class="org-string">"d3_navigator.js"</span>, <span class="org-string">"type"</span>: <span class="org-string">"module"</span>},
+    stylesheet<span class="org-operator">=</span>{<span class="org-string">"href"</span>: <span class="org-string">"d3_navigator.css"</span>},
+    all_files<span class="org-operator">=</span><span class="org-constant">True</span>,
+)
+
+
+<span class="org-keyword">class</span> <span class="org-type">render_character_graph</span>(Renderer[nx.Graph]):
+    <span class="org-doc">"""</span>
+<span class="org-doc">    Render a dict as a D3 graph.</span>
+<span class="org-doc">    """</span>
+
+    <span class="org-keyword">async def</span> <span class="org-function-name">transform</span>(<span class="org-keyword">self</span>, value: nx.Graph) <span class="org-operator">-&gt;</span> Jsonifiable:
+        <span class="org-doc">"""Transform a networkx graph representing character interactions in</span>
+<span class="org-doc">        Shakespeare's plays into a Jsonifiable object.</span>
+<span class="org-doc">        """</span>
+        <span class="org-keyword">assert</span> <span class="org-builtin">isinstance</span>(value, nx.Graph)
+        <span class="org-variable-name">G</span> <span class="org-operator">=</span> value
+
+        <span class="org-keyword">def</span> <span class="org-function-name">node_id_as_str</span>(node) <span class="org-operator">-&gt;</span> <span class="org-builtin">str</span>:
+            <span class="org-keyword">return</span> <span class="org-string">", "</span>.join(node)
+
+        <span class="org-variable-name">ret_val</span> <span class="org-operator">=</span> {
+            <span class="org-string">"nodes"</span>: [
+                {
+                    <span class="org-string">"id"</span>: node_id_as_str(node_id),
+                    <span class="org-string">"play"</span>: node_id[0],
+                    <span class="org-string">"name"</span>: node_id[1],
+                    <span class="org-string">"sentences"</span>: node_attributes[<span class="org-string">'sentences'</span>],
+                }
+                <span class="org-keyword">for</span> node_id, node_attributes <span class="org-keyword">in</span> G.nodes(data<span class="org-operator">=</span><span class="org-constant">True</span>)
+            ],
+            <span class="org-string">"links"</span>: [
+                {
+                    <span class="org-string">"source"</span>: node_id_as_str(source),
+                    <span class="org-string">"target"</span>: node_id_as_str(target),
+                    <span class="org-operator">**</span>edge_attributes,
+                }
+                <span class="org-keyword">for</span> source, target, edge_attributes <span class="org-keyword">in</span> G.edges(data<span class="org-operator">=</span><span class="org-constant">True</span>)
+            ],
+        }
+        <span class="org-keyword">for</span> link <span class="org-keyword">in</span> ret_val[<span class="org-string">'links'</span>]:
+            <span class="org-variable-name">interactions</span> <span class="org-operator">=</span> link[<span class="org-string">'interactions'</span>]
+            <span class="org-variable-name">link</span>[<span class="org-string">'interaction_strength'</span>] <span class="org-operator">=</span> <span class="org-builtin">sum</span>(interaction[<span class="org-string">'sentences_char1'</span>]<span class="org-operator">*</span>interaction[<span class="org-string">'sentences_char2'</span>]
+                                       <span class="org-keyword">for</span> interaction <span class="org-keyword">in</span> interactions)
+
+        <span class="org-keyword">return</span> ret_val
+
+
+<span class="org-variable-name">app_ui</span> <span class="org-operator">=</span> ui.page_fluid(
+    ui.tags.head(
+        ui.tags.title(<span class="org-string">"D3.js Directed Graph in Shiny"</span>),
+        d3_dependency,
+    ),
+    ui.div(
+        <span class="org-builtin">id</span><span class="org-operator">=</span>resolve_id(<span class="org-string">"d3Graph"</span>),
+        class_<span class="org-operator">=</span><span class="org-string">"shiny-d3-graph-output"</span>,
+    ),
+    ui.h2(<span class="org-string">"D3.js Directed Graph Example"</span>),
+    ui.input_select(
+        <span class="org-builtin">id</span><span class="org-operator">=</span><span class="org-string">"play_name"</span>,
+        label<span class="org-operator">=</span><span class="org-string">"Choose a play:"</span>,
+        choices<span class="org-operator">=</span>PLAY_DATA.play_names,
+        selected<span class="org-operator">=</span><span class="org-string">"Hamlet"</span>,
+    ),
+    ui.layout_columns(
+        ui.tags.svg(
+            <span class="org-builtin">id</span><span class="org-operator">=</span><span class="org-string">"d3-graph"</span>,
+            style<span class="org-operator">=</span><span class="org-string">"height: 600px; border: 1px solid black;"</span>,
+        ),
+        ui.div(
+            ui.output_ui(<span class="org-string">"focus_character_output"</span>),
+            ui.output_ui(<span class="org-string">"focus_interaction_output"</span>)
+        ),
+        col_widths<span class="org-operator">=</span>{<span class="org-string">"xl"</span>: (8, 4)},
+    ),
+    ui.div(<span class="org-builtin">id</span><span class="org-operator">=</span><span class="org-string">"tooltip"</span>),
+    theme<span class="org-operator">=</span>shinyswatch.theme.cerulean,
+)
+
+
+<span class="org-keyword">def</span> <span class="org-function-name">server</span>(<span class="org-builtin">input</span>: shiny.Inputs, output: shiny.Outputs, _session: shiny.Session):
+    <span class="org-type">@render_character_graph</span>
+    <span class="org-keyword">def</span> <span class="org-function-name">d3Graph</span>():
+        <span class="org-variable-name">play_name</span> <span class="org-operator">=</span> <span class="org-builtin">input</span>.play_name()
+
+        <span class="org-keyword">return</span> nx.subgraph_view(
+            PLAY_DATA.graph, filter_node<span class="org-operator">=</span><span class="org-keyword">lambda</span> n: n[0] <span class="org-operator">==</span> play_name
+        )
+
+    @<span class="org-builtin">staticmethod</span>
+    <span class="org-keyword">def</span> <span class="org-function-name">character_html</span>(character_graph: nx.Graph, <span class="org-operator">*</span>, play: <span class="org-builtin">str</span>, name: <span class="org-builtin">str</span>) <span class="org-operator">-&gt;</span> ui.Tag:
+        <span class="org-doc">"""Return html representing a character"""</span>
+        <span class="org-keyword">assert</span> <span class="org-builtin">isinstance</span>(character_graph, nx.Graph)
+        <span class="org-keyword">assert</span> <span class="org-builtin">isinstance</span>(play, <span class="org-builtin">str</span>)
+        <span class="org-keyword">assert</span> <span class="org-builtin">isinstance</span>(name, <span class="org-builtin">str</span>)
+
+        <span class="org-variable-name">character_id</span> <span class="org-operator">=</span> (play, name)
+        <span class="org-variable-name">character_data</span> <span class="org-operator">=</span> {
+            <span class="org-string">"character_id"</span>: <span class="org-builtin">str</span>(character_id),
+            <span class="org-operator">**</span>character_graph.nodes[character_id],
+        }
+
+        <span class="org-keyword">return</span> ui.div(
+            <span class="org-operator">*</span>(
+                ui.p(ui.strong(f<span class="org-string">"</span>{key}<span class="org-string">:"</span>), <span class="org-builtin">str</span>(value))
+                <span class="org-keyword">for</span> key, value <span class="org-keyword">in</span> character_data.items()
+            ),
+        )
+
+    <span class="org-type">@output</span>
+    <span class="org-type">@render.ui</span>
+    <span class="org-keyword">def</span> <span class="org-function-name">focus_character_output</span>():
+        <span class="org-variable-name">focus_character</span> <span class="org-operator">=</span> <span class="org-builtin">input</span>.focus_character()
+        <span class="org-variable-name">html</span> <span class="org-operator">=</span> character_html(
+            PLAY_DATA.graph, play<span class="org-operator">=</span>focus_character[<span class="org-string">"play"</span>], name<span class="org-operator">=</span>focus_character[<span class="org-string">"name"</span>]
+        )
+        <span class="org-keyword">return</span> ui.HTML(html)
+
+    <span class="org-type">@render.table</span>
+    <span class="org-keyword">def</span> <span class="org-function-name">focus_interaction_output</span>():
+        <span class="org-variable-name">interaction</span> <span class="org-operator">=</span> <span class="org-builtin">input</span>.focus_interaction()
+
+        <span class="org-variable-name">source_name</span> <span class="org-operator">=</span> interaction[<span class="org-string">'source'</span>][<span class="org-string">'name'</span>]
+        <span class="org-variable-name">source_play</span> <span class="org-operator">=</span> interaction[<span class="org-string">'source'</span>][<span class="org-string">'play'</span>]
+        <span class="org-variable-name">target_name</span> <span class="org-operator">=</span> interaction[<span class="org-string">'target'</span>][<span class="org-string">'name'</span>]
+        <span class="org-variable-name">target_play</span> <span class="org-operator">=</span> interaction[<span class="org-string">'target'</span>][<span class="org-string">'play'</span>]
+        <span class="org-variable-name">interactions</span> <span class="org-operator">=</span> PLAY_DATA.graph.edges[
+            (source_play, source_name),
+            (target_play, target_name),
+            ][<span class="org-string">'interactions'</span>]
+        <span class="org-keyword">return</span> pd.DataFrame(interactions).rename(columns<span class="org-operator">=</span>{
+            <span class="org-string">'sentences_char1'</span>: f<span class="org-string">"Sentences by </span>{source_name}<span class="org-string">"</span>,
+            <span class="org-string">'sentences_char2'</span>: f<span class="org-string">"Sentences by </span>{target_name}<span class="org-string">"</span>
+        })
+
+<span class="org-variable-name">app</span> <span class="org-operator">=</span> App(app_ui, server, static_assets<span class="org-operator">=</span>www_dir)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-js2" id="org73a0a13">import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm"; // Using d3 v7 ESM
+
+function ensureG(parent, _class) {
+    return parent
+          .data([null])
+          .join("g")
+          .attr("class", _class);
+}
+
+function getRadiusScale(nodeData, {radiusAttr, minRadius, maxRadius}) {
+    const minRadiusAttr = d3.min(nodeData, d =&gt; d[radiusAttr]);
+    const maxRadiusAttr = d3.max(nodeData, d =&gt; d[radiusAttr]);
+    return d3.scaleSqrt()
+        .domain([minRadiusAttr, maxRadiusAttr])
+        .range([minRadius, maxRadius]);
+}
+
+function createZoomBehavior(zoomGroup){
+    return d3.zoom()
+        .scaleExtent([0.1, 10])
+        .on("zoom", (event) =&gt; {
+            console.info("zoom detected", event);
+            zoomGroup.attr("transform", event.transform);
+        });
+}
+
+function enterNode({width, height}, {radiusScale, radiusAttr}) {
+    return function(enter) {
+        const nodeEnter = enter.append("g")
+              .attr("class", "node")
+              .attr("transform", d =&gt; {
+                  // Position new nodes randomly within the SVG
+                  const x = Math.random() * width;
+                  const y = Math.random() * height;
+                  return `translate(${x}, ${y})`;
+              });
+        nodeEnter.append("circle")
+            .attr("r", d =&gt; radiusScale(d[radiusAttr]));
+        nodeEnter.append("text")
+            .attr("dy", "0.75em")
+            .attr("y", d =&gt; radiusScale(d[radiusAttr]) + 5) // Position text below the circle
+            .text(d =&gt; d.name)
+            .style("pointer-events", "none") // Make text not interfere with node click
+        ;
+        return nodeEnter;
+    };
+}
+
+function linkStringId(d, i) {
+    // an identifying hash for a link, as a string
+    return `${d.source.id}--${d.target.id}`;
+}
+
+function getLinkWidthScale(linkData) {
+    const linkStrengthExtent = d3.extent(linkData, d =&gt; d.interaction_strength);
+    return d3.scaleSqrt()
+        .domain(linkStrengthExtent)
+        .range([0, 10]);
+}
+
+function getLinkColorScale(linkData) {
+    const linkStrengthExtent = d3.extent(linkData, d =&gt; d.interaction_strength);
+    return d3.scaleSqrt()
+        .domain(linkStrengthExtent)
+        .range(["#fff", "#f00"]);
+}
+
+function createLink(linkGroup, linkData) {
+    const linkWidthScale = getLinkWidthScale(linkData);
+    const linkColorScale = getLinkColorScale(linkData);
+    return linkGroup.selectAll("line")
+        .data(linkData, linkStringId)
+        .join("line")
+        .attr("class", "link")
+        .attr("stroke-width", d =&gt; linkWidthScale(d.interaction_strength))
+        .attr("stroke", d =&gt; linkColorScale(d.interaction_strength))
+    ;
+}
+
+function createSimulation({width, height}, nodeData, {radiusAttr, radiusScale}, linkData) {
+    // warning: forceLink modifies linkData. See https://d3js.org/d3-force/link
+    return d3.forceSimulation(nodeData)
+        .force("link", d3.forceLink(linkData).id(node =&gt; node.id).distance(100))
+        .force("charge", d3.forceManyBody().strength(-50))
+        .force("center", d3.forceCenter(width / 2, height / 2))
+        .force("collide", d3.forceCollide().radius(d =&gt; radiusScale(d[radiusAttr]) + 2));   
+}
+
+function updatePositions(link, node, {width, height}) {
+    node.attr("transform", d =&gt; {
+        const x = d.x = Math.max(10, Math.min(width - 10, d.x));
+        const y = d.y = Math.max(10, Math.min(height - 10, d.y));
+        return `translate(${x},${y})`;
+    });
+
+    link.attr("x1", d =&gt; d.source.x)
+        .attr("y1", d =&gt; d.source.y)
+        .attr("x2", d =&gt; d.target.x)
+        .attr("y2", d =&gt; d.target.y);
+}
+
+function isEventTargetSelected(event) {
+    return d3.select(event.currentTarget).classed('selected');
+}
+
+function nodeMouseOver(link) {
+    return function(event, d) {
+        Shiny.setInputValue("focus_character", {"play": d.play,
+                                                "name": d.name});
+
+        d3.selectAll(".node").classed("selected", false);
+
+        // Add highlight to the clicked node
+        // 'this' refers to the node element that the event listener is attached to
+        if (isEventTargetSelected(event)) {
+            d3.select(this).classed("selected", false);
+        } else {
+            d3.select(this).classed("selected", true);
+        }
+
+        // Highlight links connected to the node
+        link.classed("hidden", true);
+        link.filter(l =&gt; (l.source === d) || (l.target === d))
+            .classed("hidden", false)
+            .classed("highlighted-link", true);
+    };
+}
+
+function nodeMouseOut(link) {
+    return function(event, d) {
+        d3.select(this).classed("selected", false);
+        link.classed("highlighted-link", false)
+            .classed("hidden", false);
+    };
+}
+
+function filterGraphData(selectedNode, fullNodeData, fullLinkData) {
+    const nodesToInclude = new Set([selectedNode]);
+    fullLinkData.forEach(link =&gt; {
+        if (link.source.id === selectedNode.id) {
+            nodesToInclude.add(link.target);
+        } else if (link.target.id === selectedNode.id) {
+            nodesToInclude.add(link.source);
+        }
+    });
+    return {
+        filteredNodeData: [...nodesToInclude],
+        filteredLinkData: fullLinkData.filter(link =&gt; {
+            return link.source.id == selectedNode.id || link.target.id == selectedNode.id;
+        })
+    };
+}
+
+function linkMouseOver() {
+    return function(event, d) {
+        Shiny.setInputValue("focus_interaction",
+                            {"source": {"play": d.source.play,
+                                        "name": d.source.name},
+                             "target": {"play": d.target.play,
+                                        "name": d.target.name}});
+    };
+}
+
+function displayGraph({svgGeom, nodeData, nodeGeom, nodeGroup, linkData, linkGroup}) {
+    let forceSimulation;
+    function displayGraphInner(filteredNodeData, filteredLinkData) {
+        const node = nodeGroup.selectAll("g")
+              .data(filteredNodeData, d =&gt; d.id)
+              .join(enterNode(svgGeom, nodeGeom),
+                    update =&gt; update,
+                    exit =&gt; exit.remove());
+        const link = createLink(linkGroup, filteredLinkData);
+        node.on("mouseover", nodeMouseOver(link))
+            .on("mouseout", nodeMouseOut(link))
+            .on("click", (event, d) =&gt; {
+                const {filteredNodeData, filteredLinkData} = filterGraphData(d, nodeData, linkData);
+                displayGraphInner(filteredNodeData, filteredLinkData);
+            });
+        link.on("mouseover", linkMouseOver());
+        if (forceSimulation) {
+            forceSimulation.stop();
+        }
+        forceSimulation = createSimulation(svgGeom, filteredNodeData, nodeGeom, filteredLinkData);
+        forceSimulation.on("tick", () =&gt; updatePositions(link, node, svgGeom));
+    }
+    displayGraphInner(nodeData, linkData);
+}
+
+if (Shiny) {
+    class NavigatorGraphOutputBinding extends Shiny.OutputBinding {
+        find(scope) {
+            return scope.find(".shiny-d3-graph-output");
+        }
+        renderValue(el, payload) {
+            const nodeData = payload.nodes;
+            const linkData = payload.links;
+            const svg = d3.select("#d3-graph");
+            const width = svg.node().getBoundingClientRect().width;
+            const height = svg.node().getBoundingClientRect().height;
+            const zoomGroup = ensureG(svg.selectAll(".zoom-container"), "zoom-container");
+            const linkGroup = ensureG(zoomGroup.selectAll(".links"), "links");
+            const nodeGroup = ensureG(zoomGroup.selectAll(".nodes"), "nodes");
+            const radiusAttr = "sentences";
+            const radiusScale = getRadiusScale(nodeData, {radiusAttr: radiusAttr, minRadius: 5, maxRadius: 25});
+            svg.call(createZoomBehavior(zoomGroup));
+
+            const svgGeom = {
+                width: width,
+                height: height,
+            };
+            const nodeGeom = {
+                radiusScale: radiusScale,
+                radiusAttr: radiusAttr
+            };
+
+            displayGraph({svgGeom: svgGeom, nodeGroup: nodeGroup, nodeData: nodeData, nodeGeom: nodeGeom, 
+                          linkGroup: linkGroup, linkData: linkData,
+            });
+        }
+    }
+    Shiny.outputBindings.register(new NavigatorGraphOutputBinding(), "shiny-d3-graph-output");
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-css" id="org7e93bab"><span class="org-css-selector">body</span> { <span class="org-css-property">font-family</span>: <span class="org-string">'Inter'</span>, sans-serif; }
+
+<span class="org-css-selector">.hidden</span> {
+  <span class="org-css-property">display</span>: none;
+}
+
+<span class="org-css-selector">.node circle</span> {
+    <span class="org-css-property">fill</span>: <span class="custom-7">#69b3a2</span>;
+    <span class="org-css-property">stroke</span>: <span class="custom-6">#000000</span>;
+    <span class="org-css-property">stroke-width</span>: 1.5px;
+    <span class="org-css-property">transition</span>: all 0.2s ease-in-out; <span class="org-comment-delimiter">/* </span><span class="org-comment">Smooth transition for highlight</span><span class="org-comment-delimiter"> */</span>
+}
+
+<span class="org-css-selector">.node.selected circle</span> {
+    <span class="org-css-property">stroke-width</span>: 3px;
+    <span class="org-css-property">fill</span>: <span class="custom-5">#ff0000</span>;
+}
+
+<span class="org-css-selector">.node text</span> {
+    <span class="org-css-property">font-size</span>: 10px;
+    <span class="org-css-property">pointer-events</span>: none; <span class="org-comment-delimiter">/* </span><span class="org-comment">Prevent text from interfering with drag</span><span class="org-comment-delimiter"> */</span>
+    <span class="org-css-property">text-anchor</span>: middle;
+    <span class="org-css-property">fill</span>: <span class="custom-4">#333</span>;
+    <span class="org-css-property">transition</span>: all 0.2s ease-in-out; <span class="org-comment-delimiter">/* </span><span class="org-comment">Smooth transition for highlight</span><span class="org-comment-delimiter"> */</span>
+}
+
+<span class="org-css-selector">.node.selected text</span> {
+    <span class="org-css-property">font-weight</span>: bold;
+    <span class="org-css-property">fill</span>: <span class="custom-5">#ff0000</span>;
+}
+
+<span class="org-css-selector">.link</span> {
+    <span class="org-comment-delimiter">/* </span><span class="org-comment">stroke: #909090;</span><span class="org-comment-delimiter"> */</span>
+    <span class="org-css-property">stroke-opacity</span>: 0.6;
+    <span class="org-css-property">stroke-width</span>: 2px;
+    <span class="org-css-property">fill</span>: none; <span class="org-comment-delimiter">/* </span><span class="org-comment">Ensure links are lines, not filled shapes</span><span class="org-comment-delimiter"> */</span>
+}
+
+<span class="org-css-selector">.highlighted-link</span> {
+  <span class="org-css-property">stroke</span>: <span class="custom-3">#f00</span>; <span class="org-comment-delimiter">/* </span><span class="org-comment">Red color for highlighted links</span><span class="org-comment-delimiter"> */</span>
+}
+
+<span class="org-css-selector">.tooltip</span> {
+    <span class="org-css-property">position</span>: absolute;
+    <span class="org-css-property">text-align</span>: center;
+    <span class="org-css-property">width</span>: auto;
+    <span class="org-css-property">height</span>: auto;
+    <span class="org-css-property">padding</span>: 8px;
+    <span class="org-css-property">background</span>: <span class="custom-2">lightsteelblue</span>;
+    <span class="org-css-property">border</span>: 0px;
+    <span class="org-css-property">border-radius</span>: 8px;
+    <span class="org-css-property">pointer-events</span>: none;
+    <span class="org-css-property">opacity</span>: 0;
+    <span class="org-css-property">transition</span>: opacity 0.2s;
+}
+
+<span class="org-css-selector">table</span> {
+    <span class="org-css-property">width</span>: 100%;
+    <span class="org-css-property">border-collapse</span>: collapse;
+    <span class="org-css-property">margin-top</span>: 10px;
+}
+
+<span class="org-css-selector">th, td</span> {
+    <span class="org-css-property">border</span>: 1px solid <span class="custom-1">#ddd</span>;
+    <span class="org-css-property">padding</span>: 8px;
+    <span class="org-css-property">text-align</span>: left;
+}
+
+<span class="org-css-selector">th</span> {
+    <span class="org-css-property">background-color</span>: <span class="custom">#f2f2f2</span>;
+}
+</pre>
+</div>
+</div>
+</div>
+</div>
 <div id="outline-container-techniques-for-wrapping-cytoscapejs-for-shiny-for-python" class="outline-3">
 <h3 id="techniques-for-wrapping-cytoscapejs-for-shiny-for-python">Using Cytoscape.js</h3>
 <div class="outline-text-3" id="text-techniques-for-wrapping-cytoscapejs-for-shiny-for-python">
@@ -691,13 +1201,13 @@ This should allow using Cytoscape.js in Shiny
 without creating a custom JavaScript component, or integrating Cytoscape.js ad hoc.
 </p>
 </div>
-<div id="outline-container-org9686f13" class="outline-4">
-<h4 id="org9686f13">Code</h4>
-<div class="outline-text-4" id="text-org9686f13">
+<div id="outline-container-org48f284c" class="outline-4">
+<h4 id="org48f284c">Code</h4>
+<div class="outline-text-4" id="text-org48f284c">
 </div>
-<div id="outline-container-orgcdbc5e8" class="outline-5">
-<h5 id="orgcdbc5e8">Ipyleaflet Shiny Express app</h5>
-<div class="outline-text-5" id="text-orgcdbc5e8">
+<div id="outline-container-orgd1bada0" class="outline-5">
+<h5 id="orgd1bada0">Ipyleaflet Shiny Express app</h5>
+<div class="outline-text-5" id="text-orgd1bada0">
 <p>
 This demonstrates that we can use reactive.effect to update ipywidgets in Shiny.  It's
 taken from <a href="https://shiny.posit.co/py/docs/jupyter-widgets.html#efficient-updates">https://shiny.posit.co/py/docs/jupyter-widgets.html#efficient-updates</a>
@@ -747,9 +1257,9 @@ shiny.express.ui.input_select(<span class="org-string">"center"</span>, <span cl
 </div>
 </div>
 </div>
-<div id="outline-container-org0316e03" class="outline-5">
-<h5 id="org0316e03">Cytoscape utils</h5>
-<div class="outline-text-5" id="text-org0316e03">
+<div id="outline-container-orge7475c6" class="outline-5">
+<h5 id="orge7475c6">Cytoscape utils</h5>
+<div class="outline-text-5" id="text-orge7475c6">
 <p>
 Some utilities for making graphs using ipycytoscape.
 </p>
@@ -802,9 +1312,9 @@ Some utilities for making graphs using ipycytoscape.
 </div>
 </div>
 </div>
-<div id="outline-container-org4bf71ef" class="outline-5">
-<h5 id="org4bf71ef">Cytoscape Shiny Express app with full redraw</h5>
-<div class="outline-text-5" id="text-org4bf71ef">
+<div id="outline-container-orgfe9b9b4" class="outline-5">
+<h5 id="orgfe9b9b4">Cytoscape Shiny Express app with full redraw</h5>
+<div class="outline-text-5" id="text-orgfe9b9b4">
 <p>
 This is a Shiny Express App that displays an ipycytoscape Graph, with number of nodes
 driven by a reactive input.
@@ -994,9 +1504,9 @@ shiny run --reload --log-level debug src/navigator/cyto_core_full2.py
 </div>
 </div>
 </div>
-<div id="outline-container-org42ac3ac" class="outline-5">
-<h5 id="org42ac3ac">Ipyleaflet Shiny Core app with incremental redraw</h5>
-<div class="outline-text-5" id="text-org42ac3ac">
+<div id="outline-container-org0952b58" class="outline-5">
+<h5 id="org0952b58">Ipyleaflet Shiny Core app with incremental redraw</h5>
+<div class="outline-text-5" id="text-org0952b58">
 <p>
 The approach here is based on
 the Brownian motion example in the Shiny for Python repo
@@ -1044,9 +1554,9 @@ shiny run --reload --log-level debug src/navigator/leaflet_core.py
 </div>
 </div>
 </div>
-<div id="outline-container-org8ddd3da" class="outline-5">
-<h5 id="org8ddd3da">Cytoscape Shiny Core app with incremental redraw</h5>
-<div class="outline-text-5" id="text-org8ddd3da">
+<div id="outline-container-org5a126c9" class="outline-5">
+<h5 id="org5a126c9">Cytoscape Shiny Core app with incremental redraw</h5>
+<div class="outline-text-5" id="text-org5a126c9">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">import</span> os
 
@@ -1110,9 +1620,9 @@ shiny run --reload --log-level debug src/navigator/leaflet_core.py
 </div>
 </div>
 </div>
-<div id="outline-container-org4d609a0" class="outline-4">
-<h4 id="org4d609a0">Conclusion</h4>
-<div class="outline-text-4" id="text-org4d609a0">
+<div id="outline-container-orgadfcd78" class="outline-4">
+<h4 id="orgadfcd78">Conclusion</h4>
+<div class="outline-text-4" id="text-orgadfcd78">
 <p>
 ipyctoscape is not a viable candidate to work from.
 </p>
@@ -1137,17 +1647,17 @@ has clearly never been tested on even basic uses cases like the one in issue 322
 </div>
 </div>
 </div>
-<div id="outline-container-orgd837a33" class="outline-3">
-<h3 id="orgd837a33">Using ipysigma</h3>
-<div class="outline-text-3" id="text-orgd837a33">
+<div id="outline-container-org7ca704c" class="outline-3">
+<h3 id="org7ca704c">Using ipysigma</h3>
+<div class="outline-text-3" id="text-org7ca704c">
 </div>
-<div id="outline-container-org97a055a" class="outline-4">
-<h4 id="org97a055a">Code</h4>
-<div class="outline-text-4" id="text-org97a055a">
+<div id="outline-container-orgbf51b6c" class="outline-4">
+<h4 id="orgbf51b6c">Code</h4>
+<div class="outline-text-4" id="text-orgbf51b6c">
 </div>
-<div id="outline-container-org1cfddf4" class="outline-5">
-<h5 id="org1cfddf4">ipysigma Shiny Core app with full redraw</h5>
-<div class="outline-text-5" id="text-org1cfddf4">
+<div id="outline-container-orge5f95a9" class="outline-5">
+<h5 id="orge5f95a9">ipysigma Shiny Core app with full redraw</h5>
+<div class="outline-text-5" id="text-orge5f95a9">
 <p>
 This is a Shiny Core App that displays an ipysigma Graph, with number of nodes
 driven by a reactive input.
@@ -1195,9 +1705,9 @@ It can be run with
 </div>
 </div>
 </div>
-<div id="outline-container-orga564766" class="outline-5">
-<h5 id="orga564766">ipysigma Shiny Core node navigator</h5>
-<div class="outline-text-5" id="text-orga564766">
+<div id="outline-container-orgb5b3ca4" class="outline-5">
+<h5 id="orgb5b3ca4">ipysigma Shiny Core node navigator</h5>
+<div class="outline-text-5" id="text-orgb5b3ca4">
 <p>
 This is a Shiny Core App that displays an ipysigma Graph,
 with the choice of nodes displayed driven by
@@ -1220,7 +1730,7 @@ It can be run with
 </div>
 
 <div class="org-src-container">
-<pre class="src src-python" id="org72f25ba"><span class="org-keyword">import</span> os
+<pre class="src src-python" id="org653f886"><span class="org-keyword">import</span> os
 <span class="org-keyword">from</span> typing <span class="org-keyword">import</span> cast
 
 <span class="org-keyword">import</span> ipywidgets
@@ -1323,9 +1833,9 @@ It can be run with
 </div>
 </div>
 </div>
-<div id="outline-container-org31186a9" class="outline-4">
-<h4 id="org31186a9">Conclusion</h4>
-<div class="outline-text-4" id="text-org31186a9">
+<div id="outline-container-org32cf88e" class="outline-4">
+<h4 id="org32cf88e">Conclusion</h4>
+<div class="outline-text-4" id="text-org32cf88e">
 <p>
 The combination of ipysigma with Shiny for Python is a viable candidate to build on.
 </p>
@@ -1354,13 +1864,13 @@ polished than the containers available through Bokeh, Plotly, etc.
 </div>
 </div>
 </div>
-<div id="outline-container-org27e7009" class="outline-3">
-<h3 id="org27e7009">Using pyvis</h3>
-<div class="outline-text-3" id="text-org27e7009">
+<div id="outline-container-org9a8d27e" class="outline-3">
+<h3 id="org9a8d27e">Using pyvis</h3>
+<div class="outline-text-3" id="text-org9a8d27e">
 </div>
-<div id="outline-container-org1bd80bf" class="outline-4">
-<h4 id="org1bd80bf">pyvis Shiny Core node navigator</h4>
-<div class="outline-text-4" id="text-org1bd80bf">
+<div id="outline-container-orgb3b511b" class="outline-4">
+<h4 id="orgb3b511b">pyvis Shiny Core node navigator</h4>
+<div class="outline-text-4" id="text-orgb3b511b">
 <p>
 This is a Shiny Core App that displays a graph using pyvis.
 </p>
@@ -1385,7 +1895,7 @@ indicates that any other mode is supported.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-python" id="org15add4a"><span class="org-keyword">import</span> os
+<pre class="src src-python" id="orgb9e5928"><span class="org-keyword">import</span> os
 <span class="org-keyword">from</span> pathlib <span class="org-keyword">import</span> Path
 
 <span class="org-keyword">import</span> shiny
@@ -1441,9 +1951,9 @@ indicates that any other mode is supported.
 </div>
 </div>
 </div>
-<div id="outline-container-org9ecb917" class="outline-4">
-<h4 id="org9ecb917">Conclusion</h4>
-<div class="outline-text-4" id="text-org9ecb917">
+<div id="outline-container-org6028384" class="outline-4">
+<h4 id="org6028384">Conclusion</h4>
+<div class="outline-text-4" id="text-org6028384">
 <p>
 pyvis is not a useful option given how it operates using external HTML files,
 although the underlying VisJS library might be useful.
@@ -1451,358 +1961,13 @@ although the underlying VisJS library might be useful.
 </div>
 </div>
 </div>
-<div id="outline-container-org2faada5" class="outline-3">
-<h3 id="org2faada5">D3</h3>
-<div class="outline-text-3" id="text-org2faada5">
+<div id="outline-container-org2c2de0f" class="outline-3">
+<h3 id="org2c2de0f">Debugging Shiny</h3>
+<div class="outline-text-3" id="text-org2c2de0f">
 </div>
-<div id="outline-container-org7a062c2" class="outline-4">
-<h4 id="org7a062c2">D3 navigator</h4>
-<div class="outline-text-4" id="text-org7a062c2">
-<p>
-This is a Shiny Core App that displays a graph using D3.
-</p>
-
-<p>
-It's based on the Tabulator sample for <a href="#orgc640219">Shiny one-off custom components</a>.
-</p>
-
-<p>
-It can be run with
-</p>
-<div class="org-src-container">
-<pre class="src src-bash">shiny run --reload --log-level debug src/navigator/d3_core_navigator.py
-</pre>
-</div>
-
-<div class="org-src-container">
-<pre class="src src-python" id="orga585cc7"><span class="org-keyword">from</span> pathlib <span class="org-keyword">import</span> Path
-<span class="org-keyword">import</span> pandas <span class="org-keyword">as</span> pd
-
-<span class="org-keyword">import</span> htmltools
-<span class="org-keyword">import</span> shiny
-<span class="org-keyword">import</span> shinyswatch
-<span class="org-keyword">from</span> shiny <span class="org-keyword">import</span> App, ui, render
-<span class="org-keyword">from</span> shiny.module <span class="org-keyword">import</span> resolve_id
-<span class="org-keyword">from</span> shiny.render.renderer <span class="org-keyword">import</span> Jsonifiable, Renderer
-
-<span class="org-keyword">import</span> navigator.shakespeare <span class="org-keyword">as</span> shakespeare
-
-<span class="org-variable-name">www_dir</span> <span class="org-operator">=</span> Path(__file__).parent.parent <span class="org-operator">/</span> <span class="org-string">'www'</span>
-<span class="org-variable-name">PLAY_DATA</span> <span class="org-operator">=</span> shakespeare.CharacterNetwork(pd.read_csv(www_dir <span class="org-operator">/</span> <span class="org-string">'data'</span> <span class="org-operator">/</span> <span class="org-string">'shakespeare_plays.csv'</span>))
-
-<span class="org-variable-name">d3_dep</span> <span class="org-operator">=</span> htmltools.HTMLDependency(
-    <span class="org-string">"d3graph"</span>,
-    <span class="org-string">"0.0.0"</span>,
-    source<span class="org-operator">=</span>{<span class="org-string">"subdir"</span>: <span class="org-builtin">str</span>(www_dir <span class="org-operator">/</span> <span class="org-string">"gen"</span>)},
-    script<span class="org-operator">=</span>{<span class="org-string">"src"</span>: <span class="org-string">"d3_navigator.js"</span>, <span class="org-string">"type"</span>: <span class="org-string">"module"</span>},
-    stylesheet<span class="org-operator">=</span>{<span class="org-string">"href"</span>: <span class="org-string">"d3_navigator.css"</span>},
-    all_files<span class="org-operator">=</span><span class="org-constant">True</span>,
-)
-
-<span class="org-keyword">class</span> <span class="org-type">render_d3graph</span>(Renderer[<span class="org-builtin">dict</span>]):
-    <span class="org-doc">"""</span>
-<span class="org-doc">    Render a dict as a D3 graph.</span>
-<span class="org-doc">    """</span>
-    <span class="org-keyword">async def</span> <span class="org-function-name">transform</span>(<span class="org-keyword">self</span>, value: <span class="org-builtin">dict</span>) <span class="org-operator">-&gt;</span> Jsonifiable:
-        <span class="org-doc">"""</span>
-<span class="org-doc">        Transform a dict representing a graph into a JSONifiable object that can be</span>
-<span class="org-doc">        displayed using D3.</span>
-<span class="org-doc">        """</span>
-        <span class="org-keyword">assert</span> <span class="org-builtin">isinstance</span>(value, <span class="org-builtin">dict</span>)
-        <span class="org-keyword">assert</span> <span class="org-builtin">set</span>(value) <span class="org-operator">==</span> {<span class="org-string">'nodes'</span>, <span class="org-string">'links'</span>}
-
-        <span class="org-keyword">return</span> value
-
-<span class="org-variable-name">app_ui</span> <span class="org-operator">=</span> ui.page_fluid(
-    ui.tags.head(
-        ui.tags.title(<span class="org-string">"D3.js Directed Graph in Shiny"</span>),
-        d3_dep,
-    ),
-    ui.div(
-        <span class="org-builtin">id</span><span class="org-operator">=</span>resolve_id(<span class="org-string">"d3Graph"</span>),
-        class_<span class="org-operator">=</span><span class="org-string">"shiny-d3-graph-output"</span>,
-    ),
-    ui.h2(<span class="org-string">"D3.js Directed Graph Example"</span>),
-    ui.input_select(
-        <span class="org-builtin">id</span><span class="org-operator">=</span><span class="org-string">"play_name"</span>,
-        label<span class="org-operator">=</span><span class="org-string">"Choose a play:"</span>,
-        choices<span class="org-operator">=</span>PLAY_DATA.play_names,
-        selected<span class="org-operator">=</span><span class="org-string">'Hamlet'</span>,
-    ),
-    ui.layout_columns(
-        ui.tags.svg(
-            <span class="org-builtin">id</span><span class="org-operator">=</span><span class="org-string">"d3-graph"</span>,
-            style<span class="org-operator">=</span><span class="org-string">"height: 600px; border: 1px solid black;"</span>,
-        ),
-        ui.output_ui(<span class="org-string">"formatted_dict_output"</span>),
-        col_widths<span class="org-operator">=</span>{<span class="org-string">"xl"</span>: (8, 4)},
-    ),
-    ui.div(<span class="org-builtin">id</span><span class="org-operator">=</span><span class="org-string">"tooltip"</span>),
-    theme<span class="org-operator">=</span>shinyswatch.theme.cerulean,
-)
-
-
-<span class="org-keyword">def</span> <span class="org-function-name">server</span>(<span class="org-builtin">input</span>: shiny.Inputs, output: shiny.Outputs, _session: shiny.Session):
-    <span class="org-type">@render_d3graph</span>
-    <span class="org-keyword">def</span> <span class="org-function-name">d3Graph</span>():
-        <span class="org-variable-name">play_name</span> <span class="org-operator">=</span> <span class="org-builtin">input</span>.play_name()
-        <span class="org-variable-name">graph_data</span> <span class="org-operator">=</span> {
-            <span class="org-string">'nodes'</span>: [
-                {
-                    <span class="org-string">'id'</span>: node[1],
-                    <span class="org-string">'name'</span>: node[1],
-                }
-                <span class="org-keyword">for</span> node <span class="org-keyword">in</span> PLAY_DATA.graph.nodes
-                <span class="org-keyword">if</span> node[0] <span class="org-operator">==</span> play_name
-            ],
-            <span class="org-string">'links'</span>: [
-                {
-                    <span class="org-string">'source'</span>: edge[0][1],
-                    <span class="org-string">'target'</span>: edge[1][1],
-                }
-                <span class="org-keyword">for</span> edge <span class="org-keyword">in</span> PLAY_DATA.graph.edges
-                <span class="org-keyword">if</span> edge[0][0] <span class="org-operator">==</span> play_name
-                ]
-        }
-        <span class="org-keyword">return</span> graph_data
-
-    <span class="org-type">@output</span>
-    <span class="org-type">@render.ui</span>
-    <span class="org-keyword">def</span> <span class="org-function-name">formatted_dict_output</span>():
-        <span class="org-variable-name">play_name</span> <span class="org-operator">=</span> <span class="org-builtin">input</span>.play_name()
-        <span class="org-variable-name">node_id</span> <span class="org-operator">=</span> <span class="org-builtin">input</span>.focus_node_id()
-        <span class="org-variable-name">html_content</span> <span class="org-operator">=</span> <span class="org-string">"&lt;div&gt;"</span>
-        <span class="org-keyword">if</span> node_id:
-            <span class="org-variable-name">node_data</span> <span class="org-operator">=</span> <span class="org-builtin">dict</span>(PLAY_DATA.graph.nodes[(play_name, node_id)])
-            <span class="org-keyword">for</span> key, value <span class="org-keyword">in</span> node_data.items():
-                <span class="org-variable-name">html_content</span> <span class="org-operator">+=</span> f<span class="org-string">"&lt;p&gt;&lt;b&gt;</span>{key}<span class="org-string">:&lt;/b&gt; </span>{value}<span class="org-string">&lt;/p&gt;"</span>
-        <span class="org-variable-name">html_content</span> <span class="org-operator">+=</span> <span class="org-string">"&lt;/div&gt;"</span>
-        <span class="org-keyword">return</span> ui.HTML(html_content)
-
-<span class="org-variable-name">app</span> <span class="org-operator">=</span> App(app_ui, server, static_assets <span class="org-operator">=</span> www_dir)
-</pre>
-</div>
-
-<div class="org-src-container">
-<pre class="src src-js2" id="orgf5295aa">import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm"; // Using d3 v7 ESM
-
-function update_positions(link, node, width, height) {
-    node.attr("transform", d =&gt; {
-        const x = d.x = Math.max(10, Math.min(width - 10, d.x));
-        const y = d.y = Math.max(10, Math.min(height - 10, d.y));
-        return `translate(${x},${y})`;
-    });
-
-    link
-        .attr("x1", d =&gt; d.source.x)
-        .attr("y1", d =&gt; d.source.y)
-        .attr("x2", d =&gt; d.target.x)
-        .attr("y2", d =&gt; d.target.y);
-}
-
-if (Shiny) {
-    class NavigatorGraphOutputBinding extends Shiny.OutputBinding {
-        find(scope) {
-            const found = scope.find(".shiny-d3-graph-output");
-            return found;
-        }
-
-        renderValue(el, payload) {
-            const node_data = payload.nodes;
-            const link_data = payload.links;
-
-            const svg = d3.select("#d3-graph").call(d3.zoom().on("zoom", function () {
-                console.info("zoom detected");
-                svg.attr("transform", d3.event.transform);
-            }));
-
-            const tooltip = d3.select("#tooltip");
-            const width = svg.node().getBoundingClientRect().width;
-            const height = svg.node().getBoundingClientRect().height;
-
-            const nodeRadius = 15;
-            const linkGroup = svg.selectAll(".links")
-                .data([null])
-                .join("g")
-                .attr("class", "links");
-            const nodeGroup = svg.selectAll(".nodes")
-                .data([null])
-                .join("g")
-                .attr("class", "nodes");
-            const defs = svg.selectAll("defs")
-                  .data([null])
-                  .join("defs");
-
-            // Use a key function (d.id) to ensure D3 correctly matches data to elements
-            const node = nodeGroup.selectAll("g")
-                .data(node_data, d =&gt; d.id)
-                .join(
-                    enter =&gt; {
-                        const nodeEnter = enter.append("g")
-                            .attr("class", "node")
-                            .attr("transform", d =&gt; {
-                                // Position new nodes randomly within the SVG
-                                const x = Math.random() * (width - nodeRadius * 2) + nodeRadius;
-                                const y = Math.random() * (height - nodeRadius * 2) + nodeRadius;
-                                return `translate(${x}, ${y})`;
-                            });
-                        nodeEnter.append("circle")
-                            .attr("r", nodeRadius);
-                        nodeEnter.append("text")
-                            .attr("dy", "0.75em")
-                            .attr("y", nodeRadius + 5) // Position text below the circle
-                            .text(d =&gt; d.name)
-                            .style("pointer-events", "none") // Make text not interfere with node click
-                        ;
-                        return nodeEnter;
-                    },
-                    update =&gt; update,
-                    exit =&gt; exit.remove()
-                );
-
-            const link = linkGroup.selectAll("line")
-                  .data(link_data, d =&gt; d.source.id + "-" + d.target.id)
-                  .join("line")
-                  .attr("class", "link")
-                  .attr("marker-end", "url(#arrowhead)");
-
-            // Define arrow markers for directed graph links
-            defs.selectAll("marker")
-                .data([null])
-                .join("marker")
-                .attr("id", "arrowhead")
-                .attr("viewBox", "-0 -5 10 10")
-                .attr("refX", 15) // Position of the arrowhead relative to the end of the line
-                .attr("refY", 0)
-                .attr("orient", "auto")
-                .attr("markerWidth", 6)
-                .attr("markerHeight", 6)
-                .attr("xoverflow", "visible")
-                .append("path")
-                .attr("d", "M 0,-5 L 10,0 L 0,5")
-                .attr("fill", "#999")
-                .style("stroke", "none");
-
-            const simulation = d3.forceSimulation(node_data)
-                  .force("link", d3.forceLink(link_data).id(d =&gt; d.id).distance(100))
-                  .force("charge", d3.forceManyBody().strength(-300))
-                  .force("center", d3.forceCenter(width / 2, height / 2))
-                  .on("tick", () =&gt; update_positions(link, node, width, height));
-
-            // record clicks on nodes
-            node.on("mouseover", function(event, d) {
-                    // 'this' refers to the node element that the event listener is attached to
-
-                    // Let the server know which node has focus
-                    const focus_node_id = d.id;
-                    Shiny.setInputValue("focus_node_id", d.id);
-
-                    // Remove highlight from all nodes
-                    d3.selectAll(".node").classed("highlighted", false);
-                    d3.selectAll(".node text").classed("highlighted-text", false);
-
-                    // Add highlight to the clicked node
-                    d3.select(this).classed("highlighted", true);
-                    d3.select(this).select("text").classed("highlighted-text", true);
-
-                    tooltip.transition()
-                        .duration(200)
-                        .style("opacity", .9);
-                    tooltip.html("Node: " + d.name + "&lt;br/&gt;ID: " + d.id)
-                        .style("left", (event.pageX + 10) + "px")
-                        .style("top", (event.pageY - 28) + "px");
-                })
-                .on("mouseout", function(d) {
-                    tooltip.transition()
-                        .duration(500)
-                        .style("opacity", 0);
-                });
-        }
-    }
-    Shiny.outputBindings.register(
-        new NavigatorGraphOutputBinding(),
-        "shiny-d3-graph-output"
-    );
-}
-</pre>
-</div>
-
-<div class="org-src-container">
-<pre class="src src-css" id="org34873db"><span class="org-css-selector">body</span> { <span class="org-css-property">font-family</span>: <span class="org-string">'Inter'</span>, sans-serif; }
-
-<span class="org-css-selector">.node circle</span> {
-    <span class="org-css-property">fill</span>: <span class="custom-7">#69b3a2</span>;
-    <span class="org-css-property">stroke</span>: <span class="custom-6">#000000</span>;
-    <span class="org-css-property">stroke-width</span>: 1.5px;
-    <span class="org-css-property">transition</span>: all 0.2s ease-in-out; <span class="org-comment-delimiter">/* </span><span class="org-comment">Smooth transition for highlight</span><span class="org-comment-delimiter"> */</span>
-}
-
-<span class="org-css-selector">.node.highlighted circle</span> {
-    <span class="org-css-property">stroke-width</span>: 3px;
-    <span class="org-css-property">fill</span>: <span class="custom-5">#ff0000</span>;
-}
-
-<span class="org-css-selector">.link</span> {
-    <span class="org-css-property">stroke</span>: <span class="custom-4">#909090</span>;
-    <span class="org-css-property">stroke-opacity</span>: 0.6;
-    <span class="org-css-property">stroke-width</span>: 2px;
-    <span class="org-css-property">fill</span>: none; <span class="org-comment-delimiter">/* </span><span class="org-comment">Ensure links are lines, not filled shapes</span><span class="org-comment-delimiter"> */</span>
-}
-
-<span class="org-css-selector">.node text</span> {
-    <span class="org-css-property">font-size</span>: 10px;
-    <span class="org-css-property">pointer-events</span>: none; <span class="org-comment-delimiter">/* </span><span class="org-comment">Prevent text from interfering with drag</span><span class="org-comment-delimiter"> */</span>
-    <span class="org-css-property">text-anchor</span>: middle;
-    <span class="org-css-property">fill</span>: <span class="custom-3">#333</span>;
-    <span class="org-css-property">transition</span>: all 0.2s ease-in-out; <span class="org-comment-delimiter">/* </span><span class="org-comment">Smooth transition for highlight</span><span class="org-comment-delimiter"> */</span>
-}
-
-<span class="org-css-selector">.node text.highlighted-text</span> {
-    <span class="org-css-property">font-weight</span>: bold;
-    <span class="org-css-property">fill</span>: <span class="custom-5">#ff0000</span>;
-}
-
-<span class="org-css-selector">.tooltip</span> {
-    <span class="org-css-property">position</span>: absolute;
-    <span class="org-css-property">text-align</span>: center;
-    <span class="org-css-property">width</span>: auto;
-    <span class="org-css-property">height</span>: auto;
-    <span class="org-css-property">padding</span>: 8px;
-    <span class="org-css-property">background</span>: <span class="custom-2">lightsteelblue</span>;
-    <span class="org-css-property">border</span>: 0px;
-    <span class="org-css-property">border-radius</span>: 8px;
-    <span class="org-css-property">pointer-events</span>: none;
-    <span class="org-css-property">opacity</span>: 0;
-    <span class="org-css-property">transition</span>: opacity 0.2s;
-}
-
-<span class="org-css-selector">table</span> {
-    <span class="org-css-property">width</span>: 100%;
-    <span class="org-css-property">border-collapse</span>: collapse;
-    <span class="org-css-property">margin-top</span>: 10px;
-}
-
-<span class="org-css-selector">th, td</span> {
-    <span class="org-css-property">border</span>: 1px solid <span class="custom-1">#ddd</span>;
-    <span class="org-css-property">padding</span>: 8px;
-    <span class="org-css-property">text-align</span>: left;
-}
-
-<span class="org-css-selector">th</span> {
-    <span class="org-css-property">background-color</span>: <span class="custom">#f2f2f2</span>;
-}
-</pre>
-</div>
-</div>
-</div>
-</div>
-<div id="outline-container-orgfd941b3" class="outline-3">
-<h3 id="orgfd941b3">Debugging Shiny</h3>
-<div class="outline-text-3" id="text-orgfd941b3">
-</div>
-<div id="outline-container-org971cc7d" class="outline-4">
-<h4 id="org971cc7d">Websockets logging</h4>
-<div class="outline-text-4" id="text-org971cc7d">
+<div id="outline-container-org8d0ec2e" class="outline-4">
+<h4 id="org8d0ec2e">Websockets logging</h4>
+<div class="outline-text-4" id="text-org8d0ec2e">
 <ul class="org-ul">
 <li><a href="https://websockets.readthedocs.io/en/stable/topics/logging.html">https://websockets.readthedocs.io/en/stable/topics/logging.html</a></li>
 <li><a href="https://websockets.readthedocs.io/en/stable/reference/variables.html">https://websockets.readthedocs.io/en/stable/reference/variables.html</a></li>
@@ -1820,13 +1985,13 @@ To increase log verbosity and avoid truncating messages we can run
 </div>
 </div>
 </div>
-<div id="outline-container-org0336711" class="outline-2">
-<h2 id="org0336711">Utilities</h2>
-<div class="outline-text-2" id="text-org0336711">
+<div id="outline-container-org296fa88" class="outline-2">
+<h2 id="org296fa88">Utilities</h2>
+<div class="outline-text-2" id="text-org296fa88">
 </div>
-<div id="outline-container-org3aead1c" class="outline-3">
-<h3 id="org3aead1c">Generic utilities</h3>
-<div class="outline-text-3" id="text-org3aead1c">
+<div id="outline-container-org25117ab" class="outline-3">
+<h3 id="org25117ab">Generic utilities</h3>
+<div class="outline-text-3" id="text-org25117ab">
 <p>
 We will need some utilities for debugging.
 </p>
@@ -1896,9 +2061,9 @@ We will need some utilities for debugging.
 </div>
 </div>
 </div>
-<div id="outline-container-orgb695e04" class="outline-3">
-<h3 id="orgb695e04">Graph utilities</h3>
-<div class="outline-text-3" id="text-orgb695e04">
+<div id="outline-container-org1080472" class="outline-3">
+<h3 id="org1080472">Graph utilities</h3>
+<div class="outline-text-3" id="text-org1080472">
 <p>
 We'll need some generic graph utilities; we'll build these on networkx for now.
 </p>
@@ -1947,22 +2112,192 @@ We'll need some generic graph utilities; we'll build these on networkx for now.
 </div>
 </div>
 </div>
-<div id="outline-container-org0bcf899" class="outline-3">
-<h3 id="org0bcf899">Data providers</h3>
-<div class="outline-text-3" id="text-org0bcf899">
+<div id="outline-container-org3f53aea" class="outline-3">
+<h3 id="org3f53aea">Data providers</h3>
+<div class="outline-text-3" id="text-org3f53aea">
 </div>
-<div id="outline-container-orga5dc3f8" class="outline-4">
-<h4 id="orga5dc3f8">Shakespeare data</h4>
-<div class="outline-text-4" id="text-orga5dc3f8">
+<div id="outline-container-org9ec2f10" class="outline-4">
+<h4 id="org9ec2f10">Shakespeare data</h4>
+<div class="outline-text-4" id="text-org9ec2f10">
 <div class="org-src-container">
-<pre class="src src-python" id="org684f37b"><span class="org-keyword">import</span> pandas <span class="org-keyword">as</span> pd
-<span class="org-keyword">import</span> networkx <span class="org-keyword">as</span> nx
+<pre class="src src-python" id="orgb5300f4"><span class="org-keyword">import</span> re
+<span class="org-keyword">import</span> warnings
 <span class="org-keyword">from</span> itertools <span class="org-keyword">import</span> combinations
-<span class="org-keyword">from</span> typing <span class="org-keyword">import</span> Any
+<span class="org-keyword">from</span> typing <span class="org-keyword">import</span> Any, Iterable
+
+<span class="org-keyword">import</span> pandas <span class="org-keyword">as</span> pd
+<span class="org-keyword">import</span> pandas.testing <span class="org-keyword">as</span> pdt
+<span class="org-keyword">import</span> networkx <span class="org-keyword">as</span> nx
+<span class="org-keyword">from</span> thefuzz <span class="org-keyword">import</span> process <span class="org-keyword">as</span> thefuzz_process
+
+
+<span class="org-keyword">def</span> <span class="org-function-name">calculate_candidate_character_replacements</span>(
+    character_names: pd.Series, min_similarity_score: <span class="org-builtin">int</span>
+) <span class="org-operator">-&gt;</span> <span class="org-builtin">dict</span>[<span class="org-builtin">str</span>, <span class="org-builtin">str</span>]:
+    <span class="org-doc">"""Calculate candidate replacements to clean a Series of character names by</span>
+<span class="org-doc">    standardizing strings using fuzzy matching.</span>
+
+<span class="org-doc">    Args:</span>
+
+<span class="org-doc">        series: The input Series.</span>
+
+<span class="org-doc">        min_similarity_score: The minimum fuzzy matching score (0-100) to consider a</span>
+<span class="org-doc">            string a potential match.</span>
+
+<span class="org-doc">    Returns:</span>
+<span class="org-doc">        A mapping from current character names to cleaned ones, where these are different</span>
+<span class="org-doc">    """</span>
+
+    <span class="org-keyword">def</span> <span class="org-function-name">strip_name</span>(name: <span class="org-builtin">str</span>) <span class="org-operator">-&gt;</span> <span class="org-builtin">str</span>:
+        <span class="org-variable-name">name</span> <span class="org-operator">=</span> name.strip()
+        <span class="org-variable-name">name</span> <span class="org-operator">=</span> re.sub(r<span class="org-string">"  +"</span>, <span class="org-string">" "</span>, name)
+        <span class="org-variable-name">name</span> <span class="org-operator">=</span> re.sub(r<span class="org-string">"[^a-zA-Z]+$"</span>, <span class="org-string">""</span>, name)
+        <span class="org-keyword">return</span> name
+
+    <span class="org-keyword">def</span> <span class="org-function-name">best_match</span>(
+        name: <span class="org-builtin">str</span>, stripped_names: Iterable[<span class="org-builtin">str</span>], min_similarity_score: <span class="org-builtin">int</span>
+    ) <span class="org-operator">-&gt;</span> <span class="org-builtin">str</span>:
+        <span class="org-variable-name">stripped_name</span> <span class="org-operator">=</span> strip_name(name)
+        <span class="org-variable-name">extracted</span> <span class="org-operator">=</span> thefuzz_process.extractOne(stripped_name, stripped_names)
+        <span class="org-keyword">if</span> extracted <span class="org-keyword">is</span> <span class="org-constant">None</span>:
+            <span class="org-keyword">return</span> stripped_name
+        <span class="org-variable-name">best_match</span>, <span class="org-variable-name">score</span> <span class="org-operator">=</span> extracted
+        <span class="org-keyword">if</span> score <span class="org-operator">&lt;</span> min_similarity_score:
+            <span class="org-keyword">return</span> stripped_name
+        <span class="org-keyword">else</span>:
+            <span class="org-keyword">return</span> best_match
+
+    <span class="org-variable-name">replacements</span> <span class="org-operator">=</span> {}
+    <span class="org-variable-name">replacement_values</span> <span class="org-operator">=</span> <span class="org-builtin">set</span>()
+    <span class="org-keyword">for</span> name <span class="org-keyword">in</span> character_names.value_counts().index:  <span class="org-comment-delimiter"># </span><span class="org-comment">most frequent values first</span>
+        <span class="org-variable-name">replacements</span>[name] <span class="org-operator">=</span> best_match(name, replacement_values, min_similarity_score)
+        replacement_values.add(replacements[name])
+
+    <span class="org-keyword">return</span> {
+        name: mapped_name
+        <span class="org-keyword">for</span> name, mapped_name <span class="org-keyword">in</span> replacements.items()
+        <span class="org-keyword">if</span> name <span class="org-operator">!=</span> mapped_name
+    }
 
 
 <span class="org-keyword">class</span> <span class="org-type">CharacterNetwork</span>:
-    <span class="org-keyword">def</span> <span class="org-function-name">__init__</span>(<span class="org-keyword">self</span>, df: pd.DataFrame):
+    <span class="org-variable-name">REQUIRED_COLUMNS</span> <span class="org-operator">=</span> <span class="org-string">"play_name,genre,character,act,scene,sentence,text,sex"</span>.split(
+        <span class="org-string">","</span>
+    )
+
+    <span class="org-variable-name">KNOWN_CHARACTER_FIXES</span>: <span class="org-builtin">dict</span>[<span class="org-builtin">str</span>, <span class="org-builtin">dict</span>[<span class="org-builtin">str</span>, <span class="org-builtin">str</span>]] <span class="org-operator">=</span> {
+        <span class="org-string">"Richard III"</span>: {
+            <span class="org-string">"Of Buckingham"</span>: <span class="org-string">"Ghost of Buckingham"</span>,
+            <span class="org-string">"Of Prince Edward"</span>: <span class="org-string">"Ghost of Prince Edward"</span>,
+        },
+        <span class="org-string">"Henry VI, part 1"</span>: {<span class="org-string">"Su Ffolk"</span>: <span class="org-string">"Suffolk"</span>},
+        <span class="org-string">"Othello"</span>: {<span class="org-string">"Second Gentlemen"</span>: <span class="org-string">"Second Gentleman"</span>},
+        <span class="org-string">"Romeo and Juliet"</span>: {<span class="org-string">"Lady  Capulet"</span>: <span class="org-string">"Lady Capulet"</span>},
+        <span class="org-string">"Hamlet"</span>: {
+            <span class="org-string">"Guildenstern:"</span>: <span class="org-string">"Guildenstern"</span>,
+            <span class="org-string">"Rosencrantz:"</span>: <span class="org-string">"Rosencrantz"</span>,
+        },
+        <span class="org-string">"Taming of the Shrew"</span>: {<span class="org-string">"Katarina"</span>: <span class="org-string">"Katharina"</span>},
+        <span class="org-string">"Henry VI, part 2"</span>: {<span class="org-string">"First Murder"</span>: <span class="org-string">"First Murderer"</span>},
+        <span class="org-string">"Measure for Measure"</span>: {<span class="org-string">"Pomphey"</span>: <span class="org-string">"Pompey"</span>},
+    }
+
+    <span class="org-variable-name">KNOWN_CHARACTER_NON_FIXES</span>: <span class="org-builtin">set</span>[<span class="org-builtin">tuple</span>[<span class="org-builtin">str</span>, <span class="org-builtin">str</span>]] <span class="org-operator">=</span> {
+        (<span class="org-string">"Antony and Cleopatra"</span>, <span class="org-string">"Attendants"</span>),
+        (<span class="org-string">"Coriolanus"</span>, <span class="org-string">"Citizen"</span>),
+        (<span class="org-string">"Henry IV, part 2"</span>, <span class="org-string">"King Henry V"</span>),
+        (<span class="org-string">"Henry VI, part 2"</span>, <span class="org-string">"Servant"</span>),
+        (<span class="org-string">"Timon of Athens"</span>, <span class="org-string">"Servants"</span>),
+    }
+
+    <span class="org-comment-delimiter"># </span><span class="org-comment">Names not referring to definite characters.  These are not so interesting to look at</span>
+    <span class="org-comment-delimiter"># </span><span class="org-comment">and may represent different people.</span>
+    <span class="org-variable-name">INDEFINITE_NAMES</span> <span class="org-operator">=</span> [
+        <span class="org-string">'&amp; C'</span>,
+        <span class="org-string">'A Lord'</span>,
+        <span class="org-string">'A Patrician'</span>,
+        <span class="org-string">'A Player'</span>,
+        <span class="org-string">'All'</span>,
+        <span class="org-string">'All Citizens'</span>,
+        <span class="org-string">'All Conspirators'</span>,
+        <span class="org-string">'All Ladies'</span>,
+        <span class="org-string">'All Lords'</span>,
+        <span class="org-string">'All Servants'</span>,
+        <span class="org-string">'All The Goths'</span>,
+        <span class="org-string">'All The Lords'</span>,
+        <span class="org-string">'All The People'</span>,
+        <span class="org-string">'Another'</span>,
+        <span class="org-string">'As Long As You Or I'</span>,
+        <span class="org-string">'Attendant'</span>,
+        <span class="org-string">'Attendants'</span>,
+        <span class="org-string">'Both Citizens'</span>,
+        <span class="org-string">'Both Murderers'</span>,
+        <span class="org-string">'Both Tribunes'</span>,
+        <span class="org-string">'Boy'</span>,
+        <span class="org-string">'Captain'</span>,
+        <span class="org-string">'Children'</span>,
+        <span class="org-string">'Chorus'</span>,
+        <span class="org-string">'Citizen'</span>,
+        <span class="org-string">'Citizens'</span>,
+        <span class="org-string">'Clown'</span>,
+        <span class="org-string">'Commons'</span>,
+        <span class="org-string">'Court'</span>,
+        <span class="org-string">'Courtezan'</span>,
+        <span class="org-string">'Crier'</span>,
+        <span class="org-string">'Gentleman'</span>,
+        <span class="org-string">'Gentlemen'</span>,
+        <span class="org-string">'Gentlewoman'</span>,
+        <span class="org-string">'Girl'</span>,
+        <span class="org-string">'Guard'</span>,
+        <span class="org-string">'Knight'</span>,
+        <span class="org-string">'Knights'</span>,
+        <span class="org-string">'Lady'</span>,
+        <span class="org-string">'Lieutenant'</span>,
+        <span class="org-string">'Lord'</span>,
+        <span class="org-string">'Lords'</span>,
+        <span class="org-string">'Man'</span>,
+        <span class="org-string">'Merchant'</span>,
+        <span class="org-string">'Messenger'</span>,
+        <span class="org-string">'Mother'</span>,
+        <span class="org-string">'Musician'</span>,
+        <span class="org-string">'Nobleman'</span>,
+        <span class="org-string">'Nurse'</span>,
+        <span class="org-string">'Officer'</span>,
+        <span class="org-string">'Old Athenian'</span>,
+        <span class="org-string">'Old Lady'</span>,
+        <span class="org-string">'Old Man'</span>,
+        <span class="org-string">'Outlaws'</span>,
+        <span class="org-string">'Page'</span>,
+        <span class="org-string">'Players'</span>,
+        <span class="org-string">'Prince'</span>,
+        <span class="org-string">'Princes'</span>,
+        <span class="org-string">'Princess'</span>,
+        <span class="org-string">'Prologue'</span>,
+        <span class="org-string">'Sailor'</span>,
+        <span class="org-string">'Scout'</span>,
+        <span class="org-string">'Senator'</span>,
+        <span class="org-string">'Senators'</span>,
+        <span class="org-string">'Sergeant'</span>,
+        <span class="org-string">'Servant'</span>,
+        <span class="org-string">'Servants'</span>,
+        <span class="org-string">'Shepard'</span>,
+        <span class="org-string">'Shepherd'</span>,
+        <span class="org-string">'Sheriff'</span>,
+        <span class="org-string">'Soldier'</span>,
+        <span class="org-string">'Soldiers'</span>,
+        <span class="org-string">'Some Others'</span>,
+        <span class="org-string">'Some Speak'</span>,
+        <span class="org-string">'Soothsayer'</span>,
+        <span class="org-string">'Steward'</span>,
+        <span class="org-string">'Townsman'</span>,
+        <span class="org-string">'Travellers'</span>,
+        <span class="org-string">'Watch'</span>,
+        <span class="org-string">'Watchman'</span>,
+        <span class="org-string">'Wife'</span>,
+    ]
+
+
+    <span class="org-keyword">def</span> <span class="org-function-name">__init__</span>(<span class="org-keyword">self</span>, df: pd.DataFrame, min_similarity_score: <span class="org-builtin">int</span> <span class="org-operator">=</span> 92):
         <span class="org-doc">"""Initializes the CharacterNetwork with a dataframe containing character</span>
 <span class="org-doc">        interactions in Shakespeare's plays.</span>
 
@@ -1979,17 +2314,73 @@ We'll need some generic graph utilities; we'll build these on networkx for now.
 <span class="org-doc">            - sex</span>
 <span class="org-doc">            - sentence</span>
 <span class="org-doc">            - text</span>
+
+<span class="org-doc">            min_similarity_score: minimum Levenshtein-based similarity score to warn if</span>
+<span class="org-doc">               character name matches are found for</span>
 <span class="org-doc">        """</span>
-        <span class="org-keyword">self</span>.<span class="org-variable-name">df</span> <span class="org-operator">=</span> df
-        <span class="org-keyword">self</span>.<span class="org-variable-name">graph</span> <span class="org-operator">=</span> <span class="org-keyword">self</span>._build_shakespeare_network(<span class="org-keyword">self</span>.df)
+        <span class="org-keyword">self</span>.<span class="org-variable-name">df</span> <span class="org-operator">=</span> CharacterNetwork.clean_playdata(df, min_similarity_score)
+        <span class="org-keyword">self</span>.<span class="org-variable-name">graph</span> <span class="org-operator">=</span> CharacterNetwork._build_shakespeare_network(<span class="org-keyword">self</span>.df)
         <span class="org-keyword">self</span>.<span class="org-variable-name">play_names</span> <span class="org-operator">=</span> <span class="org-builtin">sorted</span>(<span class="org-builtin">set</span>(df[<span class="org-string">"play_name"</span>]))
 
     @<span class="org-builtin">staticmethod</span>
-    <span class="org-keyword">def</span> <span class="org-function-name">_build_shakespeare_network</span>(df: pd.DataFrame) <span class="org-operator">-&gt;</span> nx.Graph:
-        <span class="org-variable-name">required_columns</span> <span class="org-operator">=</span> <span class="org-builtin">set</span>(
-            <span class="org-string">"play_name,genre,character,act,scene,sentence,text,sex"</span>.split(<span class="org-string">","</span>)
+    <span class="org-keyword">def</span> <span class="org-function-name">clean_playdata</span>(df: pd.DataFrame, min_similarity_score: <span class="org-builtin">int</span>) <span class="org-operator">-&gt;</span> pd.DataFrame:
+        <span class="org-doc">"""Return a cleaned version of df.</span>
+
+<span class="org-doc">        Character names are replaced based on previously checked replacements.</span>
+
+<span class="org-doc">        Warnings are issued if there are any candidate replacements not among those</span>
+<span class="org-doc">        previously known or ruled out, based on a fuzzy-matching analysis of the character</span>
+<span class="org-doc">        names.</span>
+
+<span class="org-doc">        Args:</span>
+
+<span class="org-doc">          min_similarity_score: the threshold above which character names are</span>
+<span class="org-doc">            candidates for consolidation. Corresponds to the score returned from</span>
+<span class="org-doc">            `thefuzz.process.extractOne`.</span>
+<span class="org-doc">        """</span>
+        <span class="org-keyword">assert</span> <span class="org-builtin">set</span>(df.columns) <span class="org-operator">==</span> <span class="org-builtin">set</span>(CharacterNetwork.REQUIRED_COLUMNS)
+
+        <span class="org-comment-delimiter"># </span><span class="org-comment">1. Apply previously known fixes</span>
+        <span class="org-variable-name">dfr</span> <span class="org-operator">=</span> df.copy()
+        <span class="org-variable-name">dfr</span>[<span class="org-string">"character"</span>] <span class="org-operator">=</span> dfr.groupby(<span class="org-string">"play_name"</span>)[<span class="org-string">"character"</span>].transform(
+            <span class="org-keyword">lambda</span> s: s.replace(
+                CharacterNetwork.KNOWN_CHARACTER_FIXES.get(s.name) <span class="org-keyword">or</span> {}
+            )
         )
-        <span class="org-keyword">assert</span> <span class="org-builtin">set</span>(df.columns) <span class="org-operator">&gt;</span> required_columns
+
+        <span class="org-comment-delimiter"># </span><span class="org-comment">2. Warn if there are any candidate fixes not previously known</span>
+        <span class="org-variable-name">play_mappings</span> <span class="org-operator">=</span> dfr.groupby(<span class="org-string">"play_name"</span>).<span class="org-builtin">apply</span>(
+            <span class="org-keyword">lambda</span> group_df: calculate_candidate_character_replacements(
+                group_df[<span class="org-string">"character"</span>], min_similarity_score<span class="org-operator">=</span>min_similarity_score
+            )
+        )
+
+        <span class="org-keyword">assert</span> <span class="org-builtin">isinstance</span>(play_mappings, pd.Series)
+
+        <span class="org-variable-name">play_mappings</span> <span class="org-operator">=</span> {
+            play: {
+                original: replacement
+                <span class="org-keyword">for</span> original, replacement <span class="org-keyword">in</span> replacements.items()
+                <span class="org-keyword">if</span> (play, original) <span class="org-keyword">not</span> <span class="org-keyword">in</span> CharacterNetwork.KNOWN_CHARACTER_NON_FIXES
+            }
+            <span class="org-keyword">for</span> play, replacements <span class="org-keyword">in</span> play_mappings.items()
+        }
+        <span class="org-keyword">for</span> play, replacements <span class="org-keyword">in</span> play_mappings.items():
+            <span class="org-keyword">if</span> replacements:
+                warnings.warn(
+                    f<span class="org-string">"Candidate character replacements found in play </span>{play}<span class="org-string">: </span>{replacements}<span class="org-string">"</span>
+                )
+
+        <span class="org-keyword">assert</span> <span class="org-builtin">set</span>(dfr.columns) <span class="org-operator">==</span> <span class="org-builtin">set</span>(CharacterNetwork.REQUIRED_COLUMNS)
+
+        <span class="org-comment-delimiter"># </span><span class="org-comment">Remove entries with names not referring to definite characters</span>
+        <span class="org-variable-name">dfr</span> <span class="org-operator">=</span> dfr[<span class="org-operator">~</span>dfr[<span class="org-string">'character'</span>].isin(CharacterNetwork.INDEFINITE_NAMES)]
+
+        <span class="org-keyword">return</span> dfr
+
+    @<span class="org-builtin">staticmethod</span>
+    <span class="org-keyword">def</span> <span class="org-function-name">_build_shakespeare_network</span>(df: pd.DataFrame) <span class="org-operator">-&gt;</span> nx.Graph:
+        <span class="org-keyword">assert</span> <span class="org-builtin">set</span>(df.columns) <span class="org-operator">==</span> <span class="org-builtin">set</span>(CharacterNetwork.REQUIRED_COLUMNS)
 
         <span class="org-comment-delimiter"># </span><span class="org-comment">Add the number of unique scenes.</span>
         <span class="org-variable-name">scenes_per_character</span> <span class="org-operator">=</span> (
@@ -2002,13 +2393,11 @@ We'll need some generic graph utilities; we'll build these on networkx for now.
         )
 
         <span class="org-comment-delimiter"># </span><span class="org-comment">Group by play, character, and sex to get a summary for each character node.</span>
-        <span class="org-variable-name">character_data</span> <span class="org-operator">=</span> ((
+        <span class="org-variable-name">character_data</span> <span class="org-operator">=</span> (
             df.groupby([<span class="org-string">"play_name"</span>, <span class="org-string">"character"</span>, <span class="org-string">"sex"</span>])
             .agg(num_sentences<span class="org-operator">=</span>(<span class="org-string">"sentence"</span>, <span class="org-string">"count"</span>), num_acts<span class="org-operator">=</span>(<span class="org-string">"act"</span>, <span class="org-string">"nunique"</span>))
             .reset_index()
-        ).merge(
-            scenes_per_character, on<span class="org-operator">=</span>[<span class="org-string">"play_name"</span>, <span class="org-string">"character"</span>]
-        ))
+        ).merge(scenes_per_character, on<span class="org-operator">=</span>[<span class="org-string">"play_name"</span>, <span class="org-string">"character"</span>])
 
         <span class="org-comment-delimiter"># </span><span class="org-comment">Prepare a dictionary for node attributes, keyed by the unique node ID.</span>
         <span class="org-variable-name">node_attributes</span>: <span class="org-builtin">dict</span>[<span class="org-builtin">tuple</span>[<span class="org-builtin">str</span>, <span class="org-builtin">str</span>], <span class="org-builtin">dict</span>[<span class="org-builtin">str</span>, <span class="org-type">Any</span>]] <span class="org-operator">=</span> {}
@@ -2058,8 +2447,8 @@ We'll need some generic graph utilities; we'll build these on networkx for now.
                     {
                         <span class="org-string">"act"</span>: act,
                         <span class="org-string">"scene"</span>: scene,
-                        <span class="org-string">"sentences_char1"</span>: sentences_char1,
-                        <span class="org-string">"sentences_char2"</span>: sentences_char2,
+                        <span class="org-string">"sentences_char1"</span>: <span class="org-builtin">int</span>(sentences_char1),
+                        <span class="org-string">"sentences_char2"</span>: <span class="org-builtin">int</span>(sentences_char2),
                     }
                 )
 
@@ -2068,7 +2457,6 @@ We'll need some generic graph utilities; we'll build these on networkx for now.
 
         <span class="org-keyword">for</span> node_id, attributes <span class="org-keyword">in</span> node_attributes.items():
             G.add_node(node_id, <span class="org-operator">**</span>attributes)
-        <span class="org-variable-name">dn</span> <span class="org-operator">=</span> G.nodes[(<span class="org-string">"Winter's Tale"</span>, <span class="org-string">"Time"</span>)]
 
         <span class="org-keyword">for</span> edge_key, attributes <span class="org-keyword">in</span> edge_attributes.items():
             <span class="org-variable-name">play</span>, <span class="org-variable-name">char1</span>, <span class="org-variable-name">char2</span> <span class="org-operator">=</span> edge_key
@@ -2118,7 +2506,7 @@ Custom components package &#x2013; Shiny for Python, <a href="https://shiny.posi
 </div></div>
 <div id="postamble" class="status">
 <p class="author">Author: Jonathan Moore</p>
-<p class="date">Created: 2025-08-06 Wed 00:31</p>
+<p class="date">Created: 2025-08-16 Sat 15:43</p>
 </div>
 </body>
 </html>

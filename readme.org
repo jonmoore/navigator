@@ -13,4 +13,5 @@ It includes:
 - files to set up the html export in a readthedocs-style theme.
 - a couple of Jupyter notebooks not generated through org mode.
 
-See [[file:navigator.org]] for the main content.
+See https://jonmoore.github.io/navigator/navigator.html for an HTML version of
+[[file:navigator.org]].
