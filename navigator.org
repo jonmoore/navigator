@@ -500,23 +500,25 @@
       shiny run --reload --log-level debug src/navigator/d3_core_navigator.py
     #+end_src
 
-    The mechanism for focusing on characters, rather than using Shiny to handle state,
-    uses some client-side state in the filtered nodes and links that are passed to
-    displayGraph.  It is probably possible to manage that through Shiny as well, and pass
-    filtered node and link data to the front-end, where D3 can merge it via the join
-    handlers.  This might be a cleaner overall split of state between back-end and
-    front-end.  Note that the front-end is going to manage some state anyhow, e.g. for pan
-    and zoom.  Roughly, there's extra complexity in making any given update pass through
-    the back-end if it could be handled front-end only, but there's also a cost to having
-    closely-related state spread across front and back ends, as the reactive updates
-    require much more awkward coordination than if they happen solely through SHiny or D3.
+    The mechanism for focusing on characters, uses Shiny to handle the state involved in
+    the selection of nodes and links to display.
+
+    This was done to keep the logic for handling this managed through Shiny's reactive
+    mechanism, rather than spread across both Shiny and D3.  Roughly, there's extra wiring
+    needed to make any given user-driven update pass through the back-end if it could be
+    handled front-end only, but there's also a cost to having closely-related state spread
+    across front and back ends, as the reactive updates require much more awkward
+    coordination than if they happen solely through Shiny or D3.
 
     Another plus of handling complex logic server side is that we can use the full range
     of Python packages, testing, etc., whereas our JavaScript development setup is much
     more basic.
-      
+
+    Note that the front-end still manages some orthogonal state anyhow, e.g. for pan and
+    zoom.
+
     #+NAME: d3_core_navigator
-    #+begin_src python :tangle src/navigator/d3_core_navigator.py
+    #+begin_src python :tangle src/navigator/d3/app.py :mkdirp yes
       from pathlib import Path
       import networkx as nx
       import pandas as pd
@@ -527,10 +529,10 @@
       from shiny import App, ui, render
       from shiny.module import resolve_id
       from shiny.render.renderer import Jsonifiable, Renderer
-
+      from shiny.types import SilentException
       import navigator.shakespeare as shakespeare
 
-      www_dir = Path(__file__).parent.parent / "www"
+      www_dir = Path(__file__).parent.parent.parent / "www"
       PLAY_DATA = shakespeare.CharacterNetwork(
           pd.read_csv(www_dir / "data" / "shakespeare_plays.csv", index_col=0)
       )
@@ -566,7 +568,7 @@
                           "id": node_id_as_str(node_id),
                           "play": node_id[0],
                           "name": node_id[1],
-                          "sentences": node_attributes['sentences'],
+                          "sentences": node_attributes["sentences"],
                       }
                       for node_id, node_attributes in G.nodes(data=True)
                   ],
@@ -579,10 +581,12 @@
                       for source, target, edge_attributes in G.edges(data=True)
                   ],
               }
-              for link in ret_val['links']:
-                  interactions = link['interactions']
-                  link['interaction_strength'] = sum(interaction['sentences_char1']*interaction['sentences_char2']
-                                             for interaction in interactions)
+              for link in ret_val["links"]:
+                  interactions = link["interactions"]
+                  link["interaction_strength"] = sum(
+                      interaction["sentences_char1"] * interaction["sentences_char2"]
+                      for interaction in interactions
+                  )
 
               return ret_val
 
@@ -596,23 +600,28 @@
               id=resolve_id("d3Graph"),
               class_="shiny-d3-graph-output",
           ),
-          ui.h2("D3.js Directed Graph Example"),
-          ui.input_select(
-              id="play_name",
-              label="Choose a play:",
-              choices=PLAY_DATA.play_names,
-              selected="Hamlet",
-          ),
+          ui.h2("Shakespeare's plays and characters"),
           ui.layout_columns(
-              ui.tags.svg(
-                  id="d3-graph",
-                  style="height: 600px; border: 1px solid black;",
-              ),
-              ui.div(
-                  ui.output_ui("focus_character_output"),
-                  ui.output_ui("focus_interaction_output")
-              ),
-              col_widths={"xl": (8, 4)},
+              ui.card(
+                  ui.card_header("Inputs"),
+                  ui.input_select(
+                      id="play_name",
+                      label="Play",
+                      choices=PLAY_DATA.play_names,
+                      selected="Henry V",
+                  )),
+              ui.card(
+                  ui.card_header("Overview"),
+                  ui.tags.svg(
+                      id="d3-graph",
+                      style="height: 600px; border: 1px solid black;",
+                  )),
+              ui.card(
+                  ui.card_header("Details"),
+                  ui.div(
+                      ui.output_ui("detail_character_output")),
+                  ui.output_ui("detail_interaction_output")),
+              col_widths={"xl": (2, 7, 3)},
           ),
           ui.div(id="tooltip"),
           theme=shinyswatch.theme.cerulean,
@@ -620,13 +629,50 @@
 
 
       def server(input: shiny.Inputs, output: shiny.Outputs, _session: shiny.Session):
+
+          def create_character_calc(input_name: str):
+              """Create a reactive calc that returns either the character given by input_name or
+              None, if this is for a character not in the current play.
+
+              This exists to avoid displaying stale information after we switch plays.
+
+              Returns:
+                   A reactive calc. The calc returns the character dict, with 'play' and 'name'
+                   set if 1) the input has been set and 2) the character's play matches the
+                   current input for 'play_name'.  Otherwise the calc returns None.
+              """
+              @shiny.reactive.calc
+              def character_calc() -> dict | None:
+                  play = input.play_name()
+                  try:
+                      character = input[input_name]()
+                  except SilentException:
+                      return None
+                  if character["play"] != play:
+                      return None
+                  return character
+              return character_calc
+
+          # The character to zoom in the graph display for, typically chosen based on click.
+          zoom_character = create_character_calc('zoom_character')
+          # The character to show detail for, typically chosen based on mouseover.
+          detail_character = create_character_calc('detail_character')
+
           @render_character_graph
           def d3Graph():
               play_name = input.play_name()
+              G = PLAY_DATA.graph
+              if zoom_character() is None:
+                  print(f"jm - displaying all characters in {play_name}")
+                  return nx.subgraph_view(G, filter_node=lambda n: n[0] == play_name)
+              ac = zoom_character()
+              assert ac is not None
+              assert ac["play"] == play_name
 
-              return nx.subgraph_view(
-                  PLAY_DATA.graph, filter_node=lambda n: n[0] == play_name
-              )
+              focal_node = (ac["play"], ac["name"])
+              neighborhood = set([focal_node]) | set(G.neighbors(focal_node))
+              print(f"jm - displaying neighbors of {ac['name']} in {play_name}")
+              return nx.subgraph_view(G, filter_node=lambda n: n in neighborhood)
 
           @staticmethod
           def character_html(character_graph: nx.Graph, *, play: str, name: str) -> ui.Tag:
@@ -650,29 +696,42 @@
 
           @output
           @render.ui
-          def focus_character_output():
-              focus_character = input.focus_character()
+          def detail_character_output():
+              ac = detail_character()
+              if ac is None:
+                  return ui.HTML("")
               html = character_html(
-                  PLAY_DATA.graph, play=focus_character["play"], name=focus_character["name"]
+                  PLAY_DATA.graph, play=ac["play"], name=ac["name"]
               )
               return ui.HTML(html)
 
           @render.table
-          def focus_interaction_output():
-              interaction = input.focus_interaction()
+          def detail_interaction_output():
+              interaction = input.detail_interaction()
+              play_name = input.play_name()
 
-              source_name = interaction['source']['name']
-              source_play = interaction['source']['play']
-              target_name = interaction['target']['name']
-              target_play = interaction['target']['play']
+              source_name = interaction["source"]["name"]
+              source_play = interaction["source"]["play"]
+              target_name = interaction["target"]["name"]
+              target_play = interaction["target"]["play"]
+              assert source_play == target_play
+              if play_name != source_play:
+                  print("jm - Returning empty interactions DataFrame")
+                  return pd.DataFrame()
+
               interactions = PLAY_DATA.graph.edges[
                   (source_play, source_name),
                   (target_play, target_name),
-                  ]['interactions']
-              return pd.DataFrame(interactions).rename(columns={
-                  'sentences_char1': f"Sentences by {source_name}",
-                  'sentences_char2': f"Sentences by {target_name}"
-              })
+              ]["interactions"]
+              print(f"jm - {interactions=}")
+
+              return pd.DataFrame(interactions).rename(
+                  columns={
+                      "sentences_char1": f"Sentences by {source_name}",
+                      "sentences_char2": f"Sentences by {target_name}",
+                  }
+              )
+
 
       app = App(app_ui, server, static_assets=www_dir)
     #+end_src
@@ -681,11 +740,9 @@
     #+begin_src js :tangle src/www/gen/d3_navigator.js
       import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm"; // Using d3 v7 ESM
 
-      function ensureG(parent, _class) {
-          return parent
-                .data([null])
-                .join("g")
-                .attr("class", _class);
+
+      function ensureG(parentSelection, className) {
+          return parentSelection.data([42]).join("g").classed(className, true);
       }
 
       function getRadiusScale(nodeData, {radiusAttr, minRadius, maxRadius}) {
@@ -764,7 +821,7 @@
               .force("link", d3.forceLink(linkData).id(node => node.id).distance(100))
               .force("charge", d3.forceManyBody().strength(-50))
               .force("center", d3.forceCenter(width / 2, height / 2))
-              .force("collide", d3.forceCollide().radius(d => radiusScale(d[radiusAttr]) + 2));   
+              .force("collide", d3.forceCollide().radius(d => radiusScale(d[radiusAttr]) + 2));
       }
 
       function updatePositions(link, node, {width, height}) {
@@ -786,12 +843,11 @@
 
       function nodeMouseOver(link) {
           return function(event, d) {
-              Shiny.setInputValue("focus_character", {"play": d.play,
+              Shiny.setInputValue("detail_character", {"play": d.play,
                                                       "name": d.name});
 
               d3.selectAll(".node").classed("selected", false);
 
-              // Add highlight to the clicked node
               // 'this' refers to the node element that the event listener is attached to
               if (isEventTargetSelected(event)) {
                   d3.select(this).classed("selected", false);
@@ -815,26 +871,9 @@
           };
       }
 
-      function filterGraphData(selectedNode, fullNodeData, fullLinkData) {
-          const nodesToInclude = new Set([selectedNode]);
-          fullLinkData.forEach(link => {
-              if (link.source.id === selectedNode.id) {
-                  nodesToInclude.add(link.target);
-              } else if (link.target.id === selectedNode.id) {
-                  nodesToInclude.add(link.source);
-              }
-          });
-          return {
-              filteredNodeData: [...nodesToInclude],
-              filteredLinkData: fullLinkData.filter(link => {
-                  return link.source.id == selectedNode.id || link.target.id == selectedNode.id;
-              })
-          };
-      }
-
       function linkMouseOver() {
           return function(event, d) {
-              Shiny.setInputValue("focus_interaction",
+              Shiny.setInputValue("detail_interaction",
                                   {"source": {"play": d.source.play,
                                               "name": d.source.name},
                                    "target": {"play": d.target.play,
@@ -844,24 +883,23 @@
 
       function displayGraph({svgGeom, nodeData, nodeGeom, nodeGroup, linkData, linkGroup}) {
           let forceSimulation;
-          function displayGraphInner(filteredNodeData, filteredLinkData) {
+          function displayGraphInner(innerNodeData, innerLinkData) {
               const node = nodeGroup.selectAll("g")
-                    .data(filteredNodeData, d => d.id)
+                    .data(innerNodeData, d => d.id)
                     .join(enterNode(svgGeom, nodeGeom),
                           update => update,
                           exit => exit.remove());
-              const link = createLink(linkGroup, filteredLinkData);
+              const link = createLink(linkGroup, innerLinkData);
               node.on("mouseover", nodeMouseOver(link))
                   .on("mouseout", nodeMouseOut(link))
                   .on("click", (event, d) => {
-                      const {filteredNodeData, filteredLinkData} = filterGraphData(d, nodeData, linkData);
-                      displayGraphInner(filteredNodeData, filteredLinkData);
+                      Shiny.setInputValue("zoom_character", {"play": d.play, "name": d.name});
                   });
               link.on("mouseover", linkMouseOver());
               if (forceSimulation) {
                   forceSimulation.stop();
               }
-              forceSimulation = createSimulation(svgGeom, filteredNodeData, nodeGeom, filteredLinkData);
+              forceSimulation = createSimulation(svgGeom, innerNodeData, nodeGeom, innerLinkData);
               forceSimulation.on("tick", () => updatePositions(link, node, svgGeom));
           }
           displayGraphInner(nodeData, linkData);
@@ -875,12 +913,15 @@
               renderValue(el, payload) {
                   const nodeData = payload.nodes;
                   const linkData = payload.links;
+
                   const svg = d3.select("#d3-graph");
-                  const width = svg.node().getBoundingClientRect().width;
-                  const height = svg.node().getBoundingClientRect().height;
+
                   const zoomGroup = ensureG(svg.selectAll(".zoom-container"), "zoom-container");
                   const linkGroup = ensureG(zoomGroup.selectAll(".links"), "links");
                   const nodeGroup = ensureG(zoomGroup.selectAll(".nodes"), "nodes");
+
+                  const width = svg.node().getBoundingClientRect().width;
+                  const height = svg.node().getBoundingClientRect().height;
                   const radiusAttr = "sentences";
                   const radiusScale = getRadiusScale(nodeData, {radiusAttr: radiusAttr, minRadius: 5, maxRadius: 25});
                   svg.call(createZoomBehavior(zoomGroup));
@@ -894,7 +935,7 @@
                       radiusAttr: radiusAttr
                   };
 
-                  displayGraph({svgGeom: svgGeom, nodeGroup: nodeGroup, nodeData: nodeData, nodeGeom: nodeGeom, 
+                  displayGraph({svgGeom: svgGeom, nodeGroup: nodeGroup, nodeData: nodeData, nodeGeom: nodeGeom,
                                 linkGroup: linkGroup, linkData: linkData,
                   });
               }
