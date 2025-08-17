@@ -211,7 +211,11 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-3.21.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zlib-1.3.1-hb9d3cd8_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstandard-0.23.0-py313h536fd9c_1.conda
+      - pypi: https://files.pythonhosted.org/packages/52/93/342cc62a70ab727e093ed98e02a725d85b746345f05d2b5e5034649f4ec8/chevron-0.14.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/da/71/ae30dadffc90b9006d77af76b393cb9dfbfc9629f339fc1574a1c52e6806/future-1.0.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e8/99/59a0221f8a41c14af07f82ffdad204730a31b2a946201319d59796dcfa9c/ipysigma-0.24.5-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/ab/0c/28347673b45e5f0975cdf1f6d69ede6ad049be873194c4e164d79aecd34c/lzstring-1.0.4.tar.gz
+      - pypi: https://files.pythonhosted.org/packages/42/94/70cfa97831b2378d14bbdcb583562f5d4618c37db26f4c0dcc69198f31c6/shinylive-0.8.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a3/04/35477d786dbe2ace26bf34c8251a3213fcb4c70e25539f3739dda9d81dba/shinyswatch-0.9.0-py3-none-any.whl
       - pypi: .
 packages:
@@ -525,6 +529,10 @@ packages:
   - pkg:pypi/charset-normalizer?source=hash-mapping
   size: 47438
   timestamp: 1735929811779
+- pypi: https://files.pythonhosted.org/packages/52/93/342cc62a70ab727e093ed98e02a725d85b746345f05d2b5e5034649f4ec8/chevron-0.14.0-py3-none-any.whl
+  name: chevron
+  version: 0.14.0
+  sha256: fbf996a709f8da2e745ef763f482ce2d311aa817d287593a5b990d6d6e4f0443
 - conda: https://conda.anaconda.org/conda-forge/noarch/click-8.1.8-pyh707e725_0.conda
   sha256: c920d23cd1fcf565031c679adb62d848af60d6fbb0edc2d50ba475cea4f0d8ab
   md5: f22f4d4970e09d68a10b922cbb0408d3
@@ -645,6 +653,11 @@ packages:
   - pkg:pypi/fqdn?source=hash-mapping
   size: 16705
   timestamp: 1733327494780
+- pypi: https://files.pythonhosted.org/packages/da/71/ae30dadffc90b9006d77af76b393cb9dfbfc9629f339fc1574a1c52e6806/future-1.0.0-py3-none-any.whl
+  name: future
+  version: 1.0.0
+  sha256: 929292d34f5872e70396626ef385ec22355a1fae8ad29e1a734c3e43f9fbc216
+  requires_python: '>=2.6,!=3.0.*,!=3.1.*,!=3.2.*'
 - conda: https://conda.anaconda.org/conda-forge/noarch/h11-0.14.0-pyhd8ed1ab_1.conda
   sha256: 622516185a7c740d5c7f27016d0c15b45782c1501e5611deec63fd70344ce7c8
   md5: 7ee49e89531c0dcbba9466f6d115d585
@@ -1553,6 +1566,12 @@ packages:
   - pkg:pypi/linkify-it-py?source=hash-mapping
   size: 24154
   timestamp: 1733781296133
+- pypi: https://files.pythonhosted.org/packages/ab/0c/28347673b45e5f0975cdf1f6d69ede6ad049be873194c4e164d79aecd34c/lzstring-1.0.4.tar.gz
+  name: lzstring
+  version: 1.0.4
+  sha256: 1afa61e598193fbcc211e0899f09a9679e33f9102bccc37fbfda0b7fef4d9ea2
+  requires_dist:
+  - future>=0.14.0
 - conda: https://conda.anaconda.org/conda-forge/noarch/markdown-it-py-3.0.0-pyhd8ed1ab_1.conda
   sha256: 0fbacdfb31e55964152b24d5567e9a9996e1e7902fb08eb7d91b5fd6ce60803a
   md5: fee3164ac23dfca50cfcc8b85ddefb81
@@ -1643,10 +1662,11 @@ packages:
 - pypi: .
   name: navigator
   version: 0.1.0
-  sha256: 38dc282271ef9a4d45e473036e7eb787c90a92aa3328b6ddcc7e2b130324b2d1
+  sha256: a76a3d2953a8a2dc5466d5ff395dd400b0591a483e6549b5a324d95fbcca533c
   requires_dist:
   - ipysigma>=0.24.5,<0.25
   - shinyswatch>=0.9.0,<0.10
+  - shinylive>=0.8.3,<0.9
   requires_python: '>=3.11'
   editable: true
 - conda: https://conda.anaconda.org/conda-forge/noarch/nbclient-0.10.2-pyhd8ed1ab_0.conda
@@ -2467,6 +2487,26 @@ packages:
   - pkg:pypi/shiny?source=hash-mapping
   size: 2640846
   timestamp: 1741050118548
+- pypi: https://files.pythonhosted.org/packages/42/94/70cfa97831b2378d14bbdcb583562f5d4618c37db26f4c0dcc69198f31c6/shinylive-0.8.3-py3-none-any.whl
+  name: shinylive
+  version: 0.8.3
+  sha256: cb72da57f08c0f235fa8b2f6592e09fa348dd0f93ec3d0504f237f48aae3e433
+  requires_dist:
+  - shiny
+  - click>=8.1.7
+  - appdirs>=1.4.4
+  - lzstring>=1.0.4
+  - typing-extensions>=4.0.1
+  - chevron>=0.14.0
+  - setuptools ; python_full_version >= '3.12'
+  - black>=22.3.0 ; extra == 'dev'
+  - flake8>=3.9.2 ; extra == 'dev'
+  - flake8-bugbear>=22.6.22 ; extra == 'dev'
+  - isort>=5.11.2 ; extra == 'dev'
+  - pyright>=1.1.284 ; extra == 'dev'
+  - wheel ; extra == 'dev'
+  - pytest>=6.2.4 ; extra == 'test'
+  requires_python: '>=3.8'
 - pypi: https://files.pythonhosted.org/packages/a3/04/35477d786dbe2ace26bf34c8251a3213fcb4c70e25539f3739dda9d81dba/shinyswatch-0.9.0-py3-none-any.whl
   name: shinyswatch
   version: 0.9.0
