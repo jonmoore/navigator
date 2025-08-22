@@ -519,6 +519,7 @@
 
     #+NAME: d3_core_navigator
     #+begin_src python :tangle src/navigator/d3/app.py :mkdirp yes
+      from dataclasses import dataclass, asdict
       from pathlib import Path
       import networkx as nx
       import pandas as pd
@@ -530,10 +531,10 @@
       from shiny.module import resolve_id
       from shiny.render.renderer import Jsonifiable, Renderer
       from shiny.types import SilentException
-      import navigator.shakespeare as shakespeare
+      from navigator.shakespeare import CharacterNetwork, NodeId
 
       www_dir = Path(__file__).parent.parent.parent / "www"
-      PLAY_DATA = shakespeare.CharacterNetwork(
+      PLAY_DATA = CharacterNetwork(
           pd.read_csv(www_dir / "data" / "shakespeare_plays.csv", index_col=0)
       )
 
@@ -546,49 +547,64 @@
           all_files=True,
       )
 
+      @dataclass
+      class SelectionState:
+          zoom_nodes: list[NodeId]
 
-      class render_character_graph(Renderer[nx.Graph]):
+      @dataclass
+      class GraphAndState:
+          graph: nx.Graph
+          state: SelectionState
+
+      class render_character_graph(Renderer[GraphAndState]):
           """
           Render a dict as a D3 graph.
           """
 
-          async def transform(self, value: nx.Graph) -> Jsonifiable:
+          async def transform(self, value: GraphAndState) -> Jsonifiable:
               """Transform a networkx graph representing character interactions in
               Shakespeare's plays into a Jsonifiable object.
               """
-              assert isinstance(value, nx.Graph)
-              G = value
+              assert isinstance(value, GraphAndState)
+              G = value.graph
+              state = value.state
 
-              def node_id_as_str(node) -> str:
-                  return ", ".join(node)
+              def node_id_as_str(node_id) -> str:
+                  return ", ".join([node_id.play, node_id.name])
 
-              ret_val = {
-                  "nodes": [
+              nodes = [
                       {
                           "id": node_id_as_str(node_id),
-                          "play": node_id[0],
-                          "name": node_id[1],
-                          "sentences": node_attributes["sentences"],
+                          "play": node_id.play,
+                          "name": node_id.name,
+                          "sentences": int(node_attributes["sentences"]),
                       }
                       for node_id, node_attributes in G.nodes(data=True)
-                  ],
-                  "links": [
+                  ]
+              links = [
                       {
                           "source": node_id_as_str(source),
                           "target": node_id_as_str(target),
                           **edge_attributes,
                       }
                       for source, target, edge_attributes in G.edges(data=True)
-                  ],
-              }
-              for link in ret_val["links"]:
+                  ]
+              for node in nodes:
+                  node['is_focal'] = NodeId(play=str(node['play']), name=str(node['name'])) in set(state.zoom_nodes)
+
+              for link in links:
                   interactions = link["interactions"]
                   link["interaction_strength"] = sum(
                       interaction["sentences_char1"] * interaction["sentences_char2"]
                       for interaction in interactions
                   )
 
-              return ret_val
+              return {
+                  "nodes": nodes,
+                  "links": links,
+                  "state": asdict(state),
+              } #  type: ignore [reportReturnType]
+
 
 
       app_ui = ui.page_fluid(
@@ -630,62 +646,60 @@
 
       def server(input: shiny.Inputs, output: shiny.Outputs, _session: shiny.Session):
 
-          def create_character_calc(input_name: str):
-              """Create a reactive calc that returns either the character given by input_name or
-              None, if this is for a character not in the current play.
+          zoom_nodes = shiny.reactive.Value(list[NodeId]())
 
-              This exists to avoid displaying stale information after we switch plays.
+          @shiny.reactive.effect
+          def handle_node_on_click():
+              play = input.play_name()
+              click = input.node_on_click()
+              shiny.req(click)
+              clicked_node = NodeId(play=click['play'], name=click['name'])
+              if click['ctrl']:
+                  # use isolate to avoid an infinite loop
+                  with shiny.reactive.isolate():
+                      old_zoom_nodes = {n for n in zoom_nodes() if n.play == play}
+                  new_zoom_nodes = list({clicked_node} ^ old_zoom_nodes)
+              else:
+                  new_zoom_nodes = [clicked_node]
+              zoom_nodes.set(new_zoom_nodes)
 
-              Returns:
-                   A reactive calc. The calc returns the character dict, with 'play' and 'name'
-                   set if 1) the input has been set and 2) the character's play matches the
-                   current input for 'play_name'.  Otherwise the calc returns None.
-              """
-              @shiny.reactive.calc
-              def character_calc() -> dict | None:
-                  play = input.play_name()
-                  try:
-                      character = input[input_name]()
-                  except SilentException:
-                      return None
-                  if character["play"] != play:
-                      return None
-                  return character
-              return character_calc
 
-          # The character to zoom in the graph display for, typically chosen based on click.
-          zoom_character = create_character_calc('zoom_character')
-          # The character to show detail for, typically chosen based on mouseover.
-          detail_character = create_character_calc('detail_character')
+          @shiny.reactive.calc
+          def detail_character() -> NodeId | None:
+              play = input.play_name()
+              try:
+                  character = input.detail_character()
+              except SilentException:
+                  return None
+              if character["play"] != play:
+                  return None
+              return NodeId(**character)
 
           @render_character_graph
           def d3Graph():
               play_name = input.play_name()
               G = PLAY_DATA.graph
-              if zoom_character() is None:
+              if not zoom_nodes():
                   print(f"jm - displaying all characters in {play_name}")
-                  return nx.subgraph_view(G, filter_node=lambda n: n[0] == play_name)
-              ac = zoom_character()
-              assert ac is not None
-              assert ac["play"] == play_name
+                  filter_node = lambda n: n.play == play_name # noqa: E731
+              else:
+                  neighborhood = set()
+                  cutoff=1
+                  for source in zoom_nodes():
+                      neighborhood |= set(nx.single_source_shortest_path_length(G, source, cutoff=cutoff))
+                  filter_node = lambda n: n in neighborhood # noqa: E731
 
-              focal_node = (ac["play"], ac["name"])
-              neighborhood = set([focal_node]) | set(G.neighbors(focal_node))
-              print(f"jm - displaying neighbors of {ac['name']} in {play_name}")
-              return nx.subgraph_view(G, filter_node=lambda n: n in neighborhood)
+              return GraphAndState(
+                  graph=nx.subgraph_view(G, filter_node=filter_node),
+                  state=SelectionState(zoom_nodes=zoom_nodes())
+              )
 
           @staticmethod
-          def character_html(character_graph: nx.Graph, *, play: str, name: str) -> ui.Tag:
+          def character_html(character_graph: nx.Graph, *, character_id: NodeId) -> ui.Tag:
               """Return html representing a character"""
               assert isinstance(character_graph, nx.Graph)
-              assert isinstance(play, str)
-              assert isinstance(name, str)
-
-              character_id = (play, name)
-              character_data = {
-                  "character_id": str(character_id),
-                  **character_graph.nodes[character_id],
-              }
+              character_data = character_graph.nodes[character_id].copy()
+              character_data.pop("play")
 
               return ui.div(
                   *(
@@ -697,17 +711,18 @@
           @output
           @render.ui
           def detail_character_output():
-              ac = detail_character()
-              if ac is None:
+              character_id = detail_character()
+              if character_id is None:
                   return ui.HTML("")
               html = character_html(
-                  PLAY_DATA.graph, play=ac["play"], name=ac["name"]
+                  PLAY_DATA.graph, character_id=character_id
               )
               return ui.HTML(html)
 
           @render.table
           def detail_interaction_output():
               interaction = input.detail_interaction()
+
               play_name = input.play_name()
 
               source_name = interaction["source"]["name"]
@@ -720,10 +735,9 @@
                   return pd.DataFrame()
 
               interactions = PLAY_DATA.graph.edges[
-                  (source_play, source_name),
-                  (target_play, target_name),
+                  NodeId(play=source_play, name=source_name),
+                  NodeId(play=target_play, name=target_name),
               ]["interactions"]
-              print(f"jm - {interactions=}")
 
               return pd.DataFrame(interactions).rename(
                   columns={
@@ -757,7 +771,6 @@
           return d3.zoom()
               .scaleExtent([0.1, 10])
               .on("zoom", (event) => {
-                  console.info("zoom detected", event);
                   zoomGroup.attr("transform", event.transform);
               });
       }
@@ -780,6 +793,7 @@
                   .text(d => d.name)
                   .style("pointer-events", "none") // Make text not interfere with node click
               ;
+              nodeEnter.classed("focal-node", d => d.is_focal);
               return nodeEnter;
           };
       }
@@ -843,8 +857,7 @@
 
       function nodeMouseOver(link) {
           return function(event, d) {
-              Shiny.setInputValue("detail_character", {"play": d.play,
-                                                      "name": d.name});
+              Shiny.setInputValue("detail_character", {"play": d.play, "name": d.name});
 
               d3.selectAll(".node").classed("selected", false);
 
@@ -889,11 +902,12 @@
                     .join(enterNode(svgGeom, nodeGeom),
                           update => update,
                           exit => exit.remove());
+              node.classed("in_focus", d => d.is_focal);
               const link = createLink(linkGroup, innerLinkData);
               node.on("mouseover", nodeMouseOver(link))
                   .on("mouseout", nodeMouseOut(link))
                   .on("click", (event, d) => {
-                      Shiny.setInputValue("zoom_character", {"play": d.play, "name": d.name});
+                      Shiny.setInputValue("node_on_click", {"play": d.play, "name": d.name, "ctrl": event.ctrlKey});
                   });
               link.on("mouseover", linkMouseOver());
               if (forceSimulation) {
@@ -911,8 +925,11 @@
                   return scope.find(".shiny-d3-graph-output");
               }
               renderValue(el, payload) {
-                  const nodeData = payload.nodes;
-                  const linkData = payload.links;
+                  const {
+                      nodes: nodeData,
+                      links: linkData,
+                      state: state
+                  } = payload;
 
                   const svg = d3.select("#d3-graph");
 
@@ -960,8 +977,11 @@
       }
 
       .node.selected circle {
-          stroke-width: 3px;
           fill: #ff0000;
+      }
+
+      .node.in_focus circle {
+          stroke-width: 3px;
       }
 
       .node text {
@@ -1797,11 +1817,11 @@
       #+begin_src python :tangle src/navigator/shakespeare.py
         import re
         import warnings
+        from dataclasses import dataclass
         from itertools import combinations
         from typing import Any, Iterable
 
         import pandas as pd
-        import pandas.testing as pdt
         import networkx as nx
         from thefuzz import process as thefuzz_process
 
@@ -1855,6 +1875,12 @@
             }
 
 
+        @dataclass(frozen=True)
+        class NodeId:
+            play: str
+            name: str
+
+
         class CharacterNetwork:
             REQUIRED_COLUMNS = "play_name,genre,character,act,scene,sentence,text,sex".split(
                 ","
@@ -1888,89 +1914,88 @@
             # Names not referring to definite characters.  These are not so interesting to look at
             # and may represent different people.
             INDEFINITE_NAMES = [
-                '& C',
-                'A Lord',
-                'A Patrician',
-                'A Player',
-                'All',
-                'All Citizens',
-                'All Conspirators',
-                'All Ladies',
-                'All Lords',
-                'All Servants',
-                'All The Goths',
-                'All The Lords',
-                'All The People',
-                'Another',
-                'As Long As You Or I',
-                'Attendant',
-                'Attendants',
-                'Both Citizens',
-                'Both Murderers',
-                'Both Tribunes',
-                'Boy',
-                'Captain',
-                'Children',
-                'Chorus',
-                'Citizen',
-                'Citizens',
-                'Clown',
-                'Commons',
-                'Court',
-                'Courtezan',
-                'Crier',
-                'Gentleman',
-                'Gentlemen',
-                'Gentlewoman',
-                'Girl',
-                'Guard',
-                'Knight',
-                'Knights',
-                'Lady',
-                'Lieutenant',
-                'Lord',
-                'Lords',
-                'Man',
-                'Merchant',
-                'Messenger',
-                'Mother',
-                'Musician',
-                'Nobleman',
-                'Nurse',
-                'Officer',
-                'Old Athenian',
-                'Old Lady',
-                'Old Man',
-                'Outlaws',
-                'Page',
-                'Players',
-                'Prince',
-                'Princes',
-                'Princess',
-                'Prologue',
-                'Sailor',
-                'Scout',
-                'Senator',
-                'Senators',
-                'Sergeant',
-                'Servant',
-                'Servants',
-                'Shepard',
-                'Shepherd',
-                'Sheriff',
-                'Soldier',
-                'Soldiers',
-                'Some Others',
-                'Some Speak',
-                'Soothsayer',
-                'Steward',
-                'Townsman',
-                'Travellers',
-                'Watch',
-                'Watchman',
-                'Wife',
+                "& C",
+                "A Lord",
+                "A Patrician",
+                "A Player",
+                "All",
+                "All Citizens",
+                "All Conspirators",
+                "All Ladies",
+                "All Lords",
+                "All Servants",
+                "All The Goths",
+                "All The Lords",
+                "All The People",
+                "Another",
+                "As Long As You Or I",
+                "Attendant",
+                "Attendants",
+                "Both Citizens",
+                "Both Murderers",
+                "Both Tribunes",
+                "Boy",
+                "Captain",
+                "Children",
+                "Chorus",
+                "Citizen",
+                "Citizens",
+                "Clown",
+                "Commons",
+                "Court",
+                "Courtezan",
+                "Crier",
+                "Gentleman",
+                "Gentlemen",
+                "Gentlewoman",
+                "Girl",
+                "Guard",
+                "Knight",
+                "Knights",
+                "Lady",
+                "Lieutenant",
+                "Lord",
+                "Lords",
+                "Man",
+                "Merchant",
+                "Messenger",
+                "Mother",
+                "Musician",
+                "Nobleman",
+                "Nurse",
+                "Officer",
+                "Old Athenian",
+                "Old Lady",
+                "Old Man",
+                "Outlaws",
+                "Page",
+                "Players",
+                "Prince",
+                "Princes",
+                "Princess",
+                "Prologue",
+                "Sailor",
+                "Scout",
+                "Senator",
+                "Senators",
+                "Sergeant",
+                "Servant",
+                "Servants",
+                "Shepard",
+                "Shepherd",
+                "Sheriff",
+                "Soldier",
+                "Soldiers",
+                "Some Others",
+                "Some Speak",
+                "Soothsayer",
+                "Steward",
+                "Townsman",
+                "Travellers",
+                "Watch",
+                "Watchman",
+                "Wife",
             ]
-
 
             def __init__(self, df: pd.DataFrame, min_similarity_score: int = 92):
                 """Initializes the CharacterNetwork with a dataframe containing character
@@ -2049,7 +2074,7 @@
                 assert set(dfr.columns) == set(CharacterNetwork.REQUIRED_COLUMNS)
 
                 # Remove entries with names not referring to definite characters
-                dfr = dfr[~dfr['character'].isin(CharacterNetwork.INDEFINITE_NAMES)]
+                dfr = dfr[~dfr["character"].isin(CharacterNetwork.INDEFINITE_NAMES)]
 
                 return dfr
 
@@ -2075,9 +2100,9 @@
                 ).merge(scenes_per_character, on=["play_name", "character"])
 
                 # Prepare a dictionary for node attributes, keyed by the unique node ID.
-                node_attributes: dict[tuple[str, str], dict[str, Any]] = {}
+                node_attributes: dict[NodeId, dict[str, Any]] = {}
                 for _, row in character_data.iterrows():
-                    node_id = (row["play_name"], row["character"])
+                    node_id = NodeId(play=row["play_name"], name=row["character"])
                     node_attributes[node_id] = {
                         "play": row["play_name"],
                         "character": row["character"],
@@ -2135,7 +2160,11 @@
 
                 for edge_key, attributes in edge_attributes.items():
                     play, char1, char2 = edge_key
-                    G.add_edge((play, char1), (play, char2), **attributes)
+                    G.add_edge(
+                        NodeId(play=play, name=char1),
+                        NodeId(play=play, name=char2),
+                        **attributes,
+                    )
 
                 return G
 
