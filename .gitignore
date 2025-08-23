@@ -1,6 +1,6 @@
 # org-generated files
 # /*.html
-src/navigator/*.py
+src/navigator/**/*.py
 src/www/gen/
 
 # exceptions to the org-generated files
