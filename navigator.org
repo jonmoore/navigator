@@ -39,7 +39,7 @@
 
   Developing browser-based applications in Python for
   the visualization and exploration of network graphs and associated data
-  is potentially very useful in mnay domains but a significant challenge,
+  is potentially very useful in many domains but a significant challenge,
   due to the lack, over many years, of an obvious set of supporting packages to use.
 
   The combination of web application frameworks like
@@ -154,7 +154,7 @@
 
       The =renderValue()= method contains the core logic
       for initializing and updating the JavaScript display.
-      This method receives data from the Python backend, typically in a JSON format,
+      This method receives data from the Python back-end, typically in a JSON format,
       and uses it to configure the component's elements, style, and layout.
 
 ***** Python server-side code
@@ -441,7 +441,7 @@
       Numerous examples and demos available online help showcase its capabilities.
 
       It wasn't investigated outside the context of ipycytoscape.
-      It's possible it may be useful with intergration approaches similar ways to D3.
+      It's possible it may be useful with integration approaches similar ways to D3.
 
 ***** d3blocks
       - https://github.com/d3blocks/d3blocks
@@ -554,7 +554,7 @@
       showing the characters from Shakespeare's plays
       and the relationships between them based on scene co-occurrences.
     - *Play Selection*:
-      Users can select different plays from a dropdown menu
+      Users can select different plays from a drop-down menu
       to update the graph
       and visualize the character interactions specific to the chosen play.
     - *Display of Character Data*:

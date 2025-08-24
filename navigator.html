@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2025-08-24 Sun 14:52 -->
+<!-- 2025-08-24 Sun 15:41 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Building a Graph Navigator in Python</title>
@@ -27,49 +27,49 @@
 <div id="text-table-of-contents" role="doc-toc">
 <ul>
 <li><a href="#introduction">Introduction</a></li>
-<li><a href="#orgea156dc">Targets</a></li>
-<li><a href="#org96ab349">Ways to extend Shiny</a>
+<li><a href="#orgbd6a631">Targets</a></li>
+<li><a href="#org232872d">Ways to extend Shiny</a>
 <ul>
-<li><a href="#orgac08131">Including JavaScript directly</a></li>
+<li><a href="#org11ae987">Including JavaScript directly</a></li>
 <li><a href="#one-off-custom-components">One-off custom components</a>
 <ul>
-<li><a href="#orgf5d4984">JavaScript output binding</a></li>
-<li><a href="#org94eb877">Python server-side code</a>
+<li><a href="#orgdd0d104">JavaScript output binding</a></li>
+<li><a href="#orgc208d96">Python server-side code</a>
 <ul>
-<li><a href="#orgf0447a2">Output function</a></li>
-<li><a href="#org9ce764d">Render decorator</a></li>
+<li><a href="#org13ca156">Output function</a></li>
+<li><a href="#orgd2e5cb3">Render decorator</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#orgb8869d0">Custom component packages</a></li>
-<li><a href="#orgbda63bf">Debugging Shiny</a>
+<li><a href="#org0b9a4e2">Custom component packages</a></li>
+<li><a href="#orgb1fe866">Debugging Shiny</a>
 <ul>
-<li><a href="#orgc0f7353">Websockets logging</a></li>
+<li><a href="#orgfd3d89f">Websockets logging</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#orgff13aa3">Supporting packages</a>
+<li><a href="#org7c95c69">Supporting packages</a>
 <ul>
 <li><a href="#d3">D3</a></li>
 <li><a href="#jupyter-widgets">Jupyter widgets packages</a>
 <ul>
 <li><a href="#shinywidgets">shinywidgets</a></li>
 <li><a href="#ipycytoscape">ipycytoscape</a></li>
-<li><a href="#orgbd09d90">ipysigma</a></li>
+<li><a href="#org94fd3d0">ipysigma</a></li>
 </ul>
 </li>
-<li><a href="#orgcb4dd32">Pyvis</a></li>
-<li><a href="#orgb273455">Not investigated in-depth</a>
+<li><a href="#orgde01f2c">Pyvis</a></li>
+<li><a href="#org5f55853">Not investigated in-depth</a>
 <ul>
 <li><a href="#cytoscape-js">Cytoscape.js</a></li>
-<li><a href="#org75a7ae6">d3blocks</a></li>
-<li><a href="#orgd4cdfc8">ipydagred3</a></li>
-<li><a href="#orgff8e046">ipyelk</a></li>
-<li><a href="#org00d18e1">Dash</a></li>
-<li><a href="#orgd8af109">Bokeh</a></li>
-<li><a href="#orga987f0e">Altair</a></li>
+<li><a href="#org5a1719c">d3blocks</a></li>
+<li><a href="#orge4ba11e">ipydagred3</a></li>
+<li><a href="#org5f62022">ipyelk</a></li>
+<li><a href="#orgedb057c">Dash</a></li>
+<li><a href="#org6df96d4">Bokeh</a></li>
+<li><a href="#orgabbdb72">Altair</a></li>
 </ul>
 </li>
 </ul>
@@ -79,36 +79,36 @@
 <li><a href="#test-using-d3">Using D3</a></li>
 <li><a href="#test-using-ipycytoscape">Using ipycytoscape</a>
 <ul>
-<li><a href="#org40ab54d">Ipyleaflet Shiny Express app</a></li>
-<li><a href="#org9038988">Ipyleaflet Shiny Core app with incremental redraw</a></li>
-<li><a href="#org1215aca">Cytoscape Shiny Express app with full redraw</a></li>
+<li><a href="#org90f90d2">Ipyleaflet Shiny Express app</a></li>
+<li><a href="#org7ad236e">Ipyleaflet Shiny Core app with incremental redraw</a></li>
+<li><a href="#org99429ad">Cytoscape Shiny Express app with full redraw</a></li>
 <li><a href="#app-core-ipycyto-nx-full">Cytoscape Shiny Core app with full redraw</a></li>
 <li><a href="#app-core-ipycyto-cyto-full">Cytoscape Shiny Core app with full redraw, no networkx</a></li>
-<li><a href="#orgece9836">Cytoscape Shiny Core app with incremental redraw</a></li>
-<li><a href="#org7e9c2ab">Cytoscape utils</a></li>
-<li><a href="#org206c585">Conclusion</a></li>
+<li><a href="#org4445a5f">Cytoscape Shiny Core app with incremental redraw</a></li>
+<li><a href="#org2d3d60a">Cytoscape utils</a></li>
+<li><a href="#org14446e3">Conclusion</a></li>
 </ul>
 </li>
 <li><a href="#test-using-ipysigma">Using ipysigma</a>
 <ul>
-<li><a href="#org8aec126">ipysigma Shiny Core app with full redraw</a></li>
-<li><a href="#org39ee557">ipysigma Shiny Core node navigator</a></li>
-<li><a href="#org05d479c">Conclusion</a></li>
+<li><a href="#org9a3c3b7">ipysigma Shiny Core app with full redraw</a></li>
+<li><a href="#orgca0eab7">ipysigma Shiny Core node navigator</a></li>
+<li><a href="#org22dd755">Conclusion</a></li>
 </ul>
 </li>
 <li><a href="#test-using-pyvis">Using pyvis</a>
 <ul>
-<li><a href="#org9cfbb1d">pyvis Shiny Core node navigator</a></li>
-<li><a href="#orgd288829">Conclusion</a></li>
+<li><a href="#org1934a92">pyvis Shiny Core node navigator</a></li>
+<li><a href="#orgce3383f">Conclusion</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#org41b6e1e">Utilities</a>
+<li><a href="#org9d8b1fe">Utilities</a>
 <ul>
-<li><a href="#org95ee290">Generic utilities</a></li>
-<li><a href="#org62e0636">Graph utilities</a></li>
-<li><a href="#org65cdda5">Shakespeare data</a></li>
+<li><a href="#org5cc64b3">Generic utilities</a></li>
+<li><a href="#org2fffbec">Graph utilities</a></li>
+<li><a href="#orgfebfbc3">Shakespeare data</a></li>
 </ul>
 </li>
 </ul>
@@ -120,7 +120,7 @@
 <p>
 Developing browser-based applications in Python for
 the visualization and exploration of network graphs and associated data
-is potentially very useful in mnay domains but a significant challenge,
+is potentially very useful in many domains but a significant challenge,
 due to the lack, over many years, of an obvious set of supporting packages to use.
 </p>
 
@@ -144,9 +144,9 @@ and is a good candidate for building such applications on top of.
 </p>
 </div>
 </div>
-<div id="outline-container-orgea156dc" class="outline-2">
-<h2 id="orgea156dc">Targets</h2>
-<div class="outline-text-2" id="text-orgea156dc">
+<div id="outline-container-orgbd6a631" class="outline-2">
+<h2 id="orgbd6a631">Targets</h2>
+<div class="outline-text-2" id="text-orgbd6a631">
 <p>
 We want to create an application that, in rough priority order:
 </p>
@@ -171,18 +171,18 @@ front-end might be a candidate here.</li>
 </ol>
 </div>
 </div>
-<div id="outline-container-org96ab349" class="outline-2">
-<h2 id="org96ab349">Ways to extend Shiny</h2>
-<div class="outline-text-2" id="text-org96ab349">
+<div id="outline-container-org232872d" class="outline-2">
+<h2 id="org232872d">Ways to extend Shiny</h2>
+<div class="outline-text-2" id="text-org232872d">
 <p>
 Shiny provides several approaches for extending its built-in component library
 with arbitrary JavaScript functionality,
 allowing one to create richer and more interactive user interfaces.
 </p>
 </div>
-<div id="outline-container-orgac08131" class="outline-3">
-<h3 id="orgac08131">Including JavaScript directly</h3>
-<div class="outline-text-3" id="text-orgac08131">
+<div id="outline-container-org11ae987" class="outline-3">
+<h3 id="org11ae987">Including JavaScript directly</h3>
+<div class="outline-text-3" id="text-org11ae987">
 <p>
 Shiny allows including JavaScript files
 directly within an application's static assets directory (typically named www)
@@ -239,9 +239,9 @@ see the "Custom components package" page in the Shiny documentation<sup><a id="f
 which describes how to create a custom component for Shiny inputs.
 </p>
 </div>
-<div id="outline-container-orgf5d4984" class="outline-4">
-<h4 id="orgf5d4984">JavaScript output binding</h4>
-<div class="outline-text-4" id="text-orgf5d4984">
+<div id="outline-container-orgdd0d104" class="outline-4">
+<h4 id="orgdd0d104">JavaScript output binding</h4>
+<div class="outline-text-4" id="text-orgdd0d104">
 <p>
 The output binding typically includes two key methods:
 <code>find()</code> and <code>renderValue()</code>.
@@ -277,18 +277,18 @@ a specific CSS class or ID assigned to a div element in the UI.
 <p>
 The <code>renderValue()</code> method contains the core logic
 for initializing and updating the JavaScript display.
-This method receives data from the Python backend, typically in a JSON format,
+This method receives data from the Python back-end, typically in a JSON format,
 and uses it to configure the component's elements, style, and layout.
 </p>
 </div>
 </div>
-<div id="outline-container-org94eb877" class="outline-4">
-<h4 id="org94eb877">Python server-side code</h4>
-<div class="outline-text-4" id="text-org94eb877">
+<div id="outline-container-orgc208d96" class="outline-4">
+<h4 id="orgc208d96">Python server-side code</h4>
+<div class="outline-text-4" id="text-orgc208d96">
 </div>
-<div id="outline-container-orgf0447a2" class="outline-5">
-<h5 id="orgf0447a2">Output function</h5>
-<div class="outline-text-5" id="text-orgf0447a2">
+<div id="outline-container-org13ca156" class="outline-5">
+<h5 id="org13ca156">Output function</h5>
+<div class="outline-text-5" id="text-org13ca156">
 <p>
 On the Python side, an output function needs to be defined
 to place the designated HTML element in the Shiny application's user interface.
@@ -327,9 +327,9 @@ are included in the Shiny application.
 </p>
 </div>
 </div>
-<div id="outline-container-org9ce764d" class="outline-5">
-<h5 id="org9ce764d">Render decorator</h5>
-<div class="outline-text-5" id="text-org9ce764d">
+<div id="outline-container-orgd2e5cb3" class="outline-5">
+<h5 id="orgd2e5cb3">Render decorator</h5>
+<div class="outline-text-5" id="text-orgd2e5cb3">
 <p>
 Additionally, a render decorator is needed to
 transform values returned from the functions it decorates into
@@ -385,9 +385,9 @@ requires at least 3 things:
 </div>
 </div>
 </div>
-<div id="outline-container-orgb8869d0" class="outline-3">
-<h3 id="orgb8869d0">Custom component packages</h3>
-<div class="outline-text-3" id="text-orgb8869d0">
+<div id="outline-container-org0b9a4e2" class="outline-3">
+<h3 id="org0b9a4e2">Custom component packages</h3>
+<div class="outline-text-3" id="text-org0b9a4e2">
 <p>
 A custom component package
 allows reusing integrations across multiple applications.
@@ -405,13 +405,13 @@ For details see the "Custom components package" page in the Shiny documentation<
 </p>
 </div>
 </div>
-<div id="outline-container-orgbda63bf" class="outline-3">
-<h3 id="orgbda63bf">Debugging Shiny</h3>
-<div class="outline-text-3" id="text-orgbda63bf">
+<div id="outline-container-orgb1fe866" class="outline-3">
+<h3 id="orgb1fe866">Debugging Shiny</h3>
+<div class="outline-text-3" id="text-orgb1fe866">
 </div>
-<div id="outline-container-orgc0f7353" class="outline-4">
-<h4 id="orgc0f7353">Websockets logging</h4>
-<div class="outline-text-4" id="text-orgc0f7353">
+<div id="outline-container-orgfd3d89f" class="outline-4">
+<h4 id="orgfd3d89f">Websockets logging</h4>
+<div class="outline-text-4" id="text-orgfd3d89f">
 <ul class="org-ul">
 <li><a href="https://websockets.readthedocs.io/en/stable/topics/logging.html">https://websockets.readthedocs.io/en/stable/topics/logging.html</a></li>
 <li><a href="https://websockets.readthedocs.io/en/stable/reference/variables.html">https://websockets.readthedocs.io/en/stable/reference/variables.html</a></li>
@@ -429,9 +429,9 @@ To increase log verbosity and avoid truncating messages we can run
 </div>
 </div>
 </div>
-<div id="outline-container-orgff13aa3" class="outline-2">
-<h2 id="orgff13aa3">Supporting packages</h2>
-<div class="outline-text-2" id="text-orgff13aa3">
+<div id="outline-container-org7c95c69" class="outline-2">
+<h2 id="org7c95c69">Supporting packages</h2>
+<div class="outline-text-2" id="text-org7c95c69">
 </div>
 <div id="outline-container-d3" class="outline-3">
 <h3 id="d3">D3</h3>
@@ -534,9 +534,9 @@ See <a href="#test-using-ipycytoscape">Using ipycytoscape</a> for test applicati
 </p>
 </div>
 </div>
-<div id="outline-container-orgbd09d90" class="outline-4">
-<h4 id="orgbd09d90">ipysigma</h4>
-<div class="outline-text-4" id="text-orgbd09d90">
+<div id="outline-container-org94fd3d0" class="outline-4">
+<h4 id="org94fd3d0">ipysigma</h4>
+<div class="outline-text-4" id="text-org94fd3d0">
 <p>
 ipysigma is a Jupyter widget built on Sigma.js,
 designed to render interactive network visualizations effortlessly.
@@ -569,9 +569,9 @@ See <a href="#test-using-ipysigma">Using ipysigma</a> for a test application usi
 </div>
 </div>
 </div>
-<div id="outline-container-orgcb4dd32" class="outline-3">
-<h3 id="orgcb4dd32">Pyvis</h3>
-<div class="outline-text-3" id="text-orgcb4dd32">
+<div id="outline-container-orgde01f2c" class="outline-3">
+<h3 id="orgde01f2c">Pyvis</h3>
+<div class="outline-text-3" id="text-orgde01f2c">
 <ul class="org-ul">
 <li><b>Basis:</b> Wraps the vis.js JavaScript library.</li>
 <li><b>Features:</b> Designed to make creating interactive network graphs easy
@@ -606,9 +606,9 @@ See <a href="#test-using-pyvis">Using pyvis</a> for a test application using it.
 </p>
 </div>
 </div>
-<div id="outline-container-orgb273455" class="outline-3">
-<h3 id="orgb273455">Not investigated in-depth</h3>
-<div class="outline-text-3" id="text-orgb273455">
+<div id="outline-container-org5f55853" class="outline-3">
+<h3 id="org5f55853">Not investigated in-depth</h3>
+<div class="outline-text-3" id="text-org5f55853">
 </div>
 <div id="outline-container-cytoscape-js" class="outline-4">
 <h4 id="cytoscape-js">Cytoscape.js</h4>
@@ -637,13 +637,13 @@ Numerous examples and demos available online help showcase its capabilities.
 
 <p>
 It wasn't investigated outside the context of ipycytoscape.
-It's possible it may be useful with intergration approaches similar ways to D3.
+It's possible it may be useful with integration approaches similar ways to D3.
 </p>
 </div>
 </div>
-<div id="outline-container-org75a7ae6" class="outline-4">
-<h4 id="org75a7ae6">d3blocks</h4>
-<div class="outline-text-4" id="text-org75a7ae6">
+<div id="outline-container-org5a1719c" class="outline-4">
+<h4 id="org5a1719c">d3blocks</h4>
+<div class="outline-text-4" id="text-org5a1719c">
 <ul class="org-ul">
 <li><a href="https://github.com/d3blocks/d3blocks">https://github.com/d3blocks/d3blocks</a></li>
 <li><b>Basis:</b>
@@ -658,18 +658,18 @@ A well-developed package.</li>
 </ul>
 </div>
 </div>
-<div id="outline-container-orgd4cdfc8" class="outline-4">
-<h4 id="orgd4cdfc8">ipydagred3</h4>
-<div class="outline-text-4" id="text-orgd4cdfc8">
+<div id="outline-container-orge4ba11e" class="outline-4">
+<h4 id="orge4ba11e">ipydagred3</h4>
+<div class="outline-text-4" id="text-orge4ba11e">
 <ul class="org-ul">
 <li><b>Basis:</b> Uses dagre-d3 library.</li>
 <li><b>Features:</b> Specifically designed for drawing Directed Acyclic Graphs (DAGs) within JupyterLab.</li>
 </ul>
 </div>
 </div>
-<div id="outline-container-orgff8e046" class="outline-4">
-<h4 id="orgff8e046">ipyelk</h4>
-<div class="outline-text-4" id="text-orgff8e046">
+<div id="outline-container-org5f62022" class="outline-4">
+<h4 id="org5f62022">ipyelk</h4>
+<div class="outline-text-4" id="text-org5f62022">
 <ul class="org-ul">
 <li><b>Basis:</b>
 Uses the Eclipse Layout Kernel (ELK) via elkjs.</li>
@@ -679,9 +679,9 @@ Mentioned as having potential for features like collapsing/expanding subgraphs.<
 </ul>
 </div>
 </div>
-<div id="outline-container-org00d18e1" class="outline-4">
-<h4 id="org00d18e1">Dash</h4>
-<div class="outline-text-4" id="text-org00d18e1">
+<div id="outline-container-orgedb057c" class="outline-4">
+<h4 id="orgedb057c">Dash</h4>
+<div class="outline-text-4" id="text-orgedb057c">
 <ul class="org-ul">
 <li><b>Basis:</b>
 Built on Plotly.js.</li>
@@ -709,9 +709,9 @@ and now there is the true Shiny for Python package from Posit.</li>
 </ul>
 </div>
 </div>
-<div id="outline-container-orgd8af109" class="outline-4">
-<h4 id="orgd8af109">Bokeh</h4>
-<div class="outline-text-4" id="text-orgd8af109">
+<div id="outline-container-org6df96d4" class="outline-4">
+<h4 id="org6df96d4">Bokeh</h4>
+<div class="outline-text-4" id="text-org6df96d4">
 <ul class="org-ul">
 <li><b>Basis:</b> Bokeh's own JS library.</li>
 <li><b>Features:</b>
@@ -734,9 +734,9 @@ ending up doing things manually that can be done in the framework.</li>
 </ul>
 </div>
 </div>
-<div id="outline-container-orga987f0e" class="outline-4">
-<h4 id="orga987f0e">Altair</h4>
-<div class="outline-text-4" id="text-orga987f0e">
+<div id="outline-container-orgabbdb72" class="outline-4">
+<h4 id="orgabbdb72">Altair</h4>
+<div class="outline-text-4" id="text-orgabbdb72">
 <ul class="org-ul">
 <li><b>Basis:</b>
 Built on Vega-Lite, a declarative grammar.</li>
@@ -781,7 +781,7 @@ It uses D3.js to present a graph
 showing the characters from Shakespeare's plays
 and the relationships between them based on scene co-occurrences.</li>
 <li><b>Play Selection</b>:
-Users can select different plays from a dropdown menu
+Users can select different plays from a drop-down menu
 to update the graph
 and visualize the character interactions specific to the chosen play.</li>
 <li><b>Display of Character Data</b>:
@@ -844,7 +844,7 @@ even for applications with fairly sophisticated interactions.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-python" id="orgcbfbb9e"><span class="org-keyword">from</span> dataclasses <span class="org-keyword">import</span> dataclass, asdict
+<pre class="src src-python" id="org69dbe9a"><span class="org-keyword">from</span> dataclasses <span class="org-keyword">import</span> dataclass, asdict
 <span class="org-keyword">from</span> pathlib <span class="org-keyword">import</span> Path
 <span class="org-keyword">import</span> networkx <span class="org-keyword">as</span> nx
 <span class="org-keyword">import</span> pandas <span class="org-keyword">as</span> pd
@@ -1077,7 +1077,7 @@ even for applications with fairly sophisticated interactions.
 </div>
 
 <div class="org-src-container">
-<pre class="src src-js" id="org2a4aef1"><span class="org-keyword">import</span> * as d3 from <span class="org-string">"https://cdn.jsdelivr.net/npm/d3@7/+esm"</span>; <span class="org-comment-delimiter">// </span><span class="org-comment">Using d3 v7 ESM</span>
+<pre class="src src-js" id="orgea91d17"><span class="org-keyword">import</span> * as d3 from <span class="org-string">"https://cdn.jsdelivr.net/npm/d3@7/+esm"</span>; <span class="org-comment-delimiter">// </span><span class="org-comment">Using d3 v7 ESM</span>
 
 
 <span class="org-keyword">function</span> <span class="org-function-name">ensureG</span>(<span class="org-variable-name">parentSelection</span>, <span class="org-variable-name">className</span>) {
@@ -1288,7 +1288,7 @@ even for applications with fairly sophisticated interactions.
 </div>
 
 <div class="org-src-container">
-<pre class="src src-css" id="org3990401"><span class="org-css-selector">body</span> { <span class="org-css-property">font-family</span>: <span class="org-string">'Inter'</span>, sans-serif; }
+<pre class="src src-css" id="org610d992"><span class="org-css-selector">body</span> { <span class="org-css-property">font-family</span>: <span class="org-string">'Inter'</span>, sans-serif; }
 
 <span class="org-css-selector">.hidden</span> {
   <span class="org-css-property">display</span>: none;
@@ -1380,9 +1380,9 @@ This should allow using Cytoscape.js in Shiny
 without creating a custom JavaScript component, or integrating Cytoscape.js ad hoc.
 </p>
 </div>
-<div id="outline-container-org40ab54d" class="outline-4">
-<h4 id="org40ab54d">Ipyleaflet Shiny Express app</h4>
-<div class="outline-text-4" id="text-org40ab54d">
+<div id="outline-container-org90f90d2" class="outline-4">
+<h4 id="org90f90d2">Ipyleaflet Shiny Express app</h4>
+<div class="outline-text-4" id="text-org90f90d2">
 <p>
 This demonstrates that we can use reactive.effect to update ipywidgets in Shiny.
 It's taken from <a href="https://shiny.posit.co/py/docs/jupyter-widgets.html#efficient-updates">https://shiny.posit.co/py/docs/jupyter-widgets.html#efficient-updates</a>
@@ -1432,9 +1432,9 @@ shiny.express.ui.input_select(<span class="org-string">"center"</span>, <span cl
 </div>
 </div>
 </div>
-<div id="outline-container-org9038988" class="outline-4">
-<h4 id="org9038988">Ipyleaflet Shiny Core app with incremental redraw</h4>
-<div class="outline-text-4" id="text-org9038988">
+<div id="outline-container-org7ad236e" class="outline-4">
+<h4 id="org7ad236e">Ipyleaflet Shiny Core app with incremental redraw</h4>
+<div class="outline-text-4" id="text-org7ad236e">
 <p>
 The approach here is based on
 the Brownian motion example in the Shiny for Python repo
@@ -1482,9 +1482,9 @@ shiny run --reload --log-level debug src/navigator/leaflet_core.py
 </div>
 </div>
 </div>
-<div id="outline-container-org1215aca" class="outline-4">
-<h4 id="org1215aca">Cytoscape Shiny Express app with full redraw</h4>
-<div class="outline-text-4" id="text-org1215aca">
+<div id="outline-container-org99429ad" class="outline-4">
+<h4 id="org99429ad">Cytoscape Shiny Express app with full redraw</h4>
+<div class="outline-text-4" id="text-org99429ad">
 <p>
 This is a Shiny Express App that displays an ipycytoscape Graph,
 with number of nodes driven by a reactive input.
@@ -1675,9 +1675,9 @@ shiny run --reload --log-level debug src/navigator/cyto_core_full2.py
 </div>
 </div>
 </div>
-<div id="outline-container-orgece9836" class="outline-4">
-<h4 id="orgece9836">Cytoscape Shiny Core app with incremental redraw</h4>
-<div class="outline-text-4" id="text-orgece9836">
+<div id="outline-container-org4445a5f" class="outline-4">
+<h4 id="org4445a5f">Cytoscape Shiny Core app with incremental redraw</h4>
+<div class="outline-text-4" id="text-org4445a5f">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">import</span> os
 
@@ -1740,9 +1740,9 @@ shiny run --reload --log-level debug src/navigator/cyto_core_full2.py
 </div>
 </div>
 </div>
-<div id="outline-container-org7e9c2ab" class="outline-4">
-<h4 id="org7e9c2ab">Cytoscape utils</h4>
-<div class="outline-text-4" id="text-org7e9c2ab">
+<div id="outline-container-org2d3d60a" class="outline-4">
+<h4 id="org2d3d60a">Cytoscape utils</h4>
+<div class="outline-text-4" id="text-org2d3d60a">
 <p>
 Some utilities for making graphs using ipycytoscape.
 </p>
@@ -1795,9 +1795,9 @@ Some utilities for making graphs using ipycytoscape.
 </div>
 </div>
 </div>
-<div id="outline-container-org206c585" class="outline-4">
-<h4 id="org206c585">Conclusion</h4>
-<div class="outline-text-4" id="text-org206c585">
+<div id="outline-container-org14446e3" class="outline-4">
+<h4 id="org14446e3">Conclusion</h4>
+<div class="outline-text-4" id="text-org14446e3">
 <p>
 ipycytoscape is not a viable candidate to work from.
 </p>
@@ -1826,9 +1826,9 @@ has clearly never been tested on even basic uses cases like the one in issue 322
 <h3 id="test-using-ipysigma">Using ipysigma</h3>
 <div class="outline-text-3" id="text-test-using-ipysigma">
 </div>
-<div id="outline-container-org8aec126" class="outline-4">
-<h4 id="org8aec126">ipysigma Shiny Core app with full redraw</h4>
-<div class="outline-text-4" id="text-org8aec126">
+<div id="outline-container-org9a3c3b7" class="outline-4">
+<h4 id="org9a3c3b7">ipysigma Shiny Core app with full redraw</h4>
+<div class="outline-text-4" id="text-org9a3c3b7">
 <p>
 This is a Shiny Core App that displays an ipysigma Graph,
 with number of nodes driven by a reactive input.
@@ -1876,9 +1876,9 @@ It can be run with
 </div>
 </div>
 </div>
-<div id="outline-container-org39ee557" class="outline-4">
-<h4 id="org39ee557">ipysigma Shiny Core node navigator</h4>
-<div class="outline-text-4" id="text-org39ee557">
+<div id="outline-container-orgca0eab7" class="outline-4">
+<h4 id="orgca0eab7">ipysigma Shiny Core node navigator</h4>
+<div class="outline-text-4" id="text-orgca0eab7">
 <p>
 This is a Shiny Core App that displays an ipysigma Graph,
 with the choice of nodes displayed driven by
@@ -1901,7 +1901,7 @@ It can be run with
 </div>
 
 <div class="org-src-container">
-<pre class="src src-python" id="orgf8b7d41"><span class="org-keyword">import</span> os
+<pre class="src src-python" id="org3ab1e37"><span class="org-keyword">import</span> os
 <span class="org-keyword">from</span> typing <span class="org-keyword">import</span> cast
 
 <span class="org-keyword">import</span> ipywidgets
@@ -2003,9 +2003,9 @@ It can be run with
 </div>
 </div>
 </div>
-<div id="outline-container-org05d479c" class="outline-4">
-<h4 id="org05d479c">Conclusion</h4>
-<div class="outline-text-4" id="text-org05d479c">
+<div id="outline-container-org22dd755" class="outline-4">
+<h4 id="org22dd755">Conclusion</h4>
+<div class="outline-text-4" id="text-org22dd755">
 <p>
 The combination of ipysigma with Shiny for Python is a viable candidate to build on.
 </p>
@@ -2040,9 +2040,9 @@ and less polished than the containers available through Bokeh, Plotly, etc.
 <h3 id="test-using-pyvis">Using pyvis</h3>
 <div class="outline-text-3" id="text-test-using-pyvis">
 </div>
-<div id="outline-container-org9cfbb1d" class="outline-4">
-<h4 id="org9cfbb1d">pyvis Shiny Core node navigator</h4>
-<div class="outline-text-4" id="text-org9cfbb1d">
+<div id="outline-container-org1934a92" class="outline-4">
+<h4 id="org1934a92">pyvis Shiny Core node navigator</h4>
+<div class="outline-text-4" id="text-org1934a92">
 <p>
 This is a Shiny Core App that displays a graph using pyvis.
 </p>
@@ -2067,7 +2067,7 @@ indicates that any other mode is supported.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-python" id="org742a2a4"><span class="org-keyword">import</span> os
+<pre class="src src-python" id="org72d5c8d"><span class="org-keyword">import</span> os
 <span class="org-keyword">from</span> pathlib <span class="org-keyword">import</span> Path
 
 <span class="org-keyword">import</span> shiny
@@ -2123,9 +2123,9 @@ indicates that any other mode is supported.
 </div>
 </div>
 </div>
-<div id="outline-container-orgd288829" class="outline-4">
-<h4 id="orgd288829">Conclusion</h4>
-<div class="outline-text-4" id="text-orgd288829">
+<div id="outline-container-orgce3383f" class="outline-4">
+<h4 id="orgce3383f">Conclusion</h4>
+<div class="outline-text-4" id="text-orgce3383f">
 <p>
 pyvis is not a useful option
 given how it operates using external HTML files,
@@ -2135,13 +2135,13 @@ although the underlying VisJS library might be useful.
 </div>
 </div>
 </div>
-<div id="outline-container-org41b6e1e" class="outline-2">
-<h2 id="org41b6e1e">Utilities</h2>
-<div class="outline-text-2" id="text-org41b6e1e">
+<div id="outline-container-org9d8b1fe" class="outline-2">
+<h2 id="org9d8b1fe">Utilities</h2>
+<div class="outline-text-2" id="text-org9d8b1fe">
 </div>
-<div id="outline-container-org95ee290" class="outline-3">
-<h3 id="org95ee290">Generic utilities</h3>
-<div class="outline-text-3" id="text-org95ee290">
+<div id="outline-container-org5cc64b3" class="outline-3">
+<h3 id="org5cc64b3">Generic utilities</h3>
+<div class="outline-text-3" id="text-org5cc64b3">
 <p>
 We will need some utilities for debugging.
 </p>
@@ -2211,9 +2211,9 @@ We will need some utilities for debugging.
 </div>
 </div>
 </div>
-<div id="outline-container-org62e0636" class="outline-3">
-<h3 id="org62e0636">Graph utilities</h3>
-<div class="outline-text-3" id="text-org62e0636">
+<div id="outline-container-org2fffbec" class="outline-3">
+<h3 id="org2fffbec">Graph utilities</h3>
+<div class="outline-text-3" id="text-org2fffbec">
 <p>
 We'll need some generic graph utilities; we'll build these on networkx for now.
 </p>
@@ -2262,16 +2262,16 @@ We'll need some generic graph utilities; we'll build these on networkx for now.
 </div>
 </div>
 </div>
-<div id="outline-container-org65cdda5" class="outline-3">
-<h3 id="org65cdda5">Shakespeare data</h3>
-<div class="outline-text-3" id="text-org65cdda5">
+<div id="outline-container-orgfebfbc3" class="outline-3">
+<h3 id="orgfebfbc3">Shakespeare data</h3>
+<div class="outline-text-3" id="text-orgfebfbc3">
 <p>
 This is a Python wrapper for a Shakespeare dataset downloaded from Kaggle.
 I did some minor cleanup on the main CSV file.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-python" id="orgd8461d6"><span class="org-keyword">import</span> re
+<pre class="src src-python" id="org590134c"><span class="org-keyword">import</span> re
 <span class="org-keyword">import</span> warnings
 <span class="org-keyword">from</span> dataclasses <span class="org-keyword">import</span> dataclass
 <span class="org-keyword">from</span> itertools <span class="org-keyword">import</span> combinations
@@ -2665,7 +2665,7 @@ Cytoscape.js and Cytoscape, Cytoscape User Manual, <a href="https://manual.cytos
 </div></div>
 <div id="postamble" class="status">
 <p class="author">Author: Jonathan Moore</p>
-<p class="date">Created: 2025-08-24 Sun 14:52</p>
+<p class="date">Created: 2025-08-24 Sun 15:41</p>
 </div>
 </body>
 </html>
