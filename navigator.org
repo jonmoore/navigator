@@ -10,32 +10,25 @@
 
 - [[#introduction][Introduction]]
 - [[#targets][Targets]]
+- [[#ways-to-extend-shiny][Ways to extend Shiny]]
+    - [[#including-javascript-directly][Including JavaScript directly]]
+    - [[#one-off-custom-components][One-off custom components]]
+    - [[#custom-component-packages][Custom component packages]]
+    - [[#debugging-shiny][Debugging Shiny]]
 - [[#supporting-packages][Supporting packages]]
-    - [[#jupyter-widgets][Jupyter Widgets]]
-    - [[#cytoscapejs][Cytoscape.js]]
-    - [[#shinywidgets][shinywidgets]]
-    - [[#ipycytoscape][ipycytoscape]]
-    - [[#ipysigma][ipysigma]]
-    - [[#pyvis][Pyvis]]
     - [[#d3][D3]]
-    - [[#d3blocks][d3blocks]]
-    - [[#d3graph][d3graph]]
-    - [[#ipydagred3][ipydagred3]]
-    - [[#ipyelk][ipyelk]]
-    - [[#dash][Dash]]
-    - [[#bokeh][Bokeh]]
-    - [[#altair][Altair]]
-- [[#using-shiny][Using Shiny]]
-    - [[#ways-to-extend-shiny][Ways to extend Shiny]]
+    - [[#jupyter-widgets][Jupyter Widgets]]
+    - [[#pyvis][Pyvis]]
+    - [[#not-investigated-in-depth][Not investigated in-depth]]
+- [[#test-applications][Test applications]]
     - [[#using-d3][Using D3]]
     - [[#using-cytoscapejs][Using Cytoscape.js]]
     - [[#using-ipysigma][Using ipysigma]]
     - [[#using-pyvis][Using pyvis]]
-    - [[#debugging-shiny][Debugging Shiny]]
 - [[#utilities][Utilities]]
     - [[#generic-utilities][Generic utilities]]
     - [[#graph-utilities][Graph utilities]]
-    - [[#data-providers][Data providers]]
+    - [[#shakespeare-data][Shakespeare data]]
 - [[#footnotes][Footnotes]]
 
 * Introduction
@@ -44,13 +37,15 @@
   :ID:       9b3f852d-72a3-4d73-917e-d194b748e74d
   :END:
 
-  Developing browser-based applications for
-  the exploration and visualization of directed acyclic graphs (DAGs)
-  is a significant challenge in Python.
+  Developing browser-based applications in Python for
+  the visualization and exploration of network graphs and associated data
+  is potentially very useful in mnay domains but a significant challenge,
+  due to the lack, over many years, of an obvious set of supporting packages to use.
+
   The combination of web application frameworks like
   Shiny for Python[fn:shiny-overview],
   component frameworks like [[#jupyter-widgets][Jupyter Widgets]], and
-  graph visualization libraries integrated with these
+  graph visualization libraries like [[#d3][D3]] integrated with these
   offer an attractive possible solution.
   This report explores using different combinations of packages
   to achieve our goals.
@@ -60,7 +55,7 @@
   :ID:       c3e13b80-f4e8-4fad-8628-be292c39dd26
   :END:
   We want to create an application that, in rough priority order:
-  1. Displays a directed acyclic graph
+  1. Displays a network graph
   2. Supports user interactions driving server-side actions
   3. Supports user interactions driving UI elements mediated by server-side code
   4. Supports the above with incremental redrawing of updated UI elements
@@ -72,13 +67,245 @@
   3. Primarily front-end driven, with lightweight Javascript or Typescript calling
      into a mostly separate back-end API written in Python.  A simple D3 or React
      front-end might be a candidate here.
-  4. Anything else (e.g. other languages, heavy front-end frameworks).
+  4. Anything else (e.g. other languages, heavy front-end frameworks like React).
+
+* Ways to extend Shiny
+  Shiny provides several approaches for extending its built-in component library
+  with arbitrary JavaScript functionality,
+  allowing one to create richer and more interactive user interfaces.
+*** Including JavaScript directly
+    :PROPERTIES:
+    :ID:       2fd24b9e-1547-481a-a78c-b9439099b7b9
+    :END:
+    Shiny allows including JavaScript files
+    directly within an application's static assets directory (typically named www)
+    or via functions like =ui.include_js=[fn:shiny-python-js].
+    This enables the execution of JavaScript code on the client-side,
+    allowing for interaction with the DOM and integration with JavaScript libraries.
+
+    While this method is straightforward for adding simple JavaScript functionality,
+    wrapping a complex library like Cytoscape.js
+    often benefits from the more structured approaches offered by creating
+    either one-off custom components or custom component packages.
+
+*** One-off custom components
+    :PROPERTIES:
+    :ID:       bb39af16-fa88-43c2-8fe9-7e66c133ff86
+    :CUSTOM_ID: one-off-custom-components
+    :END:
+    One-off custom JavaScript components[fn:shiny-custom-js] are developed for specific applications.
+
+    This allows the integration of specific JavaScript libraries
+    without the need to create a full component package.
+
+    To create a one-off custom component, you need to write the following:
+    1. A JavaScript output binding that tells Shiny how to render the component in the browser
+    2. A Python output function to describe the HTML output element in the user interface.
+       This refers to the JavaScript output binding.
+    3. A Python render decorator to transfer data from the server to the client.
+       This may refer to the Python output function to provide automated output.
+
+    Although not covered here, communication can also occur in the reverse direction,
+    from JavaScript to Python,
+    by using Shiny's input bindings or custom messages
+    - Input bindings allow JavaScript components to send data back to the Shiny server
+      when user interactions occur.
+    - Custom messages provide a more flexible mechanism for asynchronous communication,
+      enabling more complex interactions between JavaScript and Python.
+    For guidance on creating input bindings,
+    see the "Custom components package" page in the Shiny documentation[fn:shiny-custom-components],
+    which describes how to create a custom component for Shiny inputs.
+
+***** JavaScript output binding
+      :PROPERTIES:
+      :ID:       7026bf8a-694b-49db-8560-8b5630e4647c
+      :END:
+      The output binding typically includes two key methods:
+      =find()= and =renderValue()=.
+
+      Some sample code:
+      #+begin_src javascript :tangle no
+        class TabulatorOutputBinding extends Shiny.OutputBinding {
+            // Find element to render in
+            find(scope) { ... }
+
+            // Render output element in the found element
+            renderValue(el, payload) { ... }
+        }
+
+        // Register the binding
+        Shiny.outputBindings.register(
+            new TabulatorOutputBinding(),
+            "shiny-tabulator-output"
+        );
+      #+end_src
+
+      The =find()= method is responsible for locating the HTML element in the Shiny application
+      where the component will be rendered.
+      This is often done by targeting
+      a specific CSS class or ID assigned to a div element in the UI.
+
+      The =renderValue()= method contains the core logic
+      for initializing and updating the JavaScript display.
+      This method receives data from the Python backend, typically in a JSON format,
+      and uses it to configure the component's elements, style, and layout.
+
+***** Python server-side code
+      :PROPERTIES:
+      :ID:       0abcf43a-58d6-41b5-ba43-9c2cb8c7171c
+      :END:
+
+******* Output function
+        :PROPERTIES:
+        :ID:       3d6783c6-0948-49ec-9406-096a94235e2e
+        :END:
+        On the Python side, an output function needs to be defined
+        to place the designated HTML element in the Shiny application's user interface.
+
+        #+CAPTION: Sample Python Code defining an output_ function
+        #+begin_src python :tangle no
+          from shiny import App, Inputs, ui
+          from shiny.module import resolve_id
+
+          from htmltools import HTMLDependency
+
+          tabulator_dep = HTMLDependency(
+              "tabulator",
+              "5.5.2",
+              source={"subdir": "tabulator"},
+              script={"src": "tableComponent.js", "type": "module"},
+              stylesheet={"href": "tabulator.min.css"},
+              all_files=True,
+          )
+
+          def output_tabulator(id, height="200px"):
+              return ui.div(
+                  tabulator_dep,
+                  # Use resolve_id so that our component will work in a module
+                  id=resolve_id(id),
+                  class_="shiny-tabulator-output",
+                  style=f"height: {height}",
+              )
+        #+end_src
+
+        The =htmltools.HTMLDependency= class is used to ensure
+        that the necessary JavaScript and CSS assets and the custom output binding
+        are included in the Shiny application.
+
+******* Render decorator
+        :PROPERTIES:
+        :ID:       c6d100a7-dcfb-4fc0-bcd5-a785910e7d0d
+        :END:
+        Additionally, a render decorator is needed to
+        transform values returned from the functions it decorates into
+        data to be passed to the JavaScript =renderValue()= method,
+        generally using a JSON-serializable structure.
+
+        #+CAPTION: Sample Python code defining a render decorator
+        #+begin_src python :tangle no
+          from shiny.render.renderer import Jsonifiable, Renderer
+
+          class render_tabulator(Renderer[pd.DataFrame]):
+              """
+              Render a pandas dataframe as a tabulator table.
+              """
+
+              def auto_output_ui(self):
+                  """
+                  Express UI for the tabulator renderer
+                  """
+                  return ui.output_tabulator(self.output_name)
+
+              async def transform(self, value: pd.DataFrame) -> Jsonifiable:
+                  """
+                  Transform a pandas dataframe into a JSONifiable object that can be
+                  passed to the tabulator HTML dependency.
+                  """
+                  if not isinstance(value, pd.DataFrame):
+                      # Throw an error if the value is not a dataframe
+                      raise TypeError(f"Expected a pandas.DataFrame, got {type(value)}. ")
+
+                  # Get data from dataframe as a list of lists where each inner list is a
+                  # row, column names as array of strings and types of each column as an
+                  # array of strings
+                  return {
+                      "data": value.values.tolist(),
+                      "columns": value.columns.tolist(),
+                      "type_hints": value.dtypes.astype(str).tolist(),
+                  }
+        #+end_src
+
+        An implementation of =Renderer= produces a class to be used as a decorator and
+        requires at least 3 things:
+
+        1. auto_output_ui (jm: possibly only needed for Shiny Express)
+        2. either a transform or render function, and
+        3. a value type parameter for the Renderer class.
+
+*** Custom component packages
+    :PROPERTIES:
+    :ID:       83d13cb5-f60b-4baf-b1f3-bc0e4d2c3bef
+    :END:
+    A custom component package
+    allows reusing integrations across multiple applications.
+
+    The development process involves
+    building the front-end component using JavaScript or TypeScript,
+    packaging it with necessary metadata and build scripts,
+    and then using =shiny-bindings-react= to connect to Shiny's reactivity system.
+
+    For details see the "Custom components package" page in the Shiny documentation[fn:shiny-custom-components].
+
+*** Debugging Shiny
+    :PROPERTIES:
+    :ID:       5274a82c-1ba9-4104-ab93-74d8df07fbbf
+    :END:
+***** Websockets logging
+      :PROPERTIES:
+      :ID:       71f33094-70aa-4840-be84-db4ce2bbb4b0
+      :END:
+      - https://websockets.readthedocs.io/en/stable/topics/logging.html
+      - https://websockets.readthedocs.io/en/stable/reference/variables.html
+
+      Shiny uses websockets for communication.
+      To increase log verbosity and avoid truncating messages we can run
+      #+begin_src bash
+      export WEBSOCKETS_MAX_LOG_SIZE=10000
+      #+end_src
 
 * Supporting packages
-
+*** D3
+    :PROPERTIES:
+    :CUSTOM_ID: d3
+    :END:
+    - *Basis:* Pure JavaScript library
+    - *Features:* Provides a highly customizable framework for interactive visualizations.
+      Low-level in terms of the graphical primitives it offers,
+      but high-level in that it provides supporting tooling and offers
+      a way to compose sophisticated visualizations from fairly simple elements.
+    - *Note:*
+      - Writing "ground-up" visualizations with D3 is actually quite easy,
+        even for someone not familiar with Javascript if using an LLM coding assistant.
+        The resulting code can be directly embedded in HTML and
+        deployed anywhere that will accept fragments of generic HTML documents,
+        e.g. Confluence.
+      - Using D3 directly is essentially be a two-language approach
+        with Javascript on the front end and Python on the back end.
+        The front-end Javascript can also be extended to call external services,
+        e.g. to get data or to trigger server-side calculations.
+        The main session state and focus of the design
+        moves partly into the Javascript world in this approach.
+      - This was an approach I hadn't taken seriously until
+        playing around with it in Confluence, and calling out to external data sources.
+        Language model support for wiring up the boilerplate to get started with
+        was especially helpful.
+      - Other UI elements still have to come from somewhere,
+        e.g. 1) Shiny, Dash or similar, 2) a javascript framework like react, or 3)
+        something like htmx.
 *** Jupyter Widgets
     :PROPERTIES:
     :CUSTOM_ID: jupyter-widgets
+    :ID:       a8e26756-e88e-4000-8e6e-861ce44d909d
     :END:
     Jupyter widgets, also known as ipywidgets, are interactive HTML widgets for Jupyter notebooks.
     They allow developers to create GUI-like elements within notebooks.
@@ -91,86 +318,62 @@
     This lets developers build browser-based applications with
     the same widget components that are used in Jupyter notebook environments.
 
-*** Cytoscape.js
-    :PROPERTIES:
-    :ID:       5a82ce91-7533-44d1-a65f-20626b385f5a
-    :CUSTOM_ID: cytoscape-js
-    :END:
+***** shinywidgets
+      :PROPERTIES:
+      :ID:       6a099728-29b8-4127-9328-2ef023ad2d5b
+      :CUSTOM_ID: shinywidgets
+      :END:
 
-    Cytoscape.js ([[https://js.cytoscape.org/]]) is an open-source JavaScript library
-    for visualizing and analyzing network data.
-    It serves as a building block for
-    creating interactive network visualizations in web browsers[fn:cytoscapejs-and-cytoscape].
-    It's optimized, has no external dependencies, and works with most modern browsers.
-    Features include pan and zoom, node and edge styling, layout algorithms,
-    and support for graph theory algorithms.
+      The shinywidgets Python package (https://shiny.posit.co/py/docs/jupyter-widgets.html)
+      enables the integration of ipywidgets (Jupyter Widgets) into Shiny for Python applications.
+      It is part of the ipywidgets ecosystem,
+      in which popular Python packages provide interactive widgets including:
+      - Visualization, with tools like Altair, Bokeh, and Plotly
+      - Mapping, featuring Pydeck and ipyleaflet
+      - Data display, utilizing ipydatagrid and ipysheet
+      - 3D rendering, through ipyvolume and pythreejs
+      - Media, with ipywebrtc
 
-    Core to Cytoscape.js is the graph instance, initialized with a DOM container,
-    an array of elements (nodes and edges), styling rules, and a layout algorithm.
-    It uses a JSON format to represent graph data,
-    defining nodes and edges as JavaScript objects
-    with unique identifiers and source-target relationships.
-    CSS-based styling allows customization of nodes and edges based on data attributes.
-    The library provides an API for programmatic interaction, including
-    modifying elements, applying layouts, and managing user interactions.
-    Numerous examples and demos available online help showcase its capabilities.
+      This integration allows for
+      seamless rendering, efficient updates, and responsive user interactions
+      within Shiny applications using ipywidgets.
 
-*** shinywidgets
-    :PROPERTIES:
-    :ID:       6a099728-29b8-4127-9328-2ef023ad2d5b
-    :CUSTOM_ID: shinywidgets
-    :END:
+***** ipycytoscape
+      :PROPERTIES:
+      :CUSTOM_ID: ipycytoscape
+      :END:
+      ipycytoscape (https://ipycytoscape.readthedocs.io/en/master/)
+      is an interactive widget for Jupyter notebooks that
+      leverages the Cytoscape.js library
+      to provide dynamic graph visualizations.
+      Its target users are data scientists and researchers who work with network data,
+      as it allows users to create, interact with, and
+      customize graphical representations of network structures
+      using Jupyter widgets.  It supports interactivity by allowing the user to bind actions to graph events,
+      like clicks or node selections.
 
-    The shinywidgets Python package (https://shiny.posit.co/py/docs/jupyter-widgets.html)
-    enables the integration of ipywidgets (Jupyter Widgets) into Shiny for Python applications.
-    It is part of the ipywidgets ecosystem,
-    in which popular Python packages provide interactive widgets including:
-    - Visualization, with tools like Altair, Bokeh, and Plotly
-    - Mapping, featuring Pydeck and ipyleaflet
-    - Data display, utilizing ipydatagrid and ipysheet
-    - 3D rendering, through ipyvolume and pythreejs
-    - Media, with ipywebrtc
+***** ipysigma
+      :PROPERTIES:
+      :ID:       56cce4de-511c-4fd9-b783-1019b378de0c
+      :END:
 
-    This integration allows for
-    seamless rendering, efficient updates, and responsive user interactions
-    within Shiny applications using ipywidgets.
+      ipysigma is a Jupyter widget built on Sigma.js,
+      designed to render interactive network visualizations effortlessly.
+      It integrates with popular Python libraries such as networkx and igraph,
+      allowing users to map graph structures and metrics into visual formats.
+      ipysigma emphasizes customizable visualization features,
+      focusing on node and edge properties like color, size, and shape,
+      while supporting efficient rendering of large graphs.
+      It also offers interactive capabilities,
+      such as synchronized views for comparing features within the same graph.
 
-*** ipycytoscape
-    :PROPERTIES:
-    :CUSTOM_ID: ipycytoscape
-    :END:
-    ipycytoscape (https://ipycytoscape.readthedocs.io/en/master/)
-    is an interactive widget for Jupyter notebooks that
-    leverages the Cytoscape.js library
-    to provide dynamic graph visualizations.
-    Its target users are data scientists and researchers who work with network data,
-    as it allows users to create, interact with, and
-    customize graphical representations of network structures
-    using Jupyter widgets.  It supports interactivity by allowing the user to bind actions to graph events,
-    like clicks or node selections.
+      For further information, you can visit
+      - the [[https://github.com/medialab/ipysigma][ipysigma GitHub repository]] and
+      - the [[https://pypi.org/project/ipysigma/][PyPI page for ipysigma]].
+      - this [[https://archive.fosdem.org/2023/schedule/event/graph_ipysigma/][talk at FOSDEM 2023]]
 
-*** ipysigma
-    :PROPERTIES:
-    :ID:       56cce4de-511c-4fd9-b783-1019b378de0c
-    :END:
-
-    ipysigma is a Jupyter widget built on Sigma.js,
-    designed to render interactive network visualizations effortlessly.
-    It integrates with popular Python libraries such as networkx and igraph,
-    allowing users to map graph structures and metrics into visual formats.
-    ipysigma emphasizes customizable visualization features,
-    focusing on node and edge properties like color, size, and shape,
-    while supporting efficient rendering of large graphs.
-    It also offers interactive capabilities,
-    such as synchronized views for comparing features within the same graph.
-
-    For further information, you can visit
-    - the [[https://github.com/medialab/ipysigma][ipysigma GitHub repository]] and
-    - the [[https://pypi.org/project/ipysigma/][PyPI page for ipysigma]].
-    - this [[https://archive.fosdem.org/2023/schedule/event/graph_ipysigma/][talk at FOSDEM 2023]]
-
-    ipysigma's main use cases are for exploring graph structure and data
-    rather than graph-driven interactivity which may not be a good fit here.
+      ipysigma's main use cases are for exploring graph structure and data
+      rather than graph-driven interactivity which may not be a good fit here.
 *** Pyvis
     :PROPERTIES:
     :ID:       54b92d04-5cfb-4dfc-9cd5-a663c5654cb8
@@ -195,327 +398,177 @@
         https://github.com/posit-dev/py-shinywidgets/issues/63.
     - *Conclusion:*
       - Displays graphs using an external HTML file, so rejected.
-*** D3
-    - *Basis:* Pure JavaScript library
-    - *Features:* Provides a highly customizable framework for interactive visualizations.
-      Low-level in terms of the graphical primitives it offers,
-      but high-level in that it provides supporting tooling and offers
-      a way to compose sophisticated visualizations from fairly simple elements.
-    - *Note:*
-      - Writing "ground-up" visualizations with D3 is actually quite easy,
-        even for someone not familiar with Javascript if using an LLM coding assistant.
-        The resulting code can be directly embedded in HTML and
-        deployed anywhere that will accept fragments of generic HTML documents,
-        e.g. Confluence.
-      - Using D3 directly would essentially be a two-language approach
-        with Javascript on the front end and Python on the back end.
-        The front-end Javascript can also be extended to call external services,
-        e.g. to get data or to trigger server-side calculations.
-        The main session state and focus of the design
-        moves partly into the Jaavscript world in this approach.
-      - This was an approach I hadn't taken seriously until
-        playing around with it in Confluence, and calling out to external data sources.
-        Language model support for wiring up the boilerplate to get started with
-        was especially helpful.
-      - Other UI elements would still have to come from somewhere,
-        e.g. 1) Shiny, Dash or similar, 2) a javascript framework like react, or 3)
-        something like htmx.
-*** d3blocks
-    - https://github.com/d3blocks/d3blocks
-    - **Basis:* Python library for generating Javascript
-    - **Features:* Create stand-alone and interactive d3 charts.
-      Supports a range of widely-used chart types.
-    - **Notes:*
-*** d3graph
-    - https://github.com/erdogant/d3graph
-    - **Basis:* Python package
-    - **Features:* Simplifies creating networks in D3
-    - **Notes:*
-*** ipydagred3
-    :PROPERTIES:
-    :ID:       53871af9-39da-435f-a93c-9990a53e6148
-    :END:
-    - *Basis:* Uses dagre-d3 library.
-    - *Features:* Specifically designed for drawing Directed Acyclic Graphs (DAGs) within JupyterLab.
-*** ipyelk
-    :PROPERTIES:
-    :ID:       57228ce0-eb9d-4c0c-b18e-edf18aa4502a
-    :END:
-    - *Basis:* Uses the Eclipse Layout Kernel (ELK) via elkjs.
-    - *Features:* Provides sophisticated layout algorithms, potentially useful for complex diagrams.
-      Mentioned as having potential for features like collapsing/expanding subgraphs.
-*** Dash
-    :PROPERTIES:
-    :ID:       bd56bc25-4e8a-447c-bf9f-dcb6323ebc39
-    :END:
-    - *Basis:* Built on Plotly.js.
-    - *Features:* A very versatile library for creating a wide range of interactive plots, including
-      network graphs, often using NetworkX data structures as input.
-      It offers extensive customization and works seamlessly in Jupyter notebooks and Dash web applications.
-      You can create interactive scatter plots for nodes and line plots for edges.
-    - *Note:*
-      - Search results highlight Plotly frequently for general interactive visualizations in Jupyter.
-      - Plotly has dedicated support for cytoscape through [[https://dash.plotly.com/cytoscape/][Dash Cytoscape]].
-        The documentation describes how to
-        use callbacks triggered by clicks to add and remove nodes.
-        This seems to be dong using Dash's own facilities for managing
-        inputs, outputs and state
-        rather than using the Cytoscape graph.
-        Presumably the graph is redrawn each time,
-        unless they have a workaround for Cytoscape's bugs.
-*** Bokeh
-    :PROPERTIES:
-    :ID:       f8d763d3-8d7e-490d-9624-eb90f07f64a6
-    :END:
-    - *Basis:* Bokeh's own JS library.
-    - *Features:* Excellent for creating interactive, web-based visualizations, including network graphs.
-      Known for high-performance interactivity, handling large datasets,
-      and streaming data capabilities. Integrates well with Jupyter.
-*** Altair
-    :PROPERTIES:
-    :ID:       65803d29-8325-4b9e-96cd-fb56cab46191
-    :END:
-    - *Basis:* Built on Vega-Lite, a declarative grammar.
-    - *Features:* Focuses on a declarative approach, simplifying the creation
-      of complex statistical visualizations.
-      Does not directly support network graphs, although
-      the [[https://altair-viz.github.io/getting_started/resources.html#nx-altair][nx_altair]] package provides some basic support.
-* Using Shiny
+*** Not investigated in-depth
+***** Cytoscape.js
+        :PROPERTIES:
+        :ID:       5a82ce91-7533-44d1-a65f-20626b385f5a
+        :CUSTOM_ID: cytoscape-js
+      :END:
+
+      Cytoscape.js ([[https://js.cytoscape.org/]]) is an open-source JavaScript library
+      for visualizing and analyzing network data.
+      It serves as a building block for
+      creating interactive network visualizations in web browsers[fn:cytoscapejs-and-cytoscape].
+      It's optimized, has no external dependencies, and works with most modern browsers.
+      Features include pan and zoom, node and edge styling, layout algorithms,
+      and support for graph theory algorithms.
+
+      Core to Cytoscape.js is the graph instance, initialized with a DOM container,
+      an array of elements (nodes and edges), styling rules, and a layout algorithm.
+      It uses a JSON format to represent graph data,
+      defining nodes and edges as JavaScript objects
+      with unique identifiers and source-target relationships.
+      CSS-based styling allows customization of nodes and edges based on data attributes.
+      The library provides an API for programmatic interaction, including
+      modifying elements, applying layouts, and managing user interactions.
+      Numerous examples and demos available online help showcase its capabilities.
+
+      It wasn't investigated outside the context of ipycytoscape.
+      It's possible it may be useful with intergration approaches similar ways to D3.
+
+***** d3blocks
+      - https://github.com/d3blocks/d3blocks
+      - **Basis:* Python library for generating the Javascript and HTML needed for D3 visualizations.
+      - **Features:* Create stand-alone and interactive d3 charts.
+        Supports a wide range of common chart types.
+      - **Notes:* Generates HTML and JavaScript using jinja. The HTML can then be e.g. shown
+        in a Jupyter notebook.  A well-developed package.
+***** ipydagred3
+      :PROPERTIES:
+      :ID:       53871af9-39da-435f-a93c-9990a53e6148
+      :END:
+      - *Basis:* Uses dagre-d3 library.
+      - *Features:* Specifically designed for drawing Directed Acyclic Graphs (DAGs) within JupyterLab.
+***** ipyelk
+      :PROPERTIES:
+      :ID:       57228ce0-eb9d-4c0c-b18e-edf18aa4502a
+      :END:
+      - *Basis:* Uses the Eclipse Layout Kernel (ELK) via elkjs.
+      - *Features:* Provides sophisticated layout algorithms, potentially useful for complex diagrams.
+        Mentioned as having potential for features like collapsing/expanding subgraphs.
+***** Dash
+        :PROPERTIES:
+        :ID:       bd56bc25-4e8a-447c-bf9f-dcb6323ebc39
+      :END:
+      - *Basis:*
+        Built on Plotly.js.
+      - *Features:*
+        A very versatile library for creating a wide range of interactive plots,
+        including network graphs, often using NetworkX data structures as input.
+        It offers extensive customization and
+        works seamlessly in Jupyter notebooks and Dash web applications.
+        You can create interactive scatter plots for nodes and line plots for edges.
+      - *Note:*
+        - Search results highlight Plotly frequently for general interactive visualizations in Jupyter.
+        - Plotly has dedicated support for cytoscape through [[https://dash.plotly.com/cytoscape/][Dash Cytoscape]].
+          The documentation describes how to
+          use callbacks triggered by clicks to add and remove nodes.
+          This seems to be dong using Dash's own facilities
+          for managing inputs, outputs and state
+          rather than using the Cytoscape graph.
+          Presumably the graph is redrawn each time,
+          unless they have a workaround for Cytoscape's bugs.
+        - I didn't investigate Dash because, while a serious "Shiny for Python" effort,
+          it has never been as well-designed and pleasant to use as Shiny for R,
+          and now there is the true Shiny for Python package from Posit.
+***** Bokeh
+        :PROPERTIES:
+        :ID:       f8d763d3-8d7e-490d-9624-eb90f07f64a6
+      :END:
+      - *Basis:* Bokeh's own JS library.
+      - *Features:*
+        Good for creating interactive, web-based visualizations, including network graphs.
+        Known for high-performance interactivity, handling large datasets,
+        and streaming data capabilities.
+        Integrates well with Jupyter.
+      - *Notes:*
+        While I have used Bokeh before to build working applications,
+        the programming interface is distinctly lower-level and clunky compared to
+        the reactive model offered by Shiny.
+        Overall Bokeh has quite a high barrier-to-entry compared to Shiny.
+        Unlike many visualization libraries, it's really necessary to grok Bokeh
+        before building effectively with it, and
+      - *Summary:*
+        Not investigated here as
+        I know it from previous use and
+        have seen experienced people go down blind alleys with it,
+        ending up doing things manually that can be done in the framework.
+***** Altair
+        :PROPERTIES:
+        :ID:       65803d29-8325-4b9e-96cd-fb56cab46191
+      :END:
+      - *Basis:*
+        Built on Vega-Lite, a declarative grammar.
+      - *Features:*
+        Focuses on a declarative approach, simplifying the creation
+        of complex statistical visualizations.
+        Does not directly support network graphs, although
+        the [[https://altair-viz.github.io/getting_started/resources.html#nx-altair][nx_altair]] package
+        provides some basic support.
+      - *Summary:*
+        Not investigated as it seems like it would have quite a low ceiling for
+        customization and interaction through server-side logic compared to
+        options using D3 or similar.        
+        
+* Test applications
   :PROPERTIES:
   :CUSTOM_ID: methods-for-creating-custom-components-in-shiny-for-python
   :ID:       eb0f9b0a-bf2b-4949-996b-eb2d85b06d5e
   :END:
-
-*** Ways to extend Shiny
-    Shiny provides several approaches for extending its built-in component library
-    with arbitrary JavaScript functionality,
-    allowing one to create richer and more interactive user interfaces.
-***** Including JavaScript directly
-      :PROPERTIES:
-      :ID:       2fd24b9e-1547-481a-a78c-b9439099b7b9
-      :END:
-      Shiny allows including JavaScript files
-      directly within an application's static assets directory (typically named www)
-      or via functions like =ui.include_js=[fn:shiny-python-js].
-      This enables the execution of JavaScript code on the client-side,
-      allowing for interaction with the DOM and integration with JavaScript libraries.
-
-      While this method is straightforward for adding simple JavaScript functionality,
-      wrapping a complex library like Cytoscape.js
-      often benefits from the more structured approaches offered by creating
-      either one-off custom components or custom component packages.
-
-***** One-off custom components
-      :PROPERTIES:
-      :ID:       bb39af16-fa88-43c2-8fe9-7e66c133ff86
-      :END:
-      One-off custom JavaScript components[fn:shiny-custom-js] are developed for specific applications.
-
-      This allows the integration of specific JavaScript libraries
-      without the need to create a full component package.
-
-      To create a one-off custom component, you need to write the following:
-      1. A JavaScript output binding that tells Shiny how to render the component in the browser
-      2. A Python output function to describe the HTML output element in the user interface.
-         This refers to the JavaScript output binding.
-      3. A Python render decorator to transfer data from the server to the client.
-         This may refer to the Python output function to provide automated output.
-
-      Although not covered here, communication can also occur in the reverse direction,
-      from JavaScript to Python,
-      by using Shiny's input bindings or custom messages
-      - Input bindings allow JavaScript components to send data back to the Shiny server
-        when user interactions occur.
-      - Custom messages provide a more flexible mechanism for asynchronous communication,
-        enabling more complex interactions between JavaScript and Python.
-      For guidance on creating input bindings,
-      see the "Custom components package" page in the Shiny documentation[fn:shiny-custom-components],
-      which describes how to create a custom component for Shiny inputs.
-
-******* JavaScript output binding
-        :PROPERTIES:
-        :ID:       7026bf8a-694b-49db-8560-8b5630e4647c
-        :END:
-        The output binding typically includes two key methods:
-        =find()= and =renderValue()=.
-
-        Some sample code:
-        #+begin_src javascript :tangle no
-          class TabulatorOutputBinding extends Shiny.OutputBinding {
-              // Find element to render in
-              find(scope) { ... }
-
-              // Render output element in the found element
-              renderValue(el, payload) { ... }
-          }
-
-          // Register the binding
-          Shiny.outputBindings.register(
-              new TabulatorOutputBinding(),
-              "shiny-tabulator-output"
-          );
-        #+end_src
-
-        The =find()= method is responsible for locating the HTML element in the Shiny application
-        where the component will be rendered.
-        This is often done by targeting
-        a specific CSS class or ID assigned to a div element in the UI.
-
-        The =renderValue()= method contains the core logic
-        for initializing and updating the JavaScript display.
-        This method receives data from the Python backend, typically in a JSON format,
-        and uses it to configure the component's elements, style, and layout.
-
-******* Python server-side code
-        :PROPERTIES:
-        :ID:       0abcf43a-58d6-41b5-ba43-9c2cb8c7171c
-        :END:
-
-********* Output function
-          :PROPERTIES:
-          :ID:       3d6783c6-0948-49ec-9406-096a94235e2e
-          :END:
-          On the Python side, an output function needs to be defined
-          to place the designated HTML element in the Shiny application's user interface.
-
-          #+CAPTION: Sample Python Code defining an output_ function
-          #+begin_src python :tangle no
-            from shiny import App, Inputs, ui
-            from shiny.module import resolve_id
-
-            from htmltools import HTMLDependency
-
-            tabulator_dep = HTMLDependency(
-                "tabulator",
-                "5.5.2",
-                source={"subdir": "tabulator"},
-                script={"src": "tableComponent.js", "type": "module"},
-                stylesheet={"href": "tabulator.min.css"},
-                all_files=True,
-            )
-
-            def output_tabulator(id, height="200px"):
-                return ui.div(
-                    tabulator_dep,
-                    # Use resolve_id so that our component will work in a module
-                    id=resolve_id(id),
-                    class_="shiny-tabulator-output",
-                    style=f"height: {height}",
-                )
-          #+end_src
-
-          The =htmltools.HTMLDependency= class is used to ensure
-          that the necessary JavaScript and CSS assets and the custom output binding
-          are included in the Shiny application.
-
-********* Render decorator
-          :PROPERTIES:
-          :ID:       c6d100a7-dcfb-4fc0-bcd5-a785910e7d0d
-          :END:
-          Additionally, a render decorator is needed to
-          transform values returned from the functions it decorates into
-          data to be passed to the JavaScript =renderValue()= method,
-          generally using a JSON-serializable structure.
-
-          #+CAPTION: Sample Python code defining a render decorator
-          #+begin_src python :tangle no
-            from shiny.render.renderer import Jsonifiable, Renderer
-
-            class render_tabulator(Renderer[pd.DataFrame]):
-                """
-                Render a pandas dataframe as a tabulator table.
-                """
-
-                def auto_output_ui(self):
-                    """
-                    Express UI for the tabulator renderer
-                    """
-                    return ui.output_tabulator(self.output_name)
-
-                async def transform(self, value: pd.DataFrame) -> Jsonifiable:
-                    """
-                    Transform a pandas dataframe into a JSONifiable object that can be
-                    passed to the tabulator HTML dependency.
-                    """
-                    if not isinstance(value, pd.DataFrame):
-                        # Throw an error if the value is not a dataframe
-                        raise TypeError(f"Expected a pandas.DataFrame, got {type(value)}. ")
-
-                    # Get data from dataframe as a list of lists where each inner list is a
-                    # row, column names as array of strings and types of each column as an
-                    # array of strings
-                    return {
-                        "data": value.values.tolist(),
-                        "columns": value.columns.tolist(),
-                        "type_hints": value.dtypes.astype(str).tolist(),
-                    }
-          #+end_src
-
-          An implementation of =Renderer= produces a class to be used as a decorator and
-          requires at least 3 things:
-
-          1. auto_output_ui (jm: possibly only needed for Shiny Express)
-          2. either a transform or render function, and
-          3. a value type parameter for the Renderer class.
-
-***** Custom component packages
-      :PROPERTIES:
-      :ID:       83d13cb5-f60b-4baf-b1f3-bc0e4d2c3bef
-      :END:
-      A custom component package
-      allows reusing integrations across multiple applications.
-
-      The development process involves
-      building the front-end component using JavaScript or TypeScript,
-      packaging it with necessary metadata and build scripts,
-      and then using =shiny-bindings-react= to connect to Shiny's reactivity system.
-
-      For details see the "Custom components package" page in the Shiny documentation[fn:shiny-custom-components].
-
 *** Using D3
     This is a Shiny Core/D3 App that displays a graph using D3 showing information about
     the characters in Shakespeare's plays and the relations between them based on
     the scenes they speak in.
 
-    It was originally based on the Tabulator sample for [[id:bb39af16-fa88-43c2-8fe9-7e66c133ff86][Shiny one-off custom components]].
+    It was originally based on the Tabulator sample for [[#one-off-custom-components][Shiny one-off custom components]].
 
     Its features include:
-    - *Interactive Graph Visualization*: It uses D3.js to present a directed graph showing
-      the characters from Shakespeare's plays and the relationships between them based
-      on scene co-occurrences.
-    - *Play Selection*: Users can select different plays from a dropdown menu to update
-      the graph and visualize the character interactions specific to the chosen play.
-    - *Display of Character Data*: Hovering over a node highlights it and displays
+    - *Interactive Graph Visualization*:
+      It uses D3.js to present a graph
+      showing the characters from Shakespeare's plays
+      and the relationships between them based on scene co-occurrences.
+    - *Play Selection*:
+      Users can select different plays from a dropdown menu
+      to update the graph
+      and visualize the character interactions specific to the chosen play.
+    - *Display of Character Data*:
+      Hovering over a node highlights it and displays
       information about the corresponding character.  The data display is performed
       using Shiny.
-    - *Focus on Selected Characters*: Clicking on a node/character filters the displayed
-      characters to a set relevant to the clicked one.  This filtering is done with D3
-      and does not involve Shiny.
-    - *Link Representation*: Links represent the interactions and are styled based on the
-      interactions between characters inferred from shared scenes.
-    - *Zoom and Pan*: The graph includes zoom and pan functionality.
+    - *Focus on Selected Characters*:
+      Clicking on a node/character filters the displayed characters
+      to a set relevant to the clicked one.
+      This filtering is done with D3 and does not involve Shiny.
+      Control-click can be used to manage a set of focus nodes.
+    - *Link Representation*:
+      Links represent the interactions
+      and are styled based on the interactions between characters inferred from shared scenes.
+    - *Zoom and Pan*:
+      The graph visualization supports zoom and pan functionality.
 
     It can be run with
     #+begin_src bash
-      shiny run --reload --log-level debug src/navigator/d3_core_navigator.py
+      shiny run --reload --log-level debug src/navigator/d3/app.py
     #+end_src
 
-    The mechanism for focusing on characters, uses Shiny to handle the state involved in
-    the selection of nodes and links to display.
+    The mechanism for focusing on characters uses Shiny
+    to handle the state involved in the selection of nodes and links to display.
 
-    This was done to keep the logic for handling this managed through Shiny's reactive
-    mechanism, rather than spread across both Shiny and D3.  Roughly, there's extra wiring
-    needed to make any given user-driven update pass through the back-end if it could be
-    handled front-end only, but there's also a cost to having closely-related state spread
-    across front and back ends, as the reactive updates require much more awkward
-    coordination than if they happen solely through Shiny or D3.
+    This was done to keep the logic for handling this
+    managed through Shiny's reactive mechanism,
+    rather than spread across both Shiny and D3.
+    Roughly, there's extra wiring needed
+    to make any given user-driven update pass through the back-end
+    if it could be handled front-end only,
+    but there's also a cost to having closely-related state spread across front and back ends,
+    as the reactive updates require much more awkward coordination
+    than if they happen solely through Shiny or D3.
 
-    Another plus of handling complex logic server side is that we can use the full range
-    of Python packages, testing, etc., whereas our JavaScript development setup is much
-    more basic.
+    Another plus of handling complex logic server side is that
+    we can use the full range of Python packages, testing, etc.,
+    whereas our JavaScript development setup is much more basic.
 
-    Note that the front-end still manages some orthogonal state anyhow, e.g. for pan and
-    zoom.
+    Note that the front-end still manages some orthogonal state, e.g. for pan and zoom.
 
     #+NAME: d3_core_navigator
     #+begin_src python :tangle src/navigator/d3/app.py :mkdirp yes
@@ -1044,368 +1097,365 @@
     :ID:       542b9a7f-42f3-4fc5-bd14-59253c4e9f1b
     :END:
 
-    Since Shiny provides the =shinywidgets= package for integrating Jupyter widgets, and
-    [[#ipycytoscape][ipycytoscape]] provides a Jupyter widget package for Cytoscape.js,
+    Since Shiny provides the =shinywidgets= package for integrating Jupyter widgets,
+    and [[#ipycytoscape][ipycytoscape]] provides a Jupyter widget package for Cytoscape.js,
     the obvious option is to use these together.
 
     This should allow using Cytoscape.js in Shiny
     without creating a custom JavaScript component, or integrating Cytoscape.js ad hoc.
-***** Code
+***** Ipyleaflet Shiny Express app
       :PROPERTIES:
-      :ID:       29e9c40a-26cb-4c6e-9ee2-3331fd1b9657
+      :ID:       89d6fa58-b65e-47f0-97a5-71691ba8e504
       :END:
-******* Ipyleaflet Shiny Express app
-        :PROPERTIES:
-        :ID:       89d6fa58-b65e-47f0-97a5-71691ba8e504
-        :END:
 
-        This demonstrates that we can use reactive.effect to update ipywidgets in Shiny.  It's
-        taken from https://shiny.posit.co/py/docs/jupyter-widgets.html#efficient-updates
+      This demonstrates that we can use reactive.effect to update ipywidgets in Shiny.
+      It's taken from https://shiny.posit.co/py/docs/jupyter-widgets.html#efficient-updates
 
-        It can be run with e.g.
+      It can be run with e.g.
 
-        : shiny run --reload --log-level debug src/navigator/leaflet_express.py
+      : shiny run --reload --log-level debug src/navigator/leaflet_express.py
 
-        This seems to work well, even though the Javascript component involved,
-        a full mapping user interface, is quite complex.
+      This seems to work well, even though
+      the Javascript component involved, a full mapping user interface, is quite complex.
 
-        #+begin_src python :tangle src/navigator/leaflet_express.py
-          import ipyleaflet as ipyl
-          import shiny
-          import shinywidgets as sw
-          import shiny.express
+      #+begin_src python :tangle src/navigator/leaflet_express.py
+        import ipyleaflet as ipyl
+        import shiny
+        import shinywidgets as sw
+        import shiny.express
 
-          from .utils import trace
+        from .utils import trace
 
-          city_centers = {
-              "London": (51.5074, 0.1278),
-              "Paris": (48.8566, 2.3522),
-              "New York": (40.7128, -74.0060),
-          }
+        city_centers = {
+            "London": (51.5074, 0.1278),
+            "Paris": (48.8566, 2.3522),
+            "New York": (40.7128, -74.0060),
+        }
 
-          shiny.express.ui.input_select("center", "Center", choices=list(city_centers.keys()))
+        shiny.express.ui.input_select("center", "Center", choices=list(city_centers.keys()))
+
+
+        @sw.render_widget
+        def map():
+            return ipyl.Map(zoom=4)
+
+
+        @shiny.reactive.effect
+        @trace
+        def _():
+            map.widget.center = city_centers[shiny.express.input.center()]
+      #+end_src
 
+***** Ipyleaflet Shiny Core app with incremental redraw
+      The approach here is based on
+      the Brownian motion example in the Shiny for Python repo
+      at https://github.com/posit-dev/py-shiny/tree/main/examples/brownian
 
-          @sw.render_widget
-          def map():
-              return ipyl.Map(zoom=4)
+      Each call of the server function leads to creating exactly one widget,
+      which is then registered explicitly.
+      Subsequent events trigger reactive updates, which mutate the widget.
 
+      : shiny run --reload --log-level debug src/navigator/leaflet_core.py
+      #+begin_src python :tangle src/navigator/leaflet_core.py
+        import ipyleaflet
+        import shiny
+        import shinywidgets
 
-          @shiny.reactive.effect
-          @trace
-          def _():
-              map.widget.center = city_centers[shiny.express.input.center()]
-        #+end_src
+        city_centers = {
+            "London": (51.5074, 0.1278),
+            "Paris": (48.8566, 2.3522),
+            "New York": (40.7128, -74.0060),
+        }
+        map_id = "three_cities"
 
-******* Cytoscape utils
-        :PROPERTIES:
-        :ID:       f0d347cd-d444-4b11-9b41-3c222a3636a7
-        :END:
+        app_ui = shiny.ui.page_fixed(
+            shiny.ui.h2("Ipyleaflet widget, Shiny Core, incremental redraw"),
+            shiny.ui.input_select("center", "Center", choices=list(city_centers)),
+            shinywidgets.output_widget(map_id)
+            )
 
-        Some utilities for making graphs using ipycytoscape.
+        def server(input, _output, _session):
+            widget = ipyleaflet.Map(zoom=4)
+            shinywidgets.register_widget(map_id, widget)
+
+            @shiny.reactive.effect
+            def _():
+                widget.center = city_centers[input.center()]  # pyright: ignore[reportOptionalMemberAccess]
+
+        app = shiny.App(app_ui, server)
+      #+end_src
+***** Cytoscape Shiny Express app with full redraw
+      :PROPERTIES:
+      :ID:       ff8caa81-bf32-4d57-83ec-0c56f3787016
+      :END:
+
+      This is a Shiny Express App that displays an ipycytoscape Graph,
+      with number of nodes driven by a reactive input.
+
+      This partially works:
+      - It displays the initial cytoscape graph for up to c. 20 nodes
+      - It responds to events like mouseover on nodes
+
+      However it has major bugs:
+      - With more nodes, e.g. 30 it fails, with an error
+        : Cannot read properties of undefined (reading 'on_some_change')
+      - Even with only a few nodes, updating the input frequently fails with an error
+        : Cannot read properties of undefined (reading 'on_some_change')
+      - These errors appear to be more common with =--log-level=debug=.
+
+      It can be run with
+      : shiny run --reload --log-level debug src/navigator/cyto_express_full.py
+
+      #+begin_src python :tangle src/navigator/cyto_express_full.py
+        import os
+
+        import shiny.express
+        import shinywidgets as sw
 
-        #+begin_src python :tangle src/navigator/cyto_utils.py
-          from ipycytoscape import Graph, Node, Edge
-          import networkx as nx
+        import networkx as nx
+        from ipycytoscape import CytoscapeWidget
 
+        from navigator.utils import log_clicks, log_mouseovers, trace
 
-          def _node_id(obj, prefix: str) -> str:
-              """Return a string node id for the given object"""
-              return prefix + str(obj)
+        INITIAL_NUM_NODES = int(os.environ.get("NAVIGATOR_INITIAL_NUM_NODES", 5))
 
+        # For Shiny Express the UI elements are inferred from inline ui and render expressions.
+        # These cannot be made into assignment statements
+        shiny.express.ui.h2("Cytoscape Graph (Express API)")
+        shiny.express.ui.input_numeric("num_nodes", "Number of nodes:", INITIAL_NUM_NODES, min=1)
 
-          def cyto_node(obj, prefix: str = "") -> Node:
-              """Return a Node for the given object and prefix.  prefix is used in setting the node
-              ids.
-              """
-              return Node(data={"id": _node_id(obj, prefix)})
+        @sw.render_widget
+        @trace
+        def graph():
+            num_nodes = shiny.express.input.num_nodes()
+            widget = CytoscapeWidget()
+            widget.on("node", "mouseover", log_mouseovers)
+            widget.on("node", "click", log_clicks)
+            widget.graph.add_graph_from_networkx(nx.complete_graph(num_nodes))
+            return widget
+      #+end_src
+
+***** Cytoscape Shiny Core app with full redraw
+      :PROPERTIES:
+      :CUSTOM_ID: app-core-ipycyto-nx-full
+      :END:
+
+      This is a Shiny Core App that displays an ipycytoscape Graph,
+      with number of nodes driven by a reactive input.
+
+      It has similar issues to the corresponding Shiny Express app.
+
+      It can be run with
+      : shiny run --reload --log-level debug src/navigator/cyto_core_full.py
+
+      #+begin_src python :tangle src/navigator/cyto_core_full.py
+        import os
+
+        from shiny import App, ui, Session
+        import shinywidgets as sw
+
+        import networkx as nx
+        from ipycytoscape import CytoscapeWidget
+
+        from navigator.utils import log_clicks, log_mouseovers, trace
+
+        INITIAL_NUM_NODES = int(os.environ.get("NAVIGATOR_INITIAL_NUM_NODES", 5))
+
+        # For Shiny Core the UI elements are defined explicitly in a page container
+        app_ui = ui.page_fluid(
+            ui.h2("Cytoscape Graph (Core API)"),
+            ui.input_numeric("num_nodes", "Number of nodes:", value=INITIAL_NUM_NODES, min=1),
+            sw.output_widget("graph_output"),
+        )
+
+        def server(input, output, session: Session):
+            # Note: @sw.render_widget handles the @render.display/@output automatically
+            # when the function name matches the output_widget ID.
+            @sw.render_widget
+            @trace
+            def graph_output():
+                num_nodes = input.num_nodes()
+                widget = CytoscapeWidget()
+                widget.on("node", "mouseover", log_mouseovers)
+                widget.on("node", "click", log_clicks)
+                widget.graph.add_graph_from_networkx(nx.complete_graph(num_nodes))
+                return widget
+
+        app = App(app_ui, server)
+      #+end_src
+
+***** Cytoscape Shiny Core app with full redraw, no networkx
+      :PROPERTIES:
+      :CUSTOM_ID: app-core-ipycyto-cyto-full
+      :ID:       e98158de-1fcf-48d0-af19-2ffe6764bcff
+      :END:
+
+      This is a Shiny Core App that displays an ipycytoscape Graph,
+      with number of nodes driven by a reactive input.
+      The Cytoscape graph is constructed explicitly
+      rather than using ipycytoscape's =add_graph_from= methods.
+
+      It has similar issues to the [[#app-core-ipycyto-nx-full][corresponding Shiny Core app using networkx]],
+      but less severe in that it works properly with more nodes in the graph;
+      changing the number of nodes in the graph generally works when <= 7.
+
+      It can be run with
+      : shiny run --reload --log-level debug src/navigator/cyto_core_full2.py
+
+      #+begin_src python :tangle src/navigator/cyto_core_full2.py
+        import os
+
+        from shiny import App, ui, Session
+        import shinywidgets as sw
+
+        from ipycytoscape import CytoscapeWidget
+
+        from navigator.cyto_utils import make_complete_cyto
+        from navigator.utils import log_clicks, log_mouseovers, trace
+
+        INITIAL_NUM_NODES = int(os.environ.get("NAVIGATOR_INITIAL_NUM_NODES", 5))
+
+        # For Shiny Core the UI elements are defined explicitly in a page container
+        app_ui = ui.page_fluid(
+            ui.h2("Cytoscape Graph (Core API, Cytoscape graph)"),
+            ui.input_numeric("num_nodes", "Number of nodes:", value=INITIAL_NUM_NODES, min=1),
+            sw.output_widget("graph_output"),
+        )
+
+        def server(input, output, session: Session):
+            # Note: @sw.render_widget handles the @render.display/@output automatically
+            # when the function name matches the output_widget ID.
+            @sw.render_widget
+            @trace
+            def graph_output():
+                num_nodes = input.num_nodes()
+                widget = CytoscapeWidget(graph = make_complete_cyto(num_nodes=num_nodes))
+                widget.on("node", "mouseover", log_mouseovers)
+                widget.on("node", "click", log_clicks)
+                return widget
+
+        app = App(app_ui, server)
+      #+end_src
+
+***** Cytoscape Shiny Core app with incremental redraw
+      :PROPERTIES:
+      :ID:       d2a54f51-3bfd-46d4-9b43-4de9ae178793
+      :END:
+
+      #+begin_src python :tangle src/navigator/cyto_core_incremental.py
+        import os
+
+        import networkx as nx
+        import shiny
+        import shinywidgets
+        from ipycytoscape import CytoscapeWidget
+
+        from navigator.cyto_utils import make_complete_cyto
+
+        INITIAL_NUM_NODES = int(os.environ.get("NAVIGATOR_INITIAL_NUM_NODES", 1))
+
+        graph_id = "graph_output"
+
+        app_ui = shiny.ui.page_fluid(
+            shiny.ui.h2("Cytoscape Graph (Core API, Cytoscape graph)"),
+            shiny.ui.input_numeric("num_nodes", "Number of nodes:", value=INITIAL_NUM_NODES, min=0),
+            shinywidgets.output_widget(graph_id),
+        )
+
+        app_ui = shiny.ui.page_fluid(
+            shiny.ui.h2("Cytoscape Graph (Core API, Cytoscape graph)"),
+            shiny.ui.input_numeric("num_nodes", "Number of nodes:", value=INITIAL_NUM_NODES, min=0),
+            shinywidgets.output_widget(graph_id),
+        )
+
+        def server(input, _output, _session: shiny.Session):
+            widget = CytoscapeWidget(graph = make_complete_cyto(num_nodes=INITIAL_NUM_NODES))
+            shinywidgets.register_widget(graph_id, widget)
+
+            @shiny.reactive.effect
+            def _():
+                num_nodes = input.num_nodes()
+                print(f"updating for reactive effect {num_nodes=}")
+                g = widget.graph
+                g.clear()
+                g.add_graph_from_networkx(nx.complete_graph(num_nodes))
+                print("finished updating")
+        def server(input, _output, _session: shiny.Session):
+            widget = CytoscapeWidget(graph = make_complete_cyto(num_nodes=INITIAL_NUM_NODES))
+            shinywidgets.register_widget(graph_id, widget)
+
+            @shiny.reactive.effect
+            def _():
+                num_nodes = input.num_nodes()
+                print(f"updating for reactive effect {num_nodes=}")
+                g = widget.graph
+                g.clear()
+                g.add_graph_from_networkx(nx.complete_graph(num_nodes))
+                print("finished updating")
+
+        app = shiny.App(app_ui, server)
+
+        def main():
+            pass
+
+        if __name__ == '__main__':
+            main()
+      #+end_src
+***** Cytoscape utils
+      :PROPERTIES:
+      :ID:       f0d347cd-d444-4b11-9b41-3c222a3636a7
+      :END:
+
+      Some utilities for making graphs using ipycytoscape.
+
+      #+begin_src python :tangle src/navigator/cyto_utils.py
+        from ipycytoscape import Graph, Node, Edge
+        import networkx as nx
+
+
+        def _node_id(obj, prefix: str) -> str:
+            """Return a string node id for the given object"""
+            return prefix + str(obj)
+
+
+        def cyto_node(obj, prefix: str = "") -> Node:
+            """Return a Node for the given object and prefix.  prefix is used in setting the node
+            ids.
+            """
+            return Node(data={"id": _node_id(obj, prefix)})
+
+
+        def cyto_edge(source, target, prefix: str = "") -> Edge:
+            """Return an Edge for the given source and target.  prefix is used in setting node ides."""
+            return Edge(
+                data={"source": _node_id(source, prefix), "target": _node_id(target, prefix)}
+            )
+
+
+        def make_complete_cyto(num_nodes: int) -> Graph:
+            """Return a complete graph with the given number of nodes."""
+            nx_complete_graph = nx.complete_graph(num_nodes)
+            cyto_complete_graph = Graph()
+            prefix = "jmcc"
+
+            cyto_complete_graph.add_nodes(
+                [cyto_node(nx_node, prefix) for nx_node in nx_complete_graph.nodes()]
+            )
+
+            cyto_complete_graph.add_edges(
+                [cyto_edge(u, v, prefix) for u, v in nx_complete_graph.edges()]
+            )
+
+            return cyto_complete_graph
+
+
+        def cyto_node_ids(g: Graph) -> list[str]:
+            """Return a list of node ids for the graph."""
+            return [n.data["id"] for n in g.nodes]
+      #+end_src
 
-
-          def cyto_edge(source, target, prefix: str = "") -> Edge:
-              """Return an Edge for the given source and target.  prefix is used in setting node ides."""
-              return Edge(
-                  data={"source": _node_id(source, prefix), "target": _node_id(target, prefix)}
-              )
-
-
-          def make_complete_cyto(num_nodes: int) -> Graph:
-              """Return a complete graph with the given number of nodes."""
-              nx_complete_graph = nx.complete_graph(num_nodes)
-              cyto_complete_graph = Graph()
-              prefix = "jmcc"
-
-              cyto_complete_graph.add_nodes(
-                  [cyto_node(nx_node, prefix) for nx_node in nx_complete_graph.nodes()]
-              )
-
-              cyto_complete_graph.add_edges(
-                  [cyto_edge(u, v, prefix) for u, v in nx_complete_graph.edges()]
-              )
-
-              return cyto_complete_graph
-
-
-          def cyto_node_ids(g: Graph) -> list[str]:
-              """Return a list of node ids for the graph."""
-              return [n.data["id"] for n in g.nodes]
-        #+end_src
-
-******* Cytoscape Shiny Express app with full redraw
-        :PROPERTIES:
-        :ID:       ff8caa81-bf32-4d57-83ec-0c56f3787016
-        :END:
-
-        This is a Shiny Express App that displays an ipycytoscape Graph, with number of nodes
-        driven by a reactive input.
-
-        This partially works:
-        - It displays the initial cytoscape graph for up to c. 20 nodes
-        - It responds to events like mouseover on nodes
-
-        However it has major bugs:
-        - With more nodes, e.g. 30 it fails, with an error
-          : Cannot read properties of undefined (reading 'on_some_change')
-        - Even with only a few nodes, updating the input frequently fails with an error
-          : Cannot read properties of undefined (reading 'on_some_change')
-        - These errors appear to be more common with =--log-level=debug=.
-
-        It can be run with
-        : shiny run --reload --log-level debug src/navigator/cyto_express_full.py
-
-        #+begin_src python :tangle src/navigator/cyto_express_full.py
-          import os
-
-          import shiny.express
-          import shinywidgets as sw
-
-          import networkx as nx
-          from ipycytoscape import CytoscapeWidget
-
-          from navigator.utils import log_clicks, log_mouseovers, trace
-
-          INITIAL_NUM_NODES = int(os.environ.get("NAVIGATOR_INITIAL_NUM_NODES", 5))
-
-          # For Shiny Express the UI elements are inferred from inline ui and render expressions.
-          # These cannot be made into assignment statements
-          shiny.express.ui.h2("Cytoscape Graph (Express API)")
-          shiny.express.ui.input_numeric("num_nodes", "Number of nodes:", INITIAL_NUM_NODES, min=1)
-
-          @sw.render_widget
-          @trace
-          def graph():
-              num_nodes = shiny.express.input.num_nodes()
-              widget = CytoscapeWidget()
-              widget.on("node", "mouseover", log_mouseovers)
-              widget.on("node", "click", log_clicks)
-              widget.graph.add_graph_from_networkx(nx.complete_graph(num_nodes))
-              return widget
-        #+end_src
-
-******* Cytoscape Shiny Core app with full redraw
-        :PROPERTIES:
-        :CUSTOM_ID: app-core-ipycyto-nx-full
-        :END:
-
-        This is a Shiny Core App that displays an ipycytoscape Graph, with number of nodes
-        driven by a reactive input.
-
-        It has similar issues to the corresponding Shiny Express app.
-
-        It can be run with
-        : shiny run --reload --log-level debug src/navigator/cyto_core_full.py
-
-        #+begin_src python :tangle src/navigator/cyto_core_full.py
-          import os
-
-          from shiny import App, ui, Session
-          import shinywidgets as sw
-
-          import networkx as nx
-          from ipycytoscape import CytoscapeWidget
-
-          from navigator.utils import log_clicks, log_mouseovers, trace
-
-          INITIAL_NUM_NODES = int(os.environ.get("NAVIGATOR_INITIAL_NUM_NODES", 5))
-
-          # For Shiny Core the UI elements are defined explicitly in a page container
-          app_ui = ui.page_fluid(
-              ui.h2("Cytoscape Graph (Core API)"),
-              ui.input_numeric("num_nodes", "Number of nodes:", value=INITIAL_NUM_NODES, min=1),
-              sw.output_widget("graph_output"),
-          )
-
-          def server(input, output, session: Session):
-              # Note: @sw.render_widget handles the @render.display/@output automatically
-              # when the function name matches the output_widget ID.
-              @sw.render_widget
-              @trace
-              def graph_output():
-                  num_nodes = input.num_nodes()
-                  widget = CytoscapeWidget()
-                  widget.on("node", "mouseover", log_mouseovers)
-                  widget.on("node", "click", log_clicks)
-                  widget.graph.add_graph_from_networkx(nx.complete_graph(num_nodes))
-                  return widget
-
-          app = App(app_ui, server)
-        #+end_src
-
-******* Cytoscape Shiny Core app with full redraw, no networkx
-        :PROPERTIES:
-        :CUSTOM_ID: app-core-ipycyto-cyto-full
-        :ID:       e98158de-1fcf-48d0-af19-2ffe6764bcff
-        :END:
-
-        This is a Shiny Core App that displays an ipycytoscape Graph, with number of nodes
-        driven by a reactive input.  The Cytoscape graph is constructed explicitly rather than
-        using ipycytoscape's =add_graph_from= methods.
-
-        It has similar issues to the [[#app-core-ipycyto-nx-full][corresponding Shiny Core app using networkx]], but less
-        severe in that it works properly with more nodes in the graph; changing the number of
-        nodes in the graph generally works when <= 7.
-
-        It can be run with
-        : shiny run --reload --log-level debug src/navigator/cyto_core_full2.py
-
-        #+begin_src python :tangle src/navigator/cyto_core_full2.py
-          import os
-
-          from shiny import App, ui, Session
-          import shinywidgets as sw
-
-          from ipycytoscape import CytoscapeWidget
-
-          from navigator.cyto_utils import make_complete_cyto
-          from navigator.utils import log_clicks, log_mouseovers, trace
-
-          INITIAL_NUM_NODES = int(os.environ.get("NAVIGATOR_INITIAL_NUM_NODES", 5))
-
-          # For Shiny Core the UI elements are defined explicitly in a page container
-          app_ui = ui.page_fluid(
-              ui.h2("Cytoscape Graph (Core API, Cytoscape graph)"),
-              ui.input_numeric("num_nodes", "Number of nodes:", value=INITIAL_NUM_NODES, min=1),
-              sw.output_widget("graph_output"),
-          )
-
-          def server(input, output, session: Session):
-              # Note: @sw.render_widget handles the @render.display/@output automatically
-              # when the function name matches the output_widget ID.
-              @sw.render_widget
-              @trace
-              def graph_output():
-                  num_nodes = input.num_nodes()
-                  widget = CytoscapeWidget(graph = make_complete_cyto(num_nodes=num_nodes))
-                  widget.on("node", "mouseover", log_mouseovers)
-                  widget.on("node", "click", log_clicks)
-                  return widget
-
-          app = App(app_ui, server)
-        #+end_src
-
-******* Ipyleaflet Shiny Core app with incremental redraw
-        The approach here is based on
-        the Brownian motion example in the Shiny for Python repo
-        at https://github.com/posit-dev/py-shiny/tree/main/examples/brownian
-
-        Each call of the server function leads to creating exactly one widget,
-        which is then registered explicitly.
-        Subsequent events trigger reactive updates, which mutate the widget.
-
-        : shiny run --reload --log-level debug src/navigator/leaflet_core.py
-        #+begin_src python :tangle src/navigator/leaflet_core.py
-          import ipyleaflet
-          import shiny
-          import shinywidgets
-
-          city_centers = {
-              "London": (51.5074, 0.1278),
-              "Paris": (48.8566, 2.3522),
-              "New York": (40.7128, -74.0060),
-          }
-          map_id = "three_cities"
-
-          app_ui = shiny.ui.page_fixed(
-              shiny.ui.h2("Ipyleaflet widget, Shiny Core, incremental redraw"),
-              shiny.ui.input_select("center", "Center", choices=list(city_centers)),
-              shinywidgets.output_widget(map_id)
-              )
-
-          def server(input, _output, _session):
-              widget = ipyleaflet.Map(zoom=4)
-              shinywidgets.register_widget(map_id, widget)
-
-              @shiny.reactive.effect
-              def _():
-                  widget.center = city_centers[input.center()]  # pyright: ignore[reportOptionalMemberAccess]
-
-          app = shiny.App(app_ui, server)
-        #+end_src
-******* Cytoscape Shiny Core app with incremental redraw
-        :PROPERTIES:
-        :ID:       d2a54f51-3bfd-46d4-9b43-4de9ae178793
-        :END:
-
-        #+begin_src python :tangle src/navigator/cyto_core_incremental.py
-          import os
-
-          import networkx as nx
-          import shiny
-          import shinywidgets
-          from ipycytoscape import CytoscapeWidget
-
-          from navigator.cyto_utils import make_complete_cyto
-
-          INITIAL_NUM_NODES = int(os.environ.get("NAVIGATOR_INITIAL_NUM_NODES", 1))
-
-          graph_id = "graph_output"
-
-          app_ui = shiny.ui.page_fluid(
-              shiny.ui.h2("Cytoscape Graph (Core API, Cytoscape graph)"),
-              shiny.ui.input_numeric("num_nodes", "Number of nodes:", value=INITIAL_NUM_NODES, min=0),
-              shinywidgets.output_widget(graph_id),
-          )
-
-          app_ui = shiny.ui.page_fluid(
-              shiny.ui.h2("Cytoscape Graph (Core API, Cytoscape graph)"),
-              shiny.ui.input_numeric("num_nodes", "Number of nodes:", value=INITIAL_NUM_NODES, min=0),
-              shinywidgets.output_widget(graph_id),
-          )
-
-          def server(input, _output, _session: shiny.Session):
-              widget = CytoscapeWidget(graph = make_complete_cyto(num_nodes=INITIAL_NUM_NODES))
-              shinywidgets.register_widget(graph_id, widget)
-
-              @shiny.reactive.effect
-              def _():
-                  num_nodes = input.num_nodes()
-                  print(f"updating for reactive effect {num_nodes=}")
-                  g = widget.graph
-                  g.clear()
-                  g.add_graph_from_networkx(nx.complete_graph(num_nodes))
-                  print("finished updating")
-          def server(input, _output, _session: shiny.Session):
-              widget = CytoscapeWidget(graph = make_complete_cyto(num_nodes=INITIAL_NUM_NODES))
-              shinywidgets.register_widget(graph_id, widget)
-
-              @shiny.reactive.effect
-              def _():
-                  num_nodes = input.num_nodes()
-                  print(f"updating for reactive effect {num_nodes=}")
-                  g = widget.graph
-                  g.clear()
-                  g.add_graph_from_networkx(nx.complete_graph(num_nodes))
-                  print("finished updating")
-
-          app = shiny.App(app_ui, server)
-
-          def main():
-              pass
-
-          if __name__ == '__main__':
-              main()
-        #+end_src
 ***** Conclusion
-      ipyctoscape is not a viable candidate to work from.
+      ipycytoscape is not a viable candidate to work from.
 
       Although it has an attractive feature set,
       it is not nearly reliable enough to be productive to work with.
@@ -1420,168 +1470,167 @@
       has clearly never been tested on even basic uses cases like the one in issue 322.
 
 *** Using ipysigma
-***** Code
-******* ipysigma Shiny Core app with full redraw
+***** ipysigma Shiny Core app with full redraw
 
-        This is a Shiny Core App that displays an ipysigma Graph, with number of nodes
-        driven by a reactive input.
+      This is a Shiny Core App that displays an ipysigma Graph,
+      with number of nodes driven by a reactive input.
 
-        It can be run with
-        #+begin_src bash
-          shiny run --reload --log-level debug src/navigator/ipysigma_core_full.py
-        #+end_src
+      It can be run with
+      #+begin_src bash
+        shiny run --reload --log-level debug src/navigator/ipysigma_core_full.py
+      #+end_src
 
-        #+begin_src python :tangle src/navigator/ipysigma_core_full.py
-          import os
+      #+begin_src python :tangle src/navigator/ipysigma_core_full.py
+        import os
 
-          import shinywidgets as sw
-          import networkx as nx
-          from ipysigma import Sigma
-          from shiny import App, ui, Session
+        import shinywidgets as sw
+        import networkx as nx
+        from ipysigma import Sigma
+        from shiny import App, ui, Session
 
-          from navigator.utils import trace
+        from navigator.utils import trace
 
-          INITIAL_NUM_NODES = int(os.environ.get("NAVIGATOR_INITIAL_NUM_NODES", 5))
+        INITIAL_NUM_NODES = int(os.environ.get("NAVIGATOR_INITIAL_NUM_NODES", 5))
 
-          app_ui = ui.page_fluid(
-              ui.h2("Ipysigma Graph (Core API), full redraw"),
-              ui.input_numeric("num_nodes", "Number of nodes:", value=INITIAL_NUM_NODES, min=1),
-              sw.output_widget("graph_output"),
-          )
+        app_ui = ui.page_fluid(
+            ui.h2("Ipysigma Graph (Core API), full redraw"),
+            ui.input_numeric("num_nodes", "Number of nodes:", value=INITIAL_NUM_NODES, min=1),
+            sw.output_widget("graph_output"),
+        )
 
-          def server(input, _output, _session: Session):
-              # pyright: ignore[reportUnusedFunction=false]
-              @sw.render_widget
-              @trace
-              def graph_output():
-                  num_nodes = input.num_nodes()
-                  nx_graph = nx.complete_graph(num_nodes)
+        def server(input, _output, _session: Session):
+            # pyright: ignore[reportUnusedFunction=false]
+            @sw.render_widget
+            @trace
+            def graph_output():
+                num_nodes = input.num_nodes()
+                nx_graph = nx.complete_graph(num_nodes)
 
-                  widget = Sigma(nx_graph)
-                  return widget
+                widget = Sigma(nx_graph)
+                return widget
 
-          app = App(app_ui, server)
-        #+end_src
+        app = App(app_ui, server)
+      #+end_src
 
-******* ipysigma Shiny Core node navigator
+***** ipysigma Shiny Core node navigator
 
-        This is a Shiny Core App that displays an ipysigma Graph,
-        with the choice of nodes displayed driven by
-        the user's selection of nodes on the displayed graph.
-        Initially no nodes are selected,
-        and in this state the entire underlying graph is shown.
-        When the user selects a node, then
-        the displayed graph is restricted to the selected node and its neighbors.
-        When this happens the graph is re-rendered completely,
-        including recomputing its layout.
-        The layout is determined by ipysigma's default layout engine.
+      This is a Shiny Core App that displays an ipysigma Graph,
+      with the choice of nodes displayed driven by
+      the user's selection of nodes on the displayed graph.
+      Initially no nodes are selected,
+      and in this state the entire underlying graph is shown.
+      When the user selects a node, then
+      the displayed graph is restricted to the selected node and its neighbors.
+      When this happens the graph is re-rendered completely,
+      including recomputing its layout.
+      The layout is determined by ipysigma's default layout engine.
 
-        It can be run with
-        #+begin_src bash
-          shiny run --reload --log-level debug src/navigator/ipysigma_core_navigator.py
-        #+end_src
+      It can be run with
+      #+begin_src bash
+        shiny run --reload --log-level debug src/navigator/ipysigma_core_navigator.py
+      #+end_src
 
-        #+NAME: ipysigma_core_navigator
-        #+begin_src python :tangle src/navigator/ipysigma_core_navigator.py
-          import os
-          from typing import cast
+      #+NAME: ipysigma_core_navigator
+      #+begin_src python :tangle src/navigator/ipysigma_core_navigator.py
+        import os
+        from typing import cast
 
-          import ipywidgets
-          import pandas as pd
-          import shiny
-          import shinywidgets
-          import networkx as nx
-          from ipysigma import Sigma
-          from shiny import App, ui, Session
+        import ipywidgets
+        import pandas as pd
+        import shiny
+        import shinywidgets
+        import networkx as nx
+        from ipysigma import Sigma
+        from shiny import App, ui, Session
 
-          import navigator.graph_utils as graph_utils
+        import navigator.graph_utils as graph_utils
 
-          app_ui = ui.page_fluid(
-              ui.h2("Ipysigma Graph (Core API), node navigator"),
-              shinywidgets.output_widget('graph_output'),
-              ui.output_text('selected_node_description'),
-              ui.output_table('node_data')
-          )
-
-
-          def server(_input, _output, _session: Session):
-              initial_num_nodes: int = int(os.environ.get("NAVIGATOR_INITIAL_NUM_NODES", 5))
-              base_graph: nx.Graph = graph_utils.create_cycle_graph(n=initial_num_nodes)
-              selected_node_reactive = shiny.reactive.Value[int | None](None)
-
-              @shinywidgets.render_widget
-              def graph_output() -> Sigma:
-                  """Return the ipysigma graph to render.
-
-                  Reactive reads:
-                    selected_node_reactive
-                  """
-                  selected_node = selected_node_reactive.get()
-                  if selected_node is None:
-                      graph = base_graph
-                      extra_kwargs = {}
-                  else:
-                      graph = graph_utils.node_and_neighbors(base_graph, selected_node)
-                      extra_kwargs = dict(selected_node=selected_node)
-
-                  return Sigma(
-                      graph,
-                      start_layout=5,
-                      raw_node_size=lambda _: 24,
-                      raw_node_border_size=lambda _: 4,
-                      raw_node_border_color=lambda _: 'blue',
-                      show_all_labels=True,
-                      raw_node_label_size=lambda _: 18,
-                      raw_edge_size=lambda _: 4,
-                      raw_edge_color=lambda: 'red',
-                      **extra_kwargs
-                  )
-
-              @shiny.render.text
-              def selected_node_description() -> str:
-                  """Return a text description of the selected node.
-
-                  Reactive reads:
-                    graph_output.widget
-
-                  Reactive sets:
-                    focus_node_reactive
-                  """
-                  widget = cast(ipywidgets.Widget, graph_output.widget)
-                  selected_node_read = shinywidgets.reactive_read(widget, names="selected_node")
-                  selected_node: int | None = (
-                      int(selected_node_read) if selected_node_read is not None else None
-                  )
-                  selected_node_reactive.set(value=selected_node)
-                  return f"The selected node is: {selected_node}"
-
-              @shiny.render.table
-              def node_data() -> pd.DataFrame:  # pyright: ignore[reportUnusedFunction]
-                  """Return a DataFrame with data about the selected node.
-
-                  Reactive reads:
-                    focus_node_reactive
-                  """
-                  selected_node = selected_node_reactive.get()
-                  if selected_node is not None:
-                      # Generate some example data for the selected node
-                      data = {
-                          "Attribute": ["Node", "Degree", "Clustering Coefficient"],
-                          "Value": [
-                              selected_node,
-                              nx.degree(base_graph, selected_node),
-                              nx.clustering(base_graph, selected_node)
-                          ]
-                      }
-                      df = pd.DataFrame(data)
-                  else:
-                      # Return an empty DataFrame as a placeholder
-                      df = pd.DataFrame(columns=["Attribute", "Value"])
-                  return df
+        app_ui = ui.page_fluid(
+            ui.h2("Ipysigma Graph (Core API), node navigator"),
+            shinywidgets.output_widget('graph_output'),
+            ui.output_text('selected_node_description'),
+            ui.output_table('node_data')
+        )
 
 
-          app = App(app_ui, server)
-        #+end_src
+        def server(_input, _output, _session: Session):
+            initial_num_nodes: int = int(os.environ.get("NAVIGATOR_INITIAL_NUM_NODES", 5))
+            base_graph: nx.Graph = graph_utils.create_cycle_graph(n=initial_num_nodes)
+            selected_node_reactive = shiny.reactive.Value[int | None](None)
+
+            @shinywidgets.render_widget
+            def graph_output() -> Sigma:
+                """Return the ipysigma graph to render.
+
+                Reactive reads:
+                  selected_node_reactive
+                """
+                selected_node = selected_node_reactive.get()
+                if selected_node is None:
+                    graph = base_graph
+                    extra_kwargs = {}
+                else:
+                    graph = graph_utils.node_and_neighbors(base_graph, selected_node)
+                    extra_kwargs = dict(selected_node=selected_node)
+
+                return Sigma(
+                    graph,
+                    start_layout=5,
+                    raw_node_size=lambda _: 24,
+                    raw_node_border_size=lambda _: 4,
+                    raw_node_border_color=lambda _: 'blue',
+                    show_all_labels=True,
+                    raw_node_label_size=lambda _: 18,
+                    raw_edge_size=lambda _: 4,
+                    raw_edge_color=lambda: 'red',
+                    **extra_kwargs
+                )
+
+            @shiny.render.text
+            def selected_node_description() -> str:
+                """Return a text description of the selected node.
+
+                Reactive reads:
+                  graph_output.widget
+
+                Reactive sets:
+                  focus_node_reactive
+                """
+                widget = cast(ipywidgets.Widget, graph_output.widget)
+                selected_node_read = shinywidgets.reactive_read(widget, names="selected_node")
+                selected_node: int | None = (
+                    int(selected_node_read) if selected_node_read is not None else None
+                )
+                selected_node_reactive.set(value=selected_node)
+                return f"The selected node is: {selected_node}"
+
+            @shiny.render.table
+            def node_data() -> pd.DataFrame:  # pyright: ignore[reportUnusedFunction]
+                """Return a DataFrame with data about the selected node.
+
+                Reactive reads:
+                  focus_node_reactive
+                """
+                selected_node = selected_node_reactive.get()
+                if selected_node is not None:
+                    # Generate some example data for the selected node
+                    data = {
+                        "Attribute": ["Node", "Degree", "Clustering Coefficient"],
+                        "Value": [
+                            selected_node,
+                            nx.degree(base_graph, selected_node),
+                            nx.clustering(base_graph, selected_node)
+                        ]
+                    }
+                    df = pd.DataFrame(data)
+                else:
+                    # Return an empty DataFrame as a placeholder
+                    df = pd.DataFrame(columns=["Attribute", "Value"])
+                return df
+
+
+        app = App(app_ui, server)
+      #+end_src
 
 ***** Conclusion
       The combination of ipysigma with Shiny for Python is a viable candidate to build on.
@@ -1597,10 +1646,12 @@
       the maintenance is sporadic, with a small group of maintainers,
       a low (but non-zero) rate of commits and
       a significant number of bugs outstanding;
-      there were 15 at the time of writing with some in quite basic areas like [[https://github.com/medialab/ipysigma/issues/129][svg export]].
+      there were 15 at the time of writing
+      with some in quite basic areas like [[https://github.com/medialab/ipysigma/issues/129][svg export]].
 
-      A secondary downside is that the general appearance is quite "geeky" and less
-      polished than the containers available through Bokeh, Plotly, etc.
+      A secondary downside is that
+      the general appearance is quite "geeky"
+      and less polished than the containers available through Bokeh, Plotly, etc.
 
 *** Using pyvis
 ***** pyvis Shiny Core node navigator
@@ -1675,25 +1726,9 @@
         app = App(app_ui, server, static_assets=WWW)
       #+end_src
 ***** Conclusion
-      pyvis is not a useful option given how it operates using external HTML files,
+      pyvis is not a useful option
+      given how it operates using external HTML files,
       although the underlying VisJS library might be useful.
-*** Debugging Shiny
-    :PROPERTIES:
-    :ID:       5274a82c-1ba9-4104-ab93-74d8df07fbbf
-    :END:
-***** Websockets logging
-      :PROPERTIES:
-      :ID:       71f33094-70aa-4840-be84-db4ce2bbb4b0
-      :END:
-      - https://websockets.readthedocs.io/en/stable/topics/logging.html
-      - https://websockets.readthedocs.io/en/stable/reference/variables.html
-
-      Shiny uses websockets for communication.
-      To increase log verbosity and avoid truncating messages we can run
-      #+begin_src bash
-      export WEBSOCKETS_MAX_LOG_SIZE=10000
-      #+end_src
-
 * Utilities
 *** Generic utilities
     :PROPERTIES:
@@ -1810,371 +1845,373 @@
         return graph.subgraph(subgraph_nodes)
     #+end_src
 
-*** Data providers
-***** Shakespeare data
+*** Shakespeare data
 
-      #+NAME: shakespeare_data
-      #+begin_src python :tangle src/navigator/shakespeare.py
-        import re
-        import warnings
-        from dataclasses import dataclass
-        from itertools import combinations
-        from typing import Any, Iterable
+    This is a Python wrapper for a Shakespeare dataset downloaded from Kaggle.
+    I did some minor cleanup on the main CSV file.
 
-        import pandas as pd
-        import networkx as nx
-        from thefuzz import process as thefuzz_process
+    #+NAME: shakespeare_data
+    #+begin_src python :tangle src/navigator/shakespeare.py
+      import re
+      import warnings
+      from dataclasses import dataclass
+      from itertools import combinations
+      from typing import Any, Iterable
 
-
-        def calculate_candidate_character_replacements(
-            character_names: pd.Series, min_similarity_score: int
-        ) -> dict[str, str]:
-            """Calculate candidate replacements to clean a Series of character names by
-            standardizing strings using fuzzy matching.
-
-            Args:
-
-                series: The input Series.
-
-                min_similarity_score: The minimum fuzzy matching score (0-100) to consider a
-                    string a potential match.
-
-            Returns:
-                A mapping from current character names to cleaned ones, where these are different
-            """
-
-            def strip_name(name: str) -> str:
-                name = name.strip()
-                name = re.sub(r"  +", " ", name)
-                name = re.sub(r"[^a-zA-Z]+$", "", name)
-                return name
-
-            def best_match(
-                name: str, stripped_names: Iterable[str], min_similarity_score: int
-            ) -> str:
-                stripped_name = strip_name(name)
-                extracted = thefuzz_process.extractOne(stripped_name, stripped_names)
-                if extracted is None:
-                    return stripped_name
-                best_match, score = extracted
-                if score < min_similarity_score:
-                    return stripped_name
-                else:
-                    return best_match
-
-            replacements = {}
-            replacement_values = set()
-            for name in character_names.value_counts().index:  # most frequent values first
-                replacements[name] = best_match(name, replacement_values, min_similarity_score)
-                replacement_values.add(replacements[name])
-
-            return {
-                name: mapped_name
-                for name, mapped_name in replacements.items()
-                if name != mapped_name
-            }
+      import pandas as pd
+      import networkx as nx
+      from thefuzz import process as thefuzz_process
 
 
-        @dataclass(frozen=True)
-        class NodeId:
-            play: str
-            name: str
+      def calculate_candidate_character_replacements(
+          character_names: pd.Series, min_similarity_score: int
+      ) -> dict[str, str]:
+          """Calculate candidate replacements to clean a Series of character names by
+          standardizing strings using fuzzy matching.
+
+          Args:
+
+              series: The input Series.
+
+              min_similarity_score: The minimum fuzzy matching score (0-100) to consider a
+                  string a potential match.
+
+          Returns:
+              A mapping from current character names to cleaned ones, where these are different
+          """
+
+          def strip_name(name: str) -> str:
+              name = name.strip()
+              name = re.sub(r"  +", " ", name)
+              name = re.sub(r"[^a-zA-Z]+$", "", name)
+              return name
+
+          def best_match(
+              name: str, stripped_names: Iterable[str], min_similarity_score: int
+          ) -> str:
+              stripped_name = strip_name(name)
+              extracted = thefuzz_process.extractOne(stripped_name, stripped_names)
+              if extracted is None:
+                  return stripped_name
+              best_match, score = extracted
+              if score < min_similarity_score:
+                  return stripped_name
+              else:
+                  return best_match
+
+          replacements = {}
+          replacement_values = set()
+          for name in character_names.value_counts().index:  # most frequent values first
+              replacements[name] = best_match(name, replacement_values, min_similarity_score)
+              replacement_values.add(replacements[name])
+
+          return {
+              name: mapped_name
+              for name, mapped_name in replacements.items()
+              if name != mapped_name
+          }
 
 
-        class CharacterNetwork:
-            REQUIRED_COLUMNS = "play_name,genre,character,act,scene,sentence,text,sex".split(
-                ","
-            )
-
-            KNOWN_CHARACTER_FIXES: dict[str, dict[str, str]] = {
-                "Richard III": {
-                    "Of Buckingham": "Ghost of Buckingham",
-                    "Of Prince Edward": "Ghost of Prince Edward",
-                },
-                "Henry VI, part 1": {"Su Ffolk": "Suffolk"},
-                "Othello": {"Second Gentlemen": "Second Gentleman"},
-                "Romeo and Juliet": {"Lady  Capulet": "Lady Capulet"},
-                "Hamlet": {
-                    "Guildenstern:": "Guildenstern",
-                    "Rosencrantz:": "Rosencrantz",
-                },
-                "Taming of the Shrew": {"Katarina": "Katharina"},
-                "Henry VI, part 2": {"First Murder": "First Murderer"},
-                "Measure for Measure": {"Pomphey": "Pompey"},
-            }
-
-            KNOWN_CHARACTER_NON_FIXES: set[tuple[str, str]] = {
-                ("Antony and Cleopatra", "Attendants"),
-                ("Coriolanus", "Citizen"),
-                ("Henry IV, part 2", "King Henry V"),
-                ("Henry VI, part 2", "Servant"),
-                ("Timon of Athens", "Servants"),
-            }
-
-            # Names not referring to definite characters.  These are not so interesting to look at
-            # and may represent different people.
-            INDEFINITE_NAMES = [
-                "& C",
-                "A Lord",
-                "A Patrician",
-                "A Player",
-                "All",
-                "All Citizens",
-                "All Conspirators",
-                "All Ladies",
-                "All Lords",
-                "All Servants",
-                "All The Goths",
-                "All The Lords",
-                "All The People",
-                "Another",
-                "As Long As You Or I",
-                "Attendant",
-                "Attendants",
-                "Both Citizens",
-                "Both Murderers",
-                "Both Tribunes",
-                "Boy",
-                "Captain",
-                "Children",
-                "Chorus",
-                "Citizen",
-                "Citizens",
-                "Clown",
-                "Commons",
-                "Court",
-                "Courtezan",
-                "Crier",
-                "Gentleman",
-                "Gentlemen",
-                "Gentlewoman",
-                "Girl",
-                "Guard",
-                "Knight",
-                "Knights",
-                "Lady",
-                "Lieutenant",
-                "Lord",
-                "Lords",
-                "Man",
-                "Merchant",
-                "Messenger",
-                "Mother",
-                "Musician",
-                "Nobleman",
-                "Nurse",
-                "Officer",
-                "Old Athenian",
-                "Old Lady",
-                "Old Man",
-                "Outlaws",
-                "Page",
-                "Players",
-                "Prince",
-                "Princes",
-                "Princess",
-                "Prologue",
-                "Sailor",
-                "Scout",
-                "Senator",
-                "Senators",
-                "Sergeant",
-                "Servant",
-                "Servants",
-                "Shepard",
-                "Shepherd",
-                "Sheriff",
-                "Soldier",
-                "Soldiers",
-                "Some Others",
-                "Some Speak",
-                "Soothsayer",
-                "Steward",
-                "Townsman",
-                "Travellers",
-                "Watch",
-                "Watchman",
-                "Wife",
-            ]
-
-            def __init__(self, df: pd.DataFrame, min_similarity_score: int = 92):
-                """Initializes the CharacterNetwork with a dataframe containing character
-                interactions in Shakespeare's plays.
-
-                Nodes represent a unique character within a specific play (e.g., 'play-name-character').
-                Edges connect characters who speak in the same scene.
-
-                Args:
-                    df: The dataframe, with columns:
-                    - play_name
-                    - genre
-                    - act
-                    - scene
-                    - character
-                    - sex
-                    - sentence
-                    - text
-
-                    min_similarity_score: minimum Levenshtein-based similarity score to warn if
-                       character name matches are found for
-                """
-                self.df = CharacterNetwork.clean_playdata(df, min_similarity_score)
-                self.graph = CharacterNetwork._build_shakespeare_network(self.df)
-                self.play_names = sorted(set(df["play_name"]))
-
-            @staticmethod
-            def clean_playdata(df: pd.DataFrame, min_similarity_score: int) -> pd.DataFrame:
-                """Return a cleaned version of df.
-
-                Character names are replaced based on previously checked replacements.
-
-                Warnings are issued if there are any candidate replacements not among those
-                previously known or ruled out, based on a fuzzy-matching analysis of the character
-                names.
-
-                Args:
-
-                  min_similarity_score: the threshold above which character names are
-                    candidates for consolidation. Corresponds to the score returned from
-                    `thefuzz.process.extractOne`.
-                """
-                assert set(df.columns) == set(CharacterNetwork.REQUIRED_COLUMNS)
-
-                # 1. Apply previously known fixes
-                dfr = df.copy()
-                dfr["character"] = dfr.groupby("play_name")["character"].transform(
-                    lambda s: s.replace(
-                        CharacterNetwork.KNOWN_CHARACTER_FIXES.get(s.name) or {}
-                    )
-                )
-
-                # 2. Warn if there are any candidate fixes not previously known
-                play_mappings = dfr.groupby("play_name").apply(
-                    lambda group_df: calculate_candidate_character_replacements(
-                        group_df["character"], min_similarity_score=min_similarity_score
-                    )
-                )
-
-                assert isinstance(play_mappings, pd.Series)
-
-                play_mappings = {
-                    play: {
-                        original: replacement
-                        for original, replacement in replacements.items()
-                        if (play, original) not in CharacterNetwork.KNOWN_CHARACTER_NON_FIXES
-                    }
-                    for play, replacements in play_mappings.items()
-                }
-                for play, replacements in play_mappings.items():
-                    if replacements:
-                        warnings.warn(
-                            f"Candidate character replacements found in play {play}: {replacements}"
-                        )
-
-                assert set(dfr.columns) == set(CharacterNetwork.REQUIRED_COLUMNS)
-
-                # Remove entries with names not referring to definite characters
-                dfr = dfr[~dfr["character"].isin(CharacterNetwork.INDEFINITE_NAMES)]
-
-                return dfr
-
-            @staticmethod
-            def _build_shakespeare_network(df: pd.DataFrame) -> nx.Graph:
-                assert set(df.columns) == set(CharacterNetwork.REQUIRED_COLUMNS)
-
-                # Add the number of unique scenes.
-                scenes_per_character = (
-                    df.groupby(["play_name", "character", "act", "scene"])
-                    .size()
-                    .reset_index(name="_count")
-                    .groupby(["play_name", "character"])
-                    .size()
-                    .reset_index(name="num_scenes")
-                )
-
-                # Group by play, character, and sex to get a summary for each character node.
-                character_data = (
-                    df.groupby(["play_name", "character", "sex"])
-                    .agg(num_sentences=("sentence", "count"), num_acts=("act", "nunique"))
-                    .reset_index()
-                ).merge(scenes_per_character, on=["play_name", "character"])
-
-                # Prepare a dictionary for node attributes, keyed by the unique node ID.
-                node_attributes: dict[NodeId, dict[str, Any]] = {}
-                for _, row in character_data.iterrows():
-                    node_id = NodeId(play=row["play_name"], name=row["character"])
-                    node_attributes[node_id] = {
-                        "play": row["play_name"],
-                        "character": row["character"],
-                        "sex": row["sex"],
-                        "acts": row["num_acts"],
-                        "scenes": row["num_scenes"],
-                        "sentences": row["num_sentences"],
-                    }
-                # Process Edge Data
-                interactions = (
-                    df.groupby(["play_name", "act", "scene"])["character"]
-                    .apply(set)
-                    .reset_index(name="characters_in_scene")
-                )
-
-                edge_attributes: dict[tuple[str, str, str], dict[str, Any]] = {}
-
-                sentences_by_scene_and_character = df.groupby(
-                    ["play_name", "act", "scene", "character"]
-                ).size()
-                for _, row in interactions.iterrows():
-                    play_name = row["play_name"]
-                    act = row["act"]
-                    scene = row["scene"]
-                    characters_in_scene = row["characters_in_scene"]
-
-                    # Get all unique pairs of characters in this scene.
-                    for char1, char2 in combinations(set(characters_in_scene), 2):
-                        edge_key = (play_name, char1, char2)
-                        sentences_char1 = sentences_by_scene_and_character.loc[
-                            play_name, act, scene, char1
-                        ]
-                        sentences_char2 = sentences_by_scene_and_character.loc[
-                            play_name, act, scene, char2
-                        ]
-                        if edge_key not in edge_attributes:
-                            edge_attributes[edge_key] = {
-                                "play_name": play_name,
-                                "interactions": [],
-                            }
-                        edge_attributes[edge_key]["interactions"].append(
-                            {
-                                "act": act,
-                                "scene": scene,
-                                "sentences_char1": int(sentences_char1),
-                                "sentences_char2": int(sentences_char2),
-                            }
-                        )
-
-                # Build the NetworkX Graph
-                G = nx.Graph()
-
-                for node_id, attributes in node_attributes.items():
-                    G.add_node(node_id, **attributes)
-
-                for edge_key, attributes in edge_attributes.items():
-                    play, char1, char2 = edge_key
-                    G.add_edge(
-                        NodeId(play=play, name=char1),
-                        NodeId(play=play, name=char2),
-                        **attributes,
-                    )
-
-                return G
+      @dataclass(frozen=True)
+      class NodeId:
+          play: str
+          name: str
 
 
-        # Example usage:
-        # character_network = CharacterNetwork(pd.read_csv(data_dir / 'shakespeare_plays.csv'))
-        # play_names = character_network.play_names
-        # sdg = character_network.graph
-        # print(f"jm - {sdg=}")
-      #+end_src
+      class CharacterNetwork:
+          REQUIRED_COLUMNS = "play_name,genre,character,act,scene,sentence,text,sex".split(
+              ","
+          )
+
+          KNOWN_CHARACTER_FIXES: dict[str, dict[str, str]] = {
+              "Richard III": {
+                  "Of Buckingham": "Ghost of Buckingham",
+                  "Of Prince Edward": "Ghost of Prince Edward",
+              },
+              "Henry VI, part 1": {"Su Ffolk": "Suffolk"},
+              "Othello": {"Second Gentlemen": "Second Gentleman"},
+              "Romeo and Juliet": {"Lady  Capulet": "Lady Capulet"},
+              "Hamlet": {
+                  "Guildenstern:": "Guildenstern",
+                  "Rosencrantz:": "Rosencrantz",
+              },
+              "Taming of the Shrew": {"Katarina": "Katharina"},
+              "Henry VI, part 2": {"First Murder": "First Murderer"},
+              "Measure for Measure": {"Pomphey": "Pompey"},
+          }
+
+          KNOWN_CHARACTER_NON_FIXES: set[tuple[str, str]] = {
+              ("Antony and Cleopatra", "Attendants"),
+              ("Coriolanus", "Citizen"),
+              ("Henry IV, part 2", "King Henry V"),
+              ("Henry VI, part 2", "Servant"),
+              ("Timon of Athens", "Servants"),
+          }
+
+          # Names not referring to definite characters.  These are not so interesting to look at
+          # and may represent different people.
+          INDEFINITE_NAMES = [
+              "& C",
+              "A Lord",
+              "A Patrician",
+              "A Player",
+              "All",
+              "All Citizens",
+              "All Conspirators",
+              "All Ladies",
+              "All Lords",
+              "All Servants",
+              "All The Goths",
+              "All The Lords",
+              "All The People",
+              "Another",
+              "As Long As You Or I",
+              "Attendant",
+              "Attendants",
+              "Both Citizens",
+              "Both Murderers",
+              "Both Tribunes",
+              "Boy",
+              "Captain",
+              "Children",
+              "Chorus",
+              "Citizen",
+              "Citizens",
+              "Clown",
+              "Commons",
+              "Court",
+              "Courtezan",
+              "Crier",
+              "Gentleman",
+              "Gentlemen",
+              "Gentlewoman",
+              "Girl",
+              "Guard",
+              "Knight",
+              "Knights",
+              "Lady",
+              "Lieutenant",
+              "Lord",
+              "Lords",
+              "Man",
+              "Merchant",
+              "Messenger",
+              "Mother",
+              "Musician",
+              "Nobleman",
+              "Nurse",
+              "Officer",
+              "Old Athenian",
+              "Old Lady",
+              "Old Man",
+              "Outlaws",
+              "Page",
+              "Players",
+              "Prince",
+              "Princes",
+              "Princess",
+              "Prologue",
+              "Sailor",
+              "Scout",
+              "Senator",
+              "Senators",
+              "Sergeant",
+              "Servant",
+              "Servants",
+              "Shepard",
+              "Shepherd",
+              "Sheriff",
+              "Soldier",
+              "Soldiers",
+              "Some Others",
+              "Some Speak",
+              "Soothsayer",
+              "Steward",
+              "Townsman",
+              "Travellers",
+              "Watch",
+              "Watchman",
+              "Wife",
+          ]
+
+          def __init__(self, df: pd.DataFrame, min_similarity_score: int = 92):
+              """Initializes the CharacterNetwork with a dataframe containing character
+              interactions in Shakespeare's plays.
+
+              Nodes represent a unique character within a specific play (e.g., 'play-name-character').
+              Edges connect characters who speak in the same scene.
+
+              Args:
+                  df: The dataframe, with columns:
+                  - play_name
+                  - genre
+                  - act
+                  - scene
+                  - character
+                  - sex
+                  - sentence
+                  - text
+
+                  min_similarity_score: minimum Levenshtein-based similarity score to warn if
+                     character name matches are found for
+              """
+              self.df = CharacterNetwork.clean_playdata(df, min_similarity_score)
+              self.graph = CharacterNetwork._build_shakespeare_network(self.df)
+              self.play_names = sorted(set(df["play_name"]))
+
+          @staticmethod
+          def clean_playdata(df: pd.DataFrame, min_similarity_score: int) -> pd.DataFrame:
+              """Return a cleaned version of df.
+
+              Character names are replaced based on previously checked replacements.
+
+              Warnings are issued if there are any candidate replacements not among those
+              previously known or ruled out, based on a fuzzy-matching analysis of the character
+              names.
+
+              Args:
+
+                min_similarity_score: the threshold above which character names are
+                  candidates for consolidation. Corresponds to the score returned from
+                  `thefuzz.process.extractOne`.
+              """
+              assert set(df.columns) == set(CharacterNetwork.REQUIRED_COLUMNS)
+
+              # 1. Apply previously known fixes
+              dfr = df.copy()
+              dfr["character"] = dfr.groupby("play_name")["character"].transform(
+                  lambda s: s.replace(
+                      CharacterNetwork.KNOWN_CHARACTER_FIXES.get(s.name) or {}
+                  )
+              )
+
+              # 2. Warn if there are any candidate fixes not previously known
+              play_mappings = dfr.groupby("play_name").apply(
+                  lambda group_df: calculate_candidate_character_replacements(
+                      group_df["character"], min_similarity_score=min_similarity_score
+                  )
+              )
+
+              assert isinstance(play_mappings, pd.Series)
+
+              play_mappings = {
+                  play: {
+                      original: replacement
+                      for original, replacement in replacements.items()
+                      if (play, original) not in CharacterNetwork.KNOWN_CHARACTER_NON_FIXES
+                  }
+                  for play, replacements in play_mappings.items()
+              }
+              for play, replacements in play_mappings.items():
+                  if replacements:
+                      warnings.warn(
+                          f"Candidate character replacements found in play {play}: {replacements}"
+                      )
+
+              assert set(dfr.columns) == set(CharacterNetwork.REQUIRED_COLUMNS)
+
+              # Remove entries with names not referring to definite characters
+              dfr = dfr[~dfr["character"].isin(CharacterNetwork.INDEFINITE_NAMES)]
+
+              return dfr
+
+          @staticmethod
+          def _build_shakespeare_network(df: pd.DataFrame) -> nx.Graph:
+              assert set(df.columns) == set(CharacterNetwork.REQUIRED_COLUMNS)
+
+              # Add the number of unique scenes.
+              scenes_per_character = (
+                  df.groupby(["play_name", "character", "act", "scene"])
+                  .size()
+                  .reset_index(name="_count")
+                  .groupby(["play_name", "character"])
+                  .size()
+                  .reset_index(name="num_scenes")
+              )
+
+              # Group by play, character, and sex to get a summary for each character node.
+              character_data = (
+                  df.groupby(["play_name", "character", "sex"])
+                  .agg(num_sentences=("sentence", "count"), num_acts=("act", "nunique"))
+                  .reset_index()
+              ).merge(scenes_per_character, on=["play_name", "character"])
+
+              # Prepare a dictionary for node attributes, keyed by the unique node ID.
+              node_attributes: dict[NodeId, dict[str, Any]] = {}
+              for _, row in character_data.iterrows():
+                  node_id = NodeId(play=row["play_name"], name=row["character"])
+                  node_attributes[node_id] = {
+                      "play": row["play_name"],
+                      "character": row["character"],
+                      "sex": row["sex"],
+                      "acts": row["num_acts"],
+                      "scenes": row["num_scenes"],
+                      "sentences": row["num_sentences"],
+                  }
+              # Process Edge Data
+              interactions = (
+                  df.groupby(["play_name", "act", "scene"])["character"]
+                  .apply(set)
+                  .reset_index(name="characters_in_scene")
+              )
+
+              edge_attributes: dict[tuple[str, str, str], dict[str, Any]] = {}
+
+              sentences_by_scene_and_character = df.groupby(
+                  ["play_name", "act", "scene", "character"]
+              ).size()
+              for _, row in interactions.iterrows():
+                  play_name = row["play_name"]
+                  act = row["act"]
+                  scene = row["scene"]
+                  characters_in_scene = row["characters_in_scene"]
+
+                  # Get all unique pairs of characters in this scene.
+                  for char1, char2 in combinations(set(characters_in_scene), 2):
+                      edge_key = (play_name, char1, char2)
+                      sentences_char1 = sentences_by_scene_and_character.loc[
+                          play_name, act, scene, char1
+                      ]
+                      sentences_char2 = sentences_by_scene_and_character.loc[
+                          play_name, act, scene, char2
+                      ]
+                      if edge_key not in edge_attributes:
+                          edge_attributes[edge_key] = {
+                              "play_name": play_name,
+                              "interactions": [],
+                          }
+                      edge_attributes[edge_key]["interactions"].append(
+                          {
+                              "act": act,
+                              "scene": scene,
+                              "sentences_char1": int(sentences_char1),
+                              "sentences_char2": int(sentences_char2),
+                          }
+                      )
+
+              # Build the NetworkX Graph
+              G = nx.Graph()
+
+              for node_id, attributes in node_attributes.items():
+                  G.add_node(node_id, **attributes)
+
+              for edge_key, attributes in edge_attributes.items():
+                  play, char1, char2 = edge_key
+                  G.add_edge(
+                      NodeId(play=play, name=char1),
+                      NodeId(play=play, name=char2),
+                      **attributes,
+                  )
+
+              return G
+
+
+      # Example usage:
+      # character_network = CharacterNetwork(pd.read_csv(data_dir / 'shakespeare_plays.csv'))
+      # play_names = character_network.play_names
+      # sdg = character_network.graph
+      # print(f"jm - {sdg=}")
+    #+end_src
 
 * Footnotes
   :PROPERTIES:
@@ -2182,13 +2219,13 @@
   :ID:       56c9e160-adf1-48c9-b988-4de2fe60fab3
   :END:
 
-[fn:cytoscapejs-and-cytoscape] Cytoscape.js and Cytoscape --- Cytoscape User Manual, [[https://manual.cytoscape.org/en/stable/Cytoscape.js_and_Cytoscape.html]]
+[fn:cytoscapejs-and-cytoscape] Cytoscape.js and Cytoscape, Cytoscape User Manual, [[https://manual.cytoscape.org/en/stable/Cytoscape.js_and_Cytoscape.html]]
 
-[fn:shiny-custom-components] Custom components package -- Shiny for Python, [[https://shiny.posit.co/py/docs/custom-components-pkg.html]]
+[fn:shiny-custom-components] Custom components package, Shiny for Python, [[https://shiny.posit.co/py/docs/custom-components-pkg.html]]
 
-[fn:shiny-custom-js] Custom JavaScript component -- Shiny for Python, [[https://shiny.posit.co/py/docs/custom-component-one-off.html]]
+[fn:shiny-custom-js] Custom JavaScript component, Shiny for Python, [[https://shiny.posit.co/py/docs/custom-component-one-off.html]]
 
-[fn:shiny-overview] Overview -- Shiny for Python, [[https://shiny.posit.co/py/docs/overview.html]]
+[fn:shiny-overview] Overview, Shiny for Python, [[https://shiny.posit.co/py/docs/overview.html]]
 
 [fn:shiny-python-js] Shiny for Python and JavaScript: How to Add JS Scripts to Your Dashboards - Appsilon,
 [[https://www.appsilon.com/post/shiny-for-python-javascript]]
