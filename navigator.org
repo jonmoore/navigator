@@ -17,12 +17,12 @@
     - [[#debugging-shiny][Debugging Shiny]]
 - [[#supporting-packages][Supporting packages]]
     - [[#d3][D3]]
-    - [[#jupyter-widgets][Jupyter Widgets]]
+    - [[#jupyter-widgets-packages][Jupyter widgets packages]]
     - [[#pyvis][Pyvis]]
     - [[#not-investigated-in-depth][Not investigated in-depth]]
 - [[#test-applications][Test applications]]
     - [[#using-d3][Using D3]]
-    - [[#using-cytoscapejs][Using Cytoscape.js]]
+    - [[#using-ipycytoscape][Using ipycytoscape]]
     - [[#using-ipysigma][Using ipysigma]]
     - [[#using-pyvis][Using pyvis]]
 - [[#utilities][Utilities]]
@@ -49,6 +49,13 @@
   offer an attractive possible solution.
   This report explores using different combinations of packages
   to achieve our goals.
+
+  The most successful approach by some distance was to use the D3 JavaScript library
+  for the front-end graph layout and visualization,
+  with other UI components provided through Shiny.
+  This was a significant improvement on prior experiences using Bokeh for
+  graph visualization and exploration
+  and is a good candidate for building such applications on top of.
 
 * Targets
   :PROPERTIES:
@@ -302,7 +309,9 @@
       - Other UI elements still have to come from somewhere,
         e.g. 1) Shiny, Dash or similar, 2) a javascript framework like react, or 3)
         something like htmx.
-*** Jupyter Widgets
+
+      See [[#test-using-d3][Using D3]] for a test application using it.
+*** Jupyter widgets packages
     :PROPERTIES:
     :CUSTOM_ID: jupyter-widgets
     :ID:       a8e26756-e88e-4000-8e6e-861ce44d909d
@@ -352,6 +361,8 @@
       using Jupyter widgets.  It supports interactivity by allowing the user to bind actions to graph events,
       like clicks or node selections.
 
+      See [[#test-using-ipycytoscape][Using ipycytoscape]] for test applications using it.
+
 ***** ipysigma
       :PROPERTIES:
       :ID:       56cce4de-511c-4fd9-b783-1019b378de0c
@@ -374,6 +385,9 @@
 
       ipysigma's main use cases are for exploring graph structure and data
       rather than graph-driven interactivity which may not be a good fit here.
+
+      See [[#test-using-ipysigma][Using ipysigma]] for a test application using it.
+
 *** Pyvis
     :PROPERTIES:
     :ID:       54b92d04-5cfb-4dfc-9cd5-a663c5654cb8
@@ -398,6 +412,9 @@
         https://github.com/posit-dev/py-shinywidgets/issues/63.
     - *Conclusion:*
       - Displays graphs using an external HTML file, so rejected.
+
+    See [[#test-using-pyvis][Using pyvis]] for a test application using it.
+
 *** Not investigated in-depth
 ***** Cytoscape.js
         :PROPERTIES:
@@ -428,11 +445,15 @@
 
 ***** d3blocks
       - https://github.com/d3blocks/d3blocks
-      - **Basis:* Python library for generating the Javascript and HTML needed for D3 visualizations.
-      - **Features:* Create stand-alone and interactive d3 charts.
+      - *Basis:*
+        Python library for generating the Javascript and HTML needed for D3 visualizations.
+      - *Features:*
+        Create stand-alone and interactive d3 charts.
         Supports a wide range of common chart types.
-      - **Notes:* Generates HTML and JavaScript using jinja. The HTML can then be e.g. shown
-        in a Jupyter notebook.  A well-developed package.
+      - *Notes:*
+        Generates HTML and JavaScript using jinja.
+        The HTML can then be e.g. shown in a Jupyter notebook.
+        A well-developed package.
 ***** ipydagred3
       :PROPERTIES:
       :ID:       53871af9-39da-435f-a93c-9990a53e6148
@@ -443,8 +464,10 @@
       :PROPERTIES:
       :ID:       57228ce0-eb9d-4c0c-b18e-edf18aa4502a
       :END:
-      - *Basis:* Uses the Eclipse Layout Kernel (ELK) via elkjs.
-      - *Features:* Provides sophisticated layout algorithms, potentially useful for complex diagrams.
+      - *Basis:*
+        Uses the Eclipse Layout Kernel (ELK) via elkjs.
+      - *Features:*
+        Provides sophisticated layout algorithms, potentially useful for complex diagrams.
         Mentioned as having potential for features like collapsing/expanding subgraphs.
 ***** Dash
         :PROPERTIES:
@@ -508,14 +531,17 @@
       - *Summary:*
         Not investigated as it seems like it would have quite a low ceiling for
         customization and interaction through server-side logic compared to
-        options using D3 or similar.        
-        
+        options using D3 or similar.
+
 * Test applications
   :PROPERTIES:
   :CUSTOM_ID: methods-for-creating-custom-components-in-shiny-for-python
   :ID:       eb0f9b0a-bf2b-4949-996b-eb2d85b06d5e
   :END:
 *** Using D3
+    :PROPERTIES:
+    :CUSTOM_ID: test-using-d3
+    :END:
     This is a Shiny Core/D3 App that displays a graph using D3 showing information about
     the characters in Shakespeare's plays and the relations between them based on
     the scenes they speak in.
@@ -569,6 +595,12 @@
     whereas our JavaScript development setup is much more basic.
 
     Note that the front-end still manages some orthogonal state, e.g. for pan and zoom.
+
+    Overall the experience working with D3 was good,
+    especially after working through the early rounds of updates on top of the sample code.
+    The interaction between Shiny and D3 needs to be managed,
+    but it's straightforward to keep the overall interaction structure simple,
+    even for applications with fairly sophisticated interactions.
 
     #+NAME: d3_core_navigator
     #+begin_src python :tangle src/navigator/d3/app.py :mkdirp yes
@@ -1091,9 +1123,9 @@
           background-color: #f2f2f2;
       }
     #+end_src
-*** Using Cytoscape.js
+*** Using ipycytoscape
     :PROPERTIES:
-    :CUSTOM_ID: techniques-for-wrapping-cytoscapejs-for-shiny-for-python
+    :CUSTOM_ID: test-using-ipycytoscape
     :ID:       542b9a7f-42f3-4fc5-bd14-59253c4e9f1b
     :END:
 
@@ -1470,6 +1502,9 @@
       has clearly never been tested on even basic uses cases like the one in issue 322.
 
 *** Using ipysigma
+    :PROPERTIES:
+    :CUSTOM_ID: test-using-ipysigma
+    :END:
 ***** ipysigma Shiny Core app with full redraw
 
       This is a Shiny Core App that displays an ipysigma Graph,
@@ -1654,6 +1689,9 @@
       and less polished than the containers available through Bokeh, Plotly, etc.
 
 *** Using pyvis
+    :PROPERTIES:
+    :CUSTOM_ID: test-using-pyvis
+    :END:
 ***** pyvis Shiny Core node navigator
 
       This is a Shiny Core App that displays a graph using pyvis.
